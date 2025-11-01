@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>Installation | Template </title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap"
+          rel="stylesheet">
+    <script src="app.js"></script>
+</head>
+
+<body class="text-gray-800" style='font-family: "Montserrat", sans-serif;'>
+
+<div class="flex wrapper">
+
+    <app-menu></app-menu>
+   
+    <div class="flex flex-col w-full bg-gray-50">
+
+        <div class="container mx-auto grow">
+
+            <main class="w-full p-6">
+                <!-- Page Title Start -->
+                <div class="flex justify-between items-center mb-6">
+                    <h4 class="text-slate-900 text-lg font-medium">Installation</h4>
+                </div>
+                <!-- Page Title End -->
+
+                <div class="flex flex-col gap-6">
+                    <div class="border border-gray-200 rounded-lg bg-white">
+
+                        <div class="p-6">
+                            <h6 class="mb-2.5 text-base font-semibold">Prerequisites</h6>
+                            <p class="mb-4 text-gray-800">Please follow below steps to install and setup all
+                                prerequisites:</p>
+
+                            <ul class="ps-8 list-disc">
+                                <li class="my-2.5"><a class="text-blue-500" href="https://www.php.net/" target="_blank">PHP</a>
+                                    ~v8.0
+                                </li>
+                                <li>
+                                    <p class="my-2.5 font-medium">Composer</p>
+                                    <p class="mb-3.5 text-gray-800">Make sure you have the Composer installed & running
+                                        on your computer. If you already have installed Composer on your computer, you
+                                        can skip this step.</p>
+                                    <a href="https://getcomposer.org/" target="_blank" class="text-blue-500">Download
+                                        Composer</a>
+                                </li>
+                                <li>
+                                    <p class="my-2.5 font-medium">Node.js</p>
+                                    <p class="mb-3.5 text-gray-800">In order to use build tools you will need to
+                                        download
+                                        and install Node.js. If you do not have Node.js installed already,
+                                        you can get it by downloading the package installer from the
+                                        official website. Please download the stable version of Node.js
+                                        (LTS).</p><a href="https://nodejs.org/en/download" target="_blank"
+                                                     class="text-blue-500">Download
+                                    Node.js</a>
+                                </li>
+                                <li>
+                                    <p class="my-2.5 font-medium">Gulp</p>
+                                    <p class="mb-3.5 text-gray-800">Make sure to have the <a class="text-blue-500"
+                                                                                             href="https://gulpjs.com/"
+                                                                                             target="_blank">Gulp</a>
+                                        installed &amp;
+                                        running in your computer. If you already have installed gulp on your computer,
+                                        you can skip
+                                        this step. In order to install, just run command <code class="text-cyan-500">npm
+                                            install -g
+                                            gulp</code> from
+                                        your terminal.</p>
+                                </li>
+                                <li>
+                                    <p class="my-2.5 font-medium">SQLite3 (For Windows)</p>
+                                    <p class="mb-3.5 text-gray-800">
+                                        Open the download page
+                                        <a href="https://www.sqlite.org/download.html" target="_blank"
+                                           class="text-blue-500">SQLite</a>
+                                        and download command-line tools file for your operating
+                                        system.
+                                    </p>
+                                </li>
+                            </ul>
+
+                        </div>
+                    </div>
+
+                    <div class="border border-gray-200 rounded-lg bg-white">
+                        <div class="p-6">
+                            <h6 class="mb-2.5 text-base font-semibold">Installation</h6>
+
+                            <p class="text-gray-800">To setup, follow the below mentioned steps:</p>
+                            <p class="mb-4 text-gray-800">You can run the following commands to run project locally or
+                                build for production use:</p>
+                            <p class="mb-4 text-gray-800">You can run this app using one of these package managers:
+                                <strong>Bun</strong>, <strong>Yarn</strong> or <strong>NPM</strong>
+                            </p>
+
+                            <div class="mt-3">
+                                <p class="mb-1"><span class="font-semibold text-blue-500">1. Bun </span>(Recommended for
+                                    mac and Linux OS)</p>
+                                <p class="mb-2 text-gray-800">If you don't have <strong>bun</strong> installed on your
+                                    PC, use the <code class="text-cyan-500">npm i -g bun</code> or <code
+                                            class="text-cyan-500">sudo npm i -g bun </code> to install</p>
+                                <div class="shadow-sm overflow-hidden ring-1 ring-gray-200 rounded-md mt-3">
+                                    <table class="min-w-full divide-y divide-gray-200">
+                                        <thead>
+                                        <tr>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                                                Command
+                                            </th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                                                Description
+                                            </th>
+                                        </tr>
+                                        </thead>
+                                        <tbody class="divide-y divide-gray-200">
+                                        <tr>
+                                            <td class="px-6 py-4 text-sm whitespace-nowrap font-medium">
+                                                <code class="text-cyan-500">bun i</code><br>
+                                            </td>
+                                            <td class="px-6 py-4 text-sm font-medium text-gray-800">
+                                                This would install all required dependencies
+                                                in <code class="text-cyan-500">node_modules</code> folder.
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="px-6 py-4 text-sm whitespace-nowrap font-medium">
+                                                <code class="text-cyan-500">gulp</code>
+                                            </td>
+                                            <td class="px-6 py-4 text-sm font-medium text-gray-800">
+                                                This would compile all the resources from <code class="text-cyan-500">public/source</code>
+                                                folder
+                                                to
+                                                <code class="text-cyan-500">public</code>
+                                                folder.
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="px-6 py-4 text-sm whitespace-nowrap font-medium">
+                                                <code class="text-cyan-500">bun run build</code>
+                                            </td>
+                                            <td class="px-6 py-4 text-sm font-medium text-gray-800">It bundles
+                                                with production mode. Your app is now ready to be deployed.
+                                            </td>
+                                        </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <div class="mt-5 pt-5">
+                                <p class="mb-1"><span class="font-semibold text-blue-500">2. Yarn</span></p>
+                                <p class="mb-2 text-gray-800">If you don't have <strong>yarn</strong> installed on your
+                                    PC, use the next command <code class="text-cyan-500">npm i -g yarn</code> or <code
+                                            class="text-cyan-500">sudo npm i -g yarn </code></p>
+                                <div class="shadow-sm overflow-hidden ring-1 ring-gray-200  rounded-md mt-3">
+                                    <table class="min-w-full divide-y divide-gray-200">
+                                        <thead>
+                                        <tr>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                                                Command
+                                            </th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                                                Description
+                                            </th>
+                                        </tr>
+                                        </thead>
+                                        <tbody class="divide-y divide-gray-200">
+                                        <tr>
+                                            <td class="px-6 py-4 text-sm whitespace-nowrap font-medium">
+                                                <code class="text-cyan-500">yarn</code><br>
+                                            </td>
+                                            <td class="px-6 py-4 text-sm font-medium text-gray-800">
+                                                This would install all required dependencies
+                                                in <code class="text-cyan-500">node_modules</code> folder.
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="px-6 py-4 text-sm whitespace-nowrap font-medium">
+                                                <code class="text-cyan-500">gulp</code>
+                                            </td>
+                                            <td class="px-6 py-4 text-sm font-medium text-gray-800">
+                                                This would compile all the resources from <code class="text-cyan-500">public/source</code>
+                                                folder
+                                                to
+                                                <code class="text-cyan-500">public</code>
+                                                folder.
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="px-6 py-4 text-sm whitespace-nowrap font-medium">
+                                                <code class="text-cyan-500">yarn build</code>
+                                            </td>
+                                            <td class="px-6 py-4 text-sm font-medium text-gray-800">It bundles
+                                                with production mode. Your app is now ready to be deployed.
+                                            </td>
+                                        </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <div class="mt-5 pt-5">
+                                <p class="mb-1"><span class="font-semibold text-blue-500">3. NPM</span></p>
+                                <p class="mb-2 text-gray-800"><strong>npm</strong> comes preinstalled when you install
+                                    Nodejs </p>
+                                <div class="shadow-sm overflow-hidden ring-1 ring-gray-200  rounded-md mt-3">
+                                    <table class="min-w-full divide-y divide-gray-200">
+                                        <thead>
+                                        <tr>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                                                Command
+                                            </th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                                                Description
+                                            </th>
+                                        </tr>
+                                        </thead>
+                                        <tbody class="divide-y divide-gray-200">
+                                        <tr>
+                                            <td class="px-6 py-4 text-sm whitespace-nowrap font-medium">
+                                                <code class="text-cyan-500">npm i </code> OR <code
+                                                    class="text-cyan-500"> &nbsp;npm i --force</code><br>
+                                            </td>
+                                            <td class="px-6 py-4 text-sm font-medium text-gray-800">
+                                                This would install all required dependencies
+                                                in <code class="text-cyan-500">node_modules</code> folder.
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="px-6 py-4 text-sm whitespace-nowrap font-medium">
+                                                <code class="text-cyan-500">gulp</code>
+                                            </td>
+                                            <td class="px-6 py-4 text-sm font-medium text-gray-800">
+                                                This would compile all the resources from <code class="text-cyan-500">public/source</code>
+                                                folder
+                                                to
+                                                <code class="text-cyan-500">public</code>
+                                                folder.
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="px-6 py-4 text-sm whitespace-nowrap font-medium">
+                                                <code class="text-cyan-500">npm
+                                                    run build</code>
+                                            </td>
+                                            <td class="px-6 py-4 text-sm font-medium text-gray-800">It bundles
+                                                with production mode. Your app is now ready to be deployed.
+                                            </td>
+                                        </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <p class="text-gray-800 mt-6">To spin up the CodeIgniter development server, follow the
+                                below mentioned
+                                steps in a separate terminal:</p>
+                            <div class="shadow-sm overflow-hidden ring-1 ring-gray-200 rounded-md mt-3">
+                                <table class="min-w-full divide-y divide-gray-200">
+                                    <thead>
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase">
+                                            Command
+                                        </th>
+                                        <th class="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase">
+                                            Description
+                                        </th>
+                                    </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-gray-200">
+
+                                    <tr>
+                                        <td class="px-6 py-4 text-sm whitespace-nowrap font-medium">
+                                            <code class="text-cyan-500">composer i</code><br>
+                                        </td>
+                                        <td class="px-6 py-4 text-sm font-medium text-gray-800">
+                                            This will install all required dependencies in
+                                            <code class="text-cyan-500">vendor</code> folder.
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-6 py-4 text-sm whitespace-nowrap font-medium">
+                                            <code class="text-cyan-500">php spark migrate</code><br>
+                                        </td>
+                                        <td class="px-6 py-4 text-sm font-medium text-gray-800">
+                                            This will executes all pending migrations to database.
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-6 py-4 text-sm whitespace-nowrap font-medium">
+                                            <code class="text-cyan-500">php spark db:seed UserSeeder</code><br>
+                                        </td>
+                                        <td class="px-6 py-4 text-sm font-medium text-gray-800">
+                                            This will seed database with data after it's created
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-6 py-4 text-sm whitespace-nowrap font-medium">
+                                            <code class="text-cyan-500">php spark serve</code><br>
+                                        </td>
+                                        <td class="px-6 py-4 text-sm font-medium text-gray-800">
+                                            Runs the project locally, starts the development server
+                                        </td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                        </div>
+                    </div>
+
+                </div>
+            </main>
+
+        </div>
+
+
+        <app-footer></app-footer>
+
+    </div>
+
+</div>
+
+</body>
+
+</html>
