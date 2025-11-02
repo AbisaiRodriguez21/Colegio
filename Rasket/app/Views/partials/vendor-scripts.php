@@ -1,5 +1,5 @@
-<!-- Vendor Javascript (Require in all Page) -->
-<script src="/js/vendor.js"></script>
+<!-- Vendor Javascript -->
+<script src="<?= base_url('js/vendor.js') ?>"></script>
 
-<!-- App Javascript (Require in all Page) -->
-<script src="/js/app.js"></script>
+<!-- App Javascript -->
+<script src="<?= base_url('js/app.js') ?>"></script>

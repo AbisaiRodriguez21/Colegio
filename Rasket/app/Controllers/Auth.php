@@ -2,41 +2,42 @@
 
 namespace App\Controllers;
 
+use App\Models\UsuarioModel;
+
 class Auth extends BaseController
 {
-
     public function index()
     {
+        // Carga la vista de login
         return view('auth/login');
     }
 
-    public function loginCheck()
+    public function attemptLogin()
     {
-        $email = trim($this->request->getPost('email'));
-        $password = trim($this->request->getPost('password'));
+        $usuario = trim($this->request->getPost('usuario'));
+        $password = trim($this->request->getPost('pass'));
 
-        $db = \Config\Database::connect();
-        $builder = $db->table('users');
-        $result = $builder->getWhere(['email' => $email])->getResultArray();
+        // Llama al modelo para verificar usuario
+        $model = new UsuarioModel();
+        $user = $model->verificarLogin($usuario, $password);
 
-        if (sizeof($result) > 0) {
-            if (password_verify($password, $result[0]['password'])) {
-                $session = session();
-                $session->set('isLoggedIn', 1);
-                return redirect()->to('/');
-            } else {
-                return redirect()->back()->with('error', 'Invalid Password.');
-            }
+        if ($user) {
+            session()->set([
+                'isLoggedIn' => true,
+                'usuario'    => $user['email'],
+                'nombre'     => $user['Nombre'] ?? '',
+                'nivel'      => $user['nivel'] ?? '',
+            ]);
+
+            return redirect()->to(base_url('dashboard'));
         } else {
-            return redirect()->back()->with('error', 'Invalid Email.');
+            return redirect()->back()->with('error', 'Usuario o contraseña incorrectos.');
         }
     }
 
     public function logout()
     {
-        $session = session();
-        $session->remove('isLoggedIn');
-        return redirect()->to('/login');
+        session()->destroy();
+        return redirect()->to(base_url('login'));
     }
-
 }

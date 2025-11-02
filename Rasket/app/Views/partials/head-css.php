@@ -1,11 +1,8 @@
-<!-- Vendor css (Require in all Page) -->
-<link href="/css/vendor.min.css" rel="stylesheet" type="text/css" />
+<!-- Vendor css -->
+<link href="<?= base_url('css/vendor.min.css') ?>" rel="stylesheet" type="text/css" />
 
-<!-- Icons css (Require in all Page) -->
-<link href="/css/icons.min.css" rel="stylesheet" type="text/css" />
+<!-- Icons css -->
+<link href="<?= base_url('css/icons.min.css') ?>" rel="stylesheet" type="text/css" />
 
-<!-- App css (Require in all Page) -->
-<link href="/css/app.min.css" rel="stylesheet" type="text/css" />
-
-<!-- Theme Config js (Require in all Page) -->
-<script src="/js/config.min.js"></script>
+<!-- App css -->
+<link href="<?= base_url('css/app.min.css') ?>" rel="stylesheet" type="text/css" />
