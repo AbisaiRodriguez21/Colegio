@@ -20929,3 +20929,13 @@ p.no-span::after {
     display: none;
   }
 }
+/* --- Estilo para la flecha giratoria del submenú --- */
+.nav-arrow {
+  display: inline-block; 
+  transition: transform 0.25s ease-in-out;
+  line-height: 1; 
+}
+
+.navbar-nav .nav-link[aria-expanded="true"] .nav-arrow {
+  transform: rotate(90deg) !important; 
+}

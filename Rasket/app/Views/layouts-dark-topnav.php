@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html lang="en" data-topbar-color="dark" data-menu-color="light">
+<html lang="en" data-bs-theme="light" data-topbar-color="light" data-menu-color="light">
+
 
 <head>
      <?php echo view("partials/title-meta", array("title" =>  "Dark Topnav")) ?>

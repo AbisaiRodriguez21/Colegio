@@ -8,7 +8,10 @@ class UsuarioModel extends Model
 {
     protected $table = 'usr';
     protected $primaryKey = 'email';
-    protected $allowedFields = ['email', 'pass', 'Nombre', 'ap_Alumno', 'am_Alumno', 'estatus', 'nivel'];
+    protected $allowedFields = [
+        'email', 'pass', 'Nombre', 'ap_Alumno', 'am_Alumno',
+        'estatus', 'nivel', 'foto'
+    ];
 
     public function verificarLogin($usuario, $password)
     {

@@ -24,9 +24,13 @@ class Auth extends BaseController
         if ($user) {
             session()->set([
                 'isLoggedIn' => true,
-                'usuario'    => $user['email'],
-                'nombre'     => $user['Nombre'] ?? '',
-                'nivel'      => $user['nivel'] ?? '',
+                'id'         => $user['id'],                        
+                'usuario'    => $user['email'],                    
+                'nombre'     => $user['Nombre'] ?? '',          
+                'ap'         => $user['ap_Alumno'] ?? '',         
+                'am'         => $user['am_Alumno'] ?? '',        
+                'nivel'      => $user['nivel'] ?? '',             
+                'foto'       => $user['foto'] ?? '',    
             ]);
 
             return redirect()->to(base_url('dashboard'));

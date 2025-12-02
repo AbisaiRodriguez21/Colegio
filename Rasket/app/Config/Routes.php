@@ -13,7 +13,7 @@ $routes->setDefaultController('Home');
 $routes->setDefaultMethod('index');
 $routes->setTranslateURIDashes(false);
 $routes->set404Override();
-$routes->setAutoRoute(true);
+$routes->setAutoRoute(false);
 
 // Login
 $routes->get('login', 'Auth::index');
@@ -33,7 +33,16 @@ $routes->get('profesor/ver/(:num)', 'ProfesorLista::ver/$1');
 $routes->get('profesor/eliminar/(:num)', 'ProfesorLista::eliminar/$1');
 
 // Alumnos
-$routes->match(['get', 'post'], 'alumno', 'Alumno::index');
+$routes->match(['get', 'post'], 'alumno', 'Alumno::index'); 
+$routes->get('alumnos/registro', 'Alumnos::registro'); 
+$routes->post('alumnos/guardar', 'Alumnos::guardar'); 
+// Rutas de Alumnos (Preinscripciones) 
+$routes->get('alumnos/preinscripciones', 'Alumnos::preinscripciones'); 
+$routes->post('alumnos/guardar_preinscripcion', 'Alumnos::guardar_preinscripcion'); 
+
+//Lista grupos
+$routes->get('grupos/lista', 'Grupos::index');   
+$routes->post('grupos/filtrar', 'Grupos::filtrar');
 
 // Usuarios
 $routes->get('crear-usuario', 'Dashboard::crearUsuario');

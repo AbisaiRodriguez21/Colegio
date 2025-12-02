@@ -1,108 +1,69 @@
 <div>
-     <div class="offcanvas offcanvas-end border-0" tabindex="-1" id="theme-settings-offcanvas">
-          <div class="d-flex align-items-center bg-primary p-3 offcanvas-header">
-               <h5 class="text-white m-0">Theme Settings</h5>
-               <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-          </div>
+    <div class="offcanvas offcanvas-end border-0" tabindex="-1" id="theme-settings-offcanvas">
+        <div class="d-flex align-items-center bg-primary p-3 offcanvas-header">
+            <h5 class="text-white m-0">Configuración del Usuario</h5>
+            <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
 
-          <div class="offcanvas-body p-0">
-               <div data-simplebar class="h-100">
-                    <div class="p-3 settings-bar">
+        <div class="offcanvas-body p-0">
+            <div data-simplebar class="h-100">
+                <div class="p-4 settings-bar">
 
-                         <div>
-                              <h5 class="mb-3 font-16 fw-semibold">Color Scheme</h5>
+                    <!-- Cambiar foto de perfil -->
+                    <div class="mb-4 text-center">
+                        <h6 class="fw-semibold mb-3">Foto de perfil</h6>
 
-                              <div class="form-check mb-2">
-                                   <input class="form-check-input" type="radio" name="data-bs-theme" id="layout-color-light" value="light">
-                                   <label class="form-check-label" for="layout-color-light">Light</label>
-                              </div>
+                        <!-- Imagen actual -->
+                        <?php
+                        $foto = session('foto');
+                        $fotoUsuario = $foto ? base_url($foto) : base_url('images/avatar_placeholder.jpg');
+                        ?>
+                        <img src="<?= esc($fotoUsuario) ?>" alt="Foto de perfil"
+                             class="rounded-circle mb-3" width="90" height="90">
 
-                              <div class="form-check mb-2">
-                                   <input class="form-check-input" type="radio" name="data-bs-theme" id="layout-color-dark" value="dark">
-                                   <label class="form-check-label" for="layout-color-dark">Dark</label>
-                              </div>
-                         </div>
+                        <!-- Input (aún no funcional) -->
+                        <input type="file" class="form-control mb-2" accept="image/*">
+                        <small class="text-muted d-block mb-3">Formatos: JPG o PNG (máx. 2 MB)</small>
 
-                         <div>
-                              <h5 class="my-3 font-16 fw-semibold">Topbar Color</h5>
-
-                              <div class="form-check mb-2">
-                                   <input class="form-check-input" type="radio" name="data-topbar-color" id="topbar-color-light" value="light">
-                                   <label class="form-check-label" for="topbar-color-light">Light</label>
-                              </div>
-                              <div class="form-check mb-2">
-                                   <input class="form-check-input" type="radio" name="data-topbar-color" id="topbar-color-dark" value="dark">
-                                   <label class="form-check-label" for="topbar-color-dark">Dark</label>
-                              </div>
-                         </div>
-
-
-                         <div>
-                              <h5 class="my-3 font-16 fw-semibold">Menu Color</h5>
-
-                              <div class="form-check mb-2">
-                                   <input class="form-check-input" type="radio" name="data-menu-color" id="leftbar-color-light" value="light">
-                                   <label class="form-check-label" for="leftbar-color-light">
-                                        Light
-                                   </label>
-                              </div>
-
-                              <div class="form-check mb-2">
-                                   <input class="form-check-input" type="radio" name="data-menu-color" id="leftbar-color-dark" value="dark">
-                                   <label class="form-check-label" for="leftbar-color-dark">
-                                        Dark
-                                   </label>
-                              </div>
-                         </div>
-
-                         <div>
-                              <h5 class="my-3 font-16 fw-semibold">Sidebar Size</h5>
-
-                              <div class="form-check mb-2">
-                                   <input class="form-check-input" type="radio" name="data-menu-size" id="leftbar-size-default" value="default">
-                                   <label class="form-check-label" for="leftbar-size-default">
-                                        Default
-                                   </label>
-                              </div>
-
-                              <div class="form-check mb-2">
-                                   <input class="form-check-input" type="radio" name="data-menu-size" id="leftbar-size-small" value="condensed">
-                                   <label class="form-check-label" for="leftbar-size-small">
-                                        Condensed
-                                   </label>
-                              </div>
-
-                              <div class="form-check mb-2">
-                                   <input class="form-check-input" type="radio" name="data-menu-size" id="leftbar-hidden" value="hidden">
-                                   <label class="form-check-label" for="leftbar-hidden">
-                                        Hidden
-                                   </label>
-                              </div>
-
-                              <div class="form-check mb-2">
-                                   <input class="form-check-input" type="radio" name="data-menu-size" id="leftbar-size-small-hover-active" value="sm-hover-active">
-                                   <label class="form-check-label" for="leftbar-size-small-hover-active">
-                                        Small Hover Active
-                                   </label>
-                              </div>
-
-                              <div class="form-check mb-2">
-                                   <input class="form-check-input" type="radio" name="data-menu-size" id="leftbar-size-small-hover" value="sm-hover">
-                                   <label class="form-check-label" for="leftbar-size-small-hover">
-                                        Small Hover
-                                   </label>
-                              </div>
-                         </div>
-
+                        <!-- Botón simulado -->
+                        <button class="btn btn-primary w-100" disabled>
+                            Guardar nueva foto
+                        </button>
                     </div>
-               </div>
-          </div>
-          <div class="offcanvas-footer border-top p-3 text-center">
-               <div class="row">
-                    <div class="col">
-                         <button type="button" class="btn btn-danger w-100" id="reset-layout">Reset</button>
+
+                    <hr>
+
+                    <!-- Cambiar contraseña -->
+                    <div class="mt-4">
+                        <h6 class="fw-semibold mb-3">Cambiar contraseña</h6>
+
+                        <div class="mb-3">
+                            <label class="form-label">Contraseña actual</label>
+                            <input type="password" class="form-control" placeholder="********" disabled>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Nueva contraseña</label>
+                            <input type="password" class="form-control" placeholder="********" disabled>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Confirmar nueva contraseña</label>
+                            <input type="password" class="form-control" placeholder="********" disabled>
+                        </div>
+
+                        <!-- Botón simulado -->
+                        <button class="btn btn-primary w-100" disabled>
+                            Actualizar contraseña
+                        </button>
                     </div>
-               </div>
-          </div>
-     </div>
+
+                </div>
+            </div>
+        </div>
+
+        <div class="offcanvas-footer border-top p-3 text-center">
+            <small class="text-muted">Opciones disponibles próximamente</small>
+        </div>
+    </div>
 </div>
