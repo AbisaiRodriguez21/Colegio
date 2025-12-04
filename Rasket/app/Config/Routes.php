@@ -31,6 +31,8 @@ $routes->get('testdb', 'TestDB::index');
 $routes->get('lista-profesores', 'ProfesorLista::index');
 $routes->get('profesor/ver/(:num)', 'ProfesorLista::ver/$1');
 $routes->get('profesor/eliminar/(:num)', 'ProfesorLista::eliminar/$1');
+// Asignar carga de materias
+$routes->get('profesor/asignar/(:num)', 'ProfesorLista::asignar/$1');
 
 // Alumnos
 $routes->match(['get', 'post'], 'alumno', 'Alumno::index'); 

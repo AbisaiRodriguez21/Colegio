@@ -53,4 +53,22 @@ class ProfesorLista extends Controller
         
         return view('profesores/ver_materias', $data);
     }
+
+    public function asignar($id)
+    {
+        $model = new ProfesorModel();
+
+        // 1. Obtenemos los datos del profesor para el título
+        $data['profesor'] = $model->getProfesor($id);
+
+        // Validación: Si el ID no existe, regresamos atrás
+        if (!$data['profesor']) {
+            return redirect()->back()->with('error', 'Profesor no encontrado.');
+        }
+
+        // 2. Aquí podrías cargar los grupos disponibles si quieres hacerlo dinámico más adelante.
+        // Por ahora, cargamos la vista con el diseño estático que hicimos.
+        
+        return view('profesores/carga_materias', $data);
+    }
 }
