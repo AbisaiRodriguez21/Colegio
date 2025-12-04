@@ -70,7 +70,7 @@
                 </li>
 
                <li class="nav-item">
-                    <a class="nav-link" href="/pagos/verificar">
+                    <a class="nav-link" href="<?= base_url('verificar-pagos') ?>">
                          <span class="nav-icon">
                               <iconify-icon icon="solar:bill-list-broken"></iconify-icon>
                          </span>

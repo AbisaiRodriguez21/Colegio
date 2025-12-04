@@ -52,3 +52,8 @@ $routes->group('', ['filter' => 'auth'], function ($routes) {
     $routes->get('/', 'Home::index');
     $routes->get('dashboard/obtenerGrados/(:num)', 'Dashboard::obtenerGrados/$1');
 });
+
+//pagos
+$routes->get('verificar-pagos', 'VerificarPagos::index'); 
+$routes->post('verificar-pagos/validar', 'VerificarPagos::validar');
+$routes->get('verificar-pagos/ajaxList', 'VerificarPagos::ajaxList');
