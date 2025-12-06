@@ -105,6 +105,14 @@
                     </a>
                </li>
 
+               <li class="nav-item">
+                    <a class="nav-link" href="<?= base_url('correo') ?>"> <span class="nav-icon">
+                              <iconify-icon icon="solar:letter-broken"></iconify-icon>
+                         </span>
+                         <span class="nav-text"> Correos / Mensajes </span>
+                    </a>
+               </li>
+
           </ul>
      </div>
 </div>

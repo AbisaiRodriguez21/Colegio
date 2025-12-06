@@ -33,6 +33,8 @@ $routes->get('profesor/ver/(:num)', 'ProfesorLista::ver/$1');
 $routes->get('profesor/eliminar/(:num)', 'ProfesorLista::eliminar/$1');
 // Asignar carga de materias
 $routes->get('profesor/asignar/(:num)', 'ProfesorLista::asignar/$1');
+// Ruta para procesar el formulario del switch
+$routes->post('profesor/guardar_materia', 'ProfesorLista::guardar_materia');
 
 // Alumnos
 $routes->match(['get', 'post'], 'alumno', 'Alumno::index'); 
@@ -59,3 +61,11 @@ $routes->group('', ['filter' => 'auth'], function ($routes) {
 $routes->get('verificar-pagos', 'VerificarPagos::index'); 
 $routes->post('verificar-pagos/validar', 'VerificarPagos::validar');
 $routes->get('verificar-pagos/ajaxList', 'VerificarPagos::ajaxList');
+
+// Rutas de Correo
+$routes->get('correo', 'Correo::index');          // Dashboard Principal (Inbox)
+$routes->get('correo/redactar', 'Correo::redactar'); // Formulario de Redacción
+$routes->post('correo/enviar', 'Correo::enviar');    // Acción de enviar
+$routes->get('correo/ver/(:num)', 'Correo::ver/$1'); // Ver detalle de un correo
+$routes->get('correo/ajax_ver/(:num)', 'Correo::ajax_ver/$1'); // Ver detalle vía AJAX
+$routes->post('correo/acciones', 'Correo::acciones_masivas'); // Acciones masivas
