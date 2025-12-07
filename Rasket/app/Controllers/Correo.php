@@ -25,17 +25,27 @@ class Correo extends BaseController
         return view('correos/leer_correo', $data);
     }
 
+    /**
+     * BANDEJA PRINCIPAL
+     */
     public function index()
     {
         $request = \Config\Services::request();
         $model = new CorreoModel();
         
-        // Simulamos ID de usuario logueado (Cámbialo por session()->get('id') cuando tengas Auth)
-        $userId = 1;
+        // 1. RECUPERAMOS EL ID DE LA SESIÓN (Gracias a tu Auth.php)
+        $userId = session()->get('id'); 
 
-        // Filtro por defecto ahora es 'recibidos'
+        // Seguridad: Si por alguna razón no hay sesión (expiró), lo mandamos al login
+        if (!$userId) { 
+            return redirect()->to(base_url('login'))->with('error', 'Tu sesión ha expirado.'); 
+        }
+
+        // 2. Filtros y Lógica
         $filtro = $request->getGet('filtro') ?? 'recibidos';
         
+        // El modelo ahora buscará correos donde emisor_id sea $userId (Enviados)
+        // o donde emisor_id NO sea $userId (Recibidos)
         $data['correos'] = $model->getCorreos($filtro, $userId);
         
         // Títulos
@@ -151,26 +161,32 @@ class Correo extends BaseController
         $model = new CorreoModel();
         $emailService = \Config\Services::email();
 
-        // 1. Datos básicos
+        // 1. OBTENER ID DEL USUARIO LOGUEADO
+        $emisor_id = session()->get('id');
+
+        // Seguridad: Si no hay sesión, mandar al login
+        if (!$emisor_id) {
+            return redirect()->to(base_url('login'))->with('error', 'Tu sesión ha expirado.');
+        }
+
+        // 2. Recoger datos
         $tipoDestinatario = $request->getPost('tipo_destinatario');
         $asunto           = $request->getPost('asunto');
         $mensaje          = $request->getPost('mensaje');
-        $emisor_id        = 1; // IMPORTANTE: Cambia esto por session()->get('id') o similar
 
-        // 2. Manejo del Archivo Adjunto
+        // 3. Archivo Adjunto
         $rutaAdjunto = null;
         $archivo = $this->request->getFile('adjunto');
 
         if ($archivo && $archivo->isValid() && !$archivo->hasMoved()) {
-            // Guardar en public/uploads/adjuntos
             $nombreNuevo = $archivo->getRandomName();
             $archivo->move(ROOTPATH . 'public/uploads/adjuntos', $nombreNuevo);
             $rutaAdjunto = 'uploads/adjuntos/' . $nombreNuevo;
         }
 
-        // 3. Determinar Destinatarios
+        // 4. Determinar Destinatarios
         $listaCorreos = [];
-        $textoPara = ""; // Texto para guardar en la BD (ej: "3 Kinder")
+        $textoPara = ""; 
         $gradoDestinoId = null;
 
         switch ($tipoDestinatario) {
@@ -178,19 +194,19 @@ class Correo extends BaseController
                 $email = $request->getPost('email_individual');
                 if (!empty($email)) {
                     $listaCorreos[] = $email;
-                    $textoPara = $email;
+                    $textoPara = $email; // Solo el correo, sin adornos
                 }
                 break;
 
             case 'grado':
                 $id_grado = $request->getPost('id_grado');
                 $gradoDestinoId = $id_grado;
+                
                 $resultados = $model->getEmailsPorGrado($id_grado);
                 $listaCorreos = array_column($resultados, 'email');
                 
-                // Obtener nombre del grado para guardar en BD
+                // Nombre bonito del grado
                 $grados = $model->getGrados(); 
-                // Buscamos el nombre simple
                 $key = array_search($id_grado, array_column($grados, 'id_grado'));
                 $nombreGrado = ($key !== false) ? $grados[$key]['nombreGrado'] : "Grado ID: $id_grado";
                 $textoPara = "Grado: " . $nombreGrado;
@@ -198,17 +214,21 @@ class Correo extends BaseController
 
             case 'nivel':
                 $id_nivel = $request->getPost('id_nivel');
+                
                 $resultados = $model->getEmailsPorNivel($id_nivel);
                 $listaCorreos = array_column($resultados, 'email');
-                $textoPara = "Nivel Completo ID: " . $id_nivel;
+                
+                $mapaNiveles = [1=>'Maternal', 2=>'Kinder', 3=>'Primaria', 4=>'Secundaria', 5=>'Bachiller'];
+                $nombreNivel = $mapaNiveles[$id_nivel] ?? "Nivel $id_nivel";
+                $textoPara = "Todo el Nivel: " . $nombreNivel;
                 break;
         }
 
         if (empty($listaCorreos)) {
-            return redirect()->back()->withInput()->with('error', 'No hay correos destinatarios válidos.');
+            return redirect()->back()->withInput()->with('error', 'No se encontraron alumnos con correo.');
         }
 
-        // 4. Configurar Email
+        // 5. Configurar Email
         $emailService->setFrom('notificaciones@tucolegio.com', 'Sistema Escolar');
         $emailService->setTo('noreply@tucolegio.com'); 
         $emailService->setBCC($listaCorreos);
@@ -219,45 +239,44 @@ class Correo extends BaseController
             $emailService->attach(ROOTPATH . 'public/' . $rutaAdjunto);
         }
 
-        // 5. Enviar y Guardar en BD
-        // --- INICIO DE CÓDIGO DE DEPURACIÓN ---
-        
-        // 1. Intentamos enviar el correo
-        $enviado = $emailService->send();
+        // --- CORRECCIÓN CLAVE: Lógica para el texto "Para" ---
+        // Si hay más de 1 destinatario, agregamos el conteo (ej: "3 Primaria (25)")
+        // Si es solo 1, dejamos el texto limpio (ej: "juan@gmail.com")
+        $cantidad = count($listaCorreos);
+        $paraFinal = ($cantidad > 1) ? $textoPara . " (" . $cantidad . ")" : $textoPara;
+        // -----------------------------------------------------
 
-        // 2. Intentamos guardar en BD INDEPENDIENTEMENTE de si se envió el correo
-        // (Para probar que la BD funcione)
-        $datosGuardar = [
-            'emisor_id' => 1, // <--- OJO: Asegúrate que existe el usuario con ID 1 en tu tabla 'usr'
-            'grado_destinario_id' => $gradoDestinoId,
-            'fecha_envio' => date('Y-m-d H:i:s'),
-            'asunto' => $asunto,
-            'para' => $textoPara, 
-            'mensaje' => $mensaje,
-            'adjunto' => $rutaAdjunto,
-            'estado' => $enviado ? 'enviado' : 'error_envio', // Guardamos estado según resultado
-            'eliminado' => 0
-        ];
+        // 6. Enviar y Guardar
+        if ($emailService->send()) {
+            // ÉXITO
+            $model->insert([
+                'emisor_id'           => $emisor_id,
+                'grado_destinario_id' => $gradoDestinoId,
+                'fecha_envio'         => date('Y-m-d H:i:s'),
+                'asunto'              => $asunto,
+                'para'                => $paraFinal, // Usamos la variable corregida
+                'mensaje'             => $mensaje,
+                'adjunto'             => $rutaAdjunto,
+                'estado'              => 'enviado',
+                'eliminado'           => 0
+            ]);
 
-        if (!$model->insert($datosGuardar)) {
-            // Si falla el guardado, MUESTRA EL ERROR EN PANTALLA
-            echo "<h1>Error al guardar en Base de Datos:</h1>";
-            echo "<pre>";
-            print_r($model->errors()); // Muestra por qué falló el modelo
-            print_r($datosGuardar);    // Muestra qué datos intentó guardar
-            echo "</pre>";
-            die(); // Detiene todo para que leas el error
-        }
-
-        // Si llegó aquí, sí guardó en BD. Ahora vemos el correo.
-        if ($enviado) {
-            return redirect()->to(base_url('correo'))->with('success', 'Guardado y Enviado.');
+            return redirect()->to(base_url('correo?filtro=enviados'))->with('success', 'Correo enviado correctamente.');
         } else {
-            // Imprimir error de correo si falló el envío SMTP
-            // echo $emailService->printDebugger(['headers']); die(); 
-            return redirect()->to(base_url('correo'))->with('warning', 'Se guardó en BD, pero el correo NO salió (Revisar SMTP).');
+            // ERROR (SMTP fallido, guardamos historial)
+            $model->insert([
+                'emisor_id'           => $emisor_id,
+                'grado_destinario_id' => $gradoDestinoId,
+                'fecha_envio'         => date('Y-m-d H:i:s'),
+                'asunto'              => $asunto,
+                'para'                => $paraFinal, // Usamos la variable corregida
+                'mensaje'             => $mensaje,
+                'adjunto'             => $rutaAdjunto,
+                'estado'              => 'error_envio',
+                'eliminado'           => 0
+            ]);
+            
+            return redirect()->to(base_url('correo?filtro=enviados'))->with('warning', 'Se guardó en historial, pero falló el envío real (Revisar SMTP).');
         }
-        
-        // --- FIN DE CÓDIGO DE DEPURACIÓN ---
     }
 }
