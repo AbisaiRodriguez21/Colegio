@@ -69,3 +69,9 @@ $routes->post('correo/enviar', 'Correo::enviar');    // Acción de enviar
 $routes->get('correo/ver/(:num)', 'Correo::ver/$1'); // Ver detalle de un correo
 $routes->get('correo/ajax_ver/(:num)', 'Correo::ajax_ver/$1'); // Ver detalle vía AJAX
 $routes->post('correo/acciones', 'Correo::acciones_masivas'); // Acciones masivas
+
+// Rutas para el Módulo de Boletas
+// (:num) le dice al sistema: "Aquí va a llegar un número (el ID del grado)"
+$routes->get('boleta/ver/(:num)', 'Boleta::ver/$1');
+$routes->get('boleta/calificar/(:num)', 'Boleta::calificar/$1');
+$routes->get('boleta/calificar_todo/(:num)', 'Boleta::calificar_todo/$1');
