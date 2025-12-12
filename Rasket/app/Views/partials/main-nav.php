@@ -1,6 +1,7 @@
 <?php
 // Usamos el modelo dedicado en lugar de consultas SQL crudas
 use App\Models\BoletaModel;
+
 $boletaModel = new BoletaModel();
 $grados_menu = $boletaModel->getGradosMenu();
 ?>
@@ -18,14 +19,14 @@ $grados_menu = $boletaModel->getGradosMenu();
         <ul class="navbar-nav" id="navbar-nav">
 
             <li class="menu-title">Menú</li>
-            
+
             <li class="nav-item">
                 <a class="nav-link" href="<?= base_url('dashboard') ?>">
                     <span class="nav-icon"><iconify-icon icon="solar:home-2-broken"></iconify-icon></span>
                     <span class="nav-text"> Dashboard </span>
                 </a>
             </li>
-            
+
             <li class="nav-item">
                 <a class="nav-link" href="<?= base_url('lista-profesores') ?>">
                     <span class="nav-icon"><iconify-icon icon="solar:users-group-rounded-broken"></iconify-icon></span>
@@ -57,7 +58,7 @@ $grados_menu = $boletaModel->getGradosMenu();
 
                 <div class="collapse" id="submenu-boleta">
                     <ul class="navbar-nav" style="padding-left: 20px;">
-                        
+
                         <li class="nav-item">
                             <a class="nav-link" href="#submenu-boleta-ver" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="submenu-boleta-ver">
                                 <span class="nav-text"> Ver Boleta/ Imprimir </span>
@@ -66,12 +67,12 @@ $grados_menu = $boletaModel->getGradosMenu();
                             <div class="collapse" id="submenu-boleta-ver">
                                 <ul class="navbar-nav" style="padding-left: 15px; border-left: 1px solid #eee;">
                                     <?php foreach($grados_menu as $grado): ?>
-                                        <li class="nav-item">
-                                            <a class="nav-link" href="<?= base_url('boleta/ver/' . $grado['id_grado']) ?>">
-                                                <span class="nav-text"><?= esc($grado['nombreGrado']) ?></span>
-                                            </a>
-                                        </li>
-                                    <?php endforeach; ?>
+    <li class="nav-item">
+        <a class="nav-link" href="<?= base_url('boleta/lista/' . $grado['id_grado']) ?>">
+            <span class="nav-text"><?= esc($grado['nombreGrado']) ?></span>
+        </a>
+    </li>
+<?php endforeach; ?>
                                 </ul>
                             </div>
                         </li>
@@ -83,7 +84,7 @@ $grados_menu = $boletaModel->getGradosMenu();
                             </a>
                             <div class="collapse" id="submenu-boleta-calificar">
                                 <ul class="navbar-nav" style="padding-left: 15px; border-left: 1px solid #eee;">
-                                    <?php foreach($grados_menu as $grado): ?>
+                                    <?php foreach ($grados_menu as $grado): ?>
                                         <li class="nav-item">
                                             <a class="nav-link" href="<?= base_url('boleta/calificar/' . $grado['id_grado']) ?>">
                                                 <span class="nav-text"><?= esc($grado['nombreGrado']) ?></span>
@@ -101,7 +102,7 @@ $grados_menu = $boletaModel->getGradosMenu();
                             </a>
                             <div class="collapse" id="submenu-boleta-todo">
                                 <ul class="navbar-nav" style="padding-left: 15px; border-left: 1px solid #eee;">
-                                    <?php foreach($grados_menu as $grado): ?>
+                                    <?php foreach ($grados_menu as $grado): ?>
                                         <li class="nav-item">
                                             <a class="nav-link" href="<?= base_url('boleta/calificar_todo/' . $grado['id_grado']) ?>">
                                                 <span class="nav-text"><?= esc($grado['nombreGrado']) ?></span>
@@ -123,7 +124,7 @@ $grados_menu = $boletaModel->getGradosMenu();
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="<?= base_url('correo') ?>"> 
+                <a class="nav-link" href="<?= base_url('correo') ?>">
                     <span class="nav-icon"><iconify-icon icon="solar:letter-broken"></iconify-icon></span>
                     <span class="nav-text"> Correos / Mensajes </span>
                 </a>

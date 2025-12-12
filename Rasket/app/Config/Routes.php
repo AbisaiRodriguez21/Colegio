@@ -71,7 +71,8 @@ $routes->get('correo/ajax_ver/(:num)', 'Correo::ajax_ver/$1'); // Ver detalle v�
 $routes->post('correo/acciones', 'Correo::acciones_masivas'); // Acciones masivas
 
 // Rutas para el Módulo de Boletas
-// (:num) le dice al sistema: "Aquí va a llegar un número (el ID del grado)"
-$routes->get('boleta/ver/(:num)', 'Boleta::ver/$1');
-$routes->get('boleta/calificar/(:num)', 'Boleta::calificar/$1');
-$routes->get('boleta/calificar_todo/(:num)', 'Boleta::calificar_todo/$1');
+// Ruta para la Lista de Alumnos por Grado
+$routes->get('boleta/lista/(:num)', 'Boleta::lista_alumnos/$1');
+
+// Ruta para ver la boleta individual
+$routes->get('boleta/ver/(:num)/(:num)', 'Boleta::ver/$1/$2'); // Ahora recibe grado y alumno
