@@ -4,7 +4,6 @@ use CodeIgniter\Model;
 
 class CalificacionesModel extends Model
 {
-    // Configuramos la tabla principal para usar las funciones nativas de CI4 (update, find, etc.)
     protected $table = 'calificacion';
     protected $primaryKey = 'Id_cal';
     protected $allowedFields = ['calificacion', 'faltas', 'bandera', 'fechaInsertar', 'comentarios'];
@@ -61,9 +60,7 @@ class CalificacionesModel extends Model
             $materiasMap[$m['id_materia']] = html_entity_decode($m['nombre_materia']);
         }
 
-        // C. Obtener Alumnos y sus Calificaciones (LA CONSULTA MONSTRUO 🦖)
-        // Traemos a todos los alumnos del grado y cruzamos con sus notas del mes activo
-        // C. Obtener Alumnos y sus Calificaciones
+        // C. Obtener Alumnos y sus Calificaciones 
         $id_ciclo = $activeConfig['id_ciclo'];
         $id_mes   = $activeConfig['id_mes'];
 
@@ -84,7 +81,7 @@ class CalificacionesModel extends Model
                 WHERE u.grado = ? 
                   AND u.activo = 1 
                   AND u.nivel = 7
-                  AND u.generacionactiva = 11  -- <--- ESTA ES LA LÍNEA QUE FALTABA
+                  AND u.generacionactiva = 11  
                 ORDER BY u.ap_Alumno, u.am_Alumno, u.Nombre";
 
         // Ejecutar consulta
@@ -92,7 +89,7 @@ class CalificacionesModel extends Model
         $resultados = $query->getResultArray();
 
         // D. Estructurar Datos para la Vista
-        // Convertimos la lista plana de SQL en un Array Indexado por Alumno
+        // lista plana de SQL en un Array Indexado por Alumno
         $sabana = [];
         foreach ($resultados as $row) {
             $id_al = $row['id_alumno'];
@@ -103,11 +100,11 @@ class CalificacionesModel extends Model
                     'id' => $id_al,
                     'matricula' => $row['matricula'],
                     'nombre' => strtoupper($row['nombre_completo']),
-                    'notas' => [] // Aquí guardaremos las materias
+                    'notas' => [] // Aquí se guardan las materias
                 ];
             }
 
-            // Si el alumno tiene calificación registrada (gracias al LEFT JOIN), la guardamos
+            // Si el alumno tiene calificación registrada la guardamos
             if ($row['Id_cal']) {
                 $sabana[$id_al]['notas'][$row['id_materia']] = [
                     'id_cal'       => $row['Id_cal'],       // ID clave para editar
@@ -128,16 +125,12 @@ class CalificacionesModel extends Model
     }
 
     // =========================================================================
-    // 3. ACTUALIZAR UNA CELDA (EDICIÓN EN CALIENTE)
+    // 3. ACTUALIZAR UNA CELDA
     // =========================================================================
-    public function updateCalificacion($id_cal, $tipo, $valor, $nivel_usuario)
+    public function updateCalificacion($id_cal, $tipo, $valor, $id_usuario)
     {
-        // Calculamos la "Bandera" de seguridad basada en el nivel de usuario
-        // 9=Profesor, 2=Director, 1=Admin
-        $bandera = 0;
-        if ($nivel_usuario == 9) $bandera = 1;
-        elseif ($nivel_usuario == 2) $bandera = 2;
-        elseif ($nivel_usuario == 1) $bandera = 100;
+        // CAMBIO: La bandera ahora es directamente el ID del usuario que edita.
+        $bandera = $id_usuario;
 
         $data = [];
         
@@ -146,18 +139,19 @@ class CalificacionesModel extends Model
             $data = [
                 'calificacion'  => $valor,
                 'fechaInsertar' => date('Y-m-d H:i:s'),
-                'bandera'       => $bandera
+                'bandera'       => $bandera // Guardamos el ID del usuario
             ];
         } 
         // Caso 2: Editar Faltas
         elseif ($tipo === 'absence') {
             $data = [
                 'faltas' => $valor
-                // Nota: Las faltas usualmente no cambian la bandera ni fecha, pero se puede agregar si quieres
+                // Opcional: Si también quieres registrar quién editó la falta, descomenta esto:
+                // 'bandera' => $bandera,
+                // 'fechaInsertar' => date('Y-m-d H:i:s')
             ];
         }
 
-        // Ejecutamos la actualización segura usando el ID de la calificación
         return $this->update($id_cal, $data);
     }
 }

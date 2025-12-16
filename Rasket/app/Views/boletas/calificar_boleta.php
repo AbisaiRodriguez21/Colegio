@@ -40,7 +40,7 @@
     /* --- CABECERA AUTOMÁTICA --- */
     
     .tabla-sabana thead tr {
-        /* Esto es vital: permite que la fila crezca según el contenido */
+        /* permite que la fila crezca según el contenido */
         height: auto;
     }
 
@@ -48,24 +48,24 @@
         position: sticky;
         top: 0;
         z-index: 10;
-        height: auto; /* IMPORTANTE: Ya no usamos pixeles fijos */
+        height: auto; 
         border-bottom: 2px solid #000;
-        vertical-align: bottom; /* Todo el texto pegado al fondo */
+        vertical-align: bottom; 
         padding: 5px 0;
     }
 
-    /* EL CONTENEDOR MÁGICO */
+    /* EL CONTENEDOR */
     .vertical-wrapper {
         /* Esta propiedad hace que el texto ocupe altura real */
         writing-mode: vertical-rl; 
         
-        /* Rotamos 180 grados para que se lea de abajo hacia arriba */
+        /* Rotamos 180 grados*/
         transform: rotate(180deg);
         
         /* Ajustes de alineación */
-        text-align: left; /* Al rotar, left es 'abajo' */
-        margin: 0 auto;   /* Centrado horizontal */
-        padding: 10px 4px; /* Aire para que no se pegue a los bordes */
+        text-align: left;
+        margin: 0 auto;   
+        padding: 10px 4px; 
         width: 100%;
         display: block;
         box-sizing: border-box;

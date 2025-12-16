@@ -11,7 +11,7 @@ class Calificaciones extends BaseController
     {
         $session = session();
 
-        // 1. CORRECCIÓN: Usamos 'id' que es como lo guarda tu Auth.php
+        // 1. Se verifica que el usuario correcto esté logueado 
         if (!$session->has('id')) {
             return redirect()->to('/login'); 
         }
@@ -26,7 +26,7 @@ class Calificaciones extends BaseController
             return "Error: Grado no encontrado o sin configuración.";
         }
 
-        // 4. Pasar el nivel real a la vista (Tu Auth.php guarda 'nivel')
+        // 4. Pasar el nivel real a la vista (para permisos)
         $data['user_level'] = $session->get('nivel');
 
         return view('boletas/calificar_boleta', $data);
@@ -37,7 +37,7 @@ class Calificaciones extends BaseController
     // =========================================================================
     public function actualizar()
     {
-        // Solo permitimos peticiones AJAX para no exponer la URL
+        // Solo permitimos peticiones AJAX
         if (!$this->request->isAJAX()) {
             return $this->response->setStatusCode(403)->setBody("Prohibido");
         }
@@ -45,24 +45,22 @@ class Calificaciones extends BaseController
         $request = $this->request;
         $session = session();
 
-        // 1. Recibir datos del formulario JS
+        // 1. Recibir datos del formulario
         $id_cal = $request->getPost('scoreId');
         $valor  = $request->getPost('value');
-        $tipo   = $request->getPost('type'); // 'score' o 'absence'
+        $tipo   = $request->getPost('type'); 
 
-        // 2. SEGURIDAD: Obtener el nivel real desde la SESIÓN (No desde el POST)
-        // Esto evita que un alumno hackee el sistema enviando "nivel=1"
-        $nivel_usuario = $session->get('nivel'); 
+        // 2. Obtenemos el ID del usuario logueado (quién hace el cambio)
+        $id_usuario = $session->get('id'); 
 
-        // Validar que tengamos datos mínimos
-        if (!$id_cal || !isset($valor) || !$nivel_usuario) {
-            return $this->response->setJSON(['status' => 'error', 'msg' => 'Datos incompletos']);
+        if (!$id_cal || !isset($valor) || !$id_usuario) {
+            return $this->response->setJSON(['status' => 'error', 'msg' => 'Datos incompletos o sesión expirada']);
         }
 
         $model = new CalificacionesModel();
 
-        // 3. Ejecutar actualización
-        $resultado = $model->updateCalificacion($id_cal, $tipo, $valor, $nivel_usuario);
+        // 3. Ejecutar actualización pasando el ID de usuario
+        $resultado = $model->updateCalificacion($id_cal, $tipo, $valor, $id_usuario);
 
         if ($resultado) {
             return $this->response->setJSON(['status' => 'success', 'msg' => 'Guardado']);
