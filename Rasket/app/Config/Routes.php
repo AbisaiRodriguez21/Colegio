@@ -71,8 +71,21 @@ $routes->get('correo/ajax_ver/(:num)', 'Correo::ajax_ver/$1'); // Ver detalle v�
 $routes->post('correo/acciones', 'Correo::acciones_masivas'); // Acciones masivas
 
 // Rutas para el Módulo de Boletas
-// Ruta para la Lista de Alumnos por Grado
-$routes->get('boleta/lista/(:num)', 'Boleta::lista_alumnos/$1');
 
-// Ruta para ver la boleta individual
-$routes->get('boleta/ver/(:num)/(:num)', 'Boleta::ver/$1/$2'); // Ahora recibe grado y alumno
+$routes->get('boleta/lista/(:num)', 'Boleta::lista_alumnos/$1'); // Ruta para la Lista de Alumnos por Grado
+
+$routes->get('boleta/ver/(:num)/(:num)', 'Boleta::ver/$1/$2'); // Ruta para ver la boleta individual. recibe grado y alumno
+
+// =============================================================================
+// RUTAS PARA CALIFICAR BOLETA (PROFESORES)
+// =============================================================================
+
+// 1. La pantalla de la sábana (GET)
+// Esta es la ruta estándar
+$routes->get('calificaciones/editar/(:num)', 'Calificaciones::editar/$1');
+
+// 2. Ruta Alias (Para que funcione el link que intentaste abrir 'boleta/calificar/22')
+$routes->get('boleta/calificar/(:num)', 'Calificaciones::editar/$1');
+
+// 3. La ruta oculta para guardar los datos por AJAX (POST)
+$routes->post('calificaciones/actualizar', 'Calificaciones::actualizar');

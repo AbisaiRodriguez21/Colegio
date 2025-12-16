@@ -91,10 +91,13 @@ class BoletaModel extends Model
     }
 
     /**
-     * Obtiene la información de un grado específico
+     * Obtiene la información de un grado específico (incluyendo JSONs)
      */
     public function getInfoGrado($id_grado) {
-        return $this->db->table('grados')->where('id_grado', $id_grado)->get()->getRowArray();
+        return $this->db->table('grados')
+            ->select('id_grado, nombreGrado, nivel_grado, boleta_config, boleta_ing_config') // Agregamos los campos JSON
+            ->where('id_grado', $id_grado)
+            ->get()->getRowArray();
     }
 
     // =========================================================================

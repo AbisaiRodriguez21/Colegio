@@ -62,7 +62,7 @@
         /* Navegación central */
         .nav-center-group { display: flex; align-items: center; justify-content: center; gap: 10px; }
         
-        /* --- RESPONSIVIDAD (SOLUCIÓN MÓVIL) --- */
+        /* --- RESPONSIVIDAD --- */
         
         /* Contenedor para hacer scroll horizontal en tablas */
         .table-responsive {
@@ -75,8 +75,8 @@
         @media screen and (max-width: 768px) {
             .boleta-paper {
                 margin: 10px auto;
-                padding: 15px; /* Menos padding */
-                width: 95%; /* Ocupar casi todo el ancho */
+                padding: 15px; 
+                width: 95%; 
                 min-height: auto;
             }
             
@@ -199,15 +199,29 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <?php if(!empty($boleta)): ?>
-                        <?php foreach($boleta as $m): ?>
-                            <tr class="<?= ($m['es_taller'] ?? false) ? 'taller-row' : '' ?>">
-                                <td class="materia-col"><?= $m['nombre'] ?></td>
-                                <?php foreach($m['notas'] as $nota): ?>
-                                    <td><?= pNota($nota) ?></td>
-                                <?php endforeach; ?>
-                                <td><?= pNota($m['promedio']) ?></td>
-                            </tr>
+                    <?php if(!empty($secciones)): ?>
+                        <?php foreach($secciones as $seccion): ?>
+                            
+                            <?php if(!empty($seccion['titulo'])): ?>
+                                <tr>
+                                    <td colspan="<?= count($headers) + 2 ?>" style="background:#e0e0e0; font-weight:bold; text-align:left; padding-left:10px;">
+                                        <?= strtoupper($seccion['titulo']) ?>
+                                    </td>
+                                </tr>
+                            <?php endif; ?>
+
+                            <?php foreach($seccion['materias'] as $m): ?>
+                                <tr class="<?= ($m['es_taller'] ?? false) ? 'taller-row' : '' ?>">
+                                    <td class="materia-col"><?= $m['nombre'] ?></td>
+                                    
+                                    <?php foreach($m['notas'] as $nota): ?>
+                                        <td><?= pNota($nota) ?></td>
+                                    <?php endforeach; ?>
+                                    
+                                    <td><?= pNota($m['promedio']) ?></td>
+                                </tr>
+                            <?php endforeach; ?>
+
                         <?php endforeach; ?>
                         
                         <tr>
@@ -218,7 +232,7 @@
                             <td class="gray-bg" style="font-weight: bold;"><?= pNota($prom_gral) ?></td>
                         </tr>
                     <?php else: ?>
-                        <tr><td colspan="<?= count($headers) + 2 ?>">No hay materias registradas.</td></tr>
+                        <tr><td colspan="<?= count($headers) + 2 ?>">No hay materias configuradas.</td></tr>
                     <?php endif; ?>
                 </tbody>
             </table>

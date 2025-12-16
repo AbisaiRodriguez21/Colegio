@@ -84,6 +84,7 @@
         <table style="width: 100%; border: none; margin-bottom: 20px;">
             <tr>
                 <td style="width: 20%; border: none;"><img src="<?= base_url('images/LogoST.png') ?>" style="height: 60px;"></td>
+                
                 <td style="width: 80%; border: none; text-align: right;">
                     <h4 style="margin:0;">CALIFICACIONES</h4>
                     <small>Fecha: <?= date('d/m/Y') ?></small>

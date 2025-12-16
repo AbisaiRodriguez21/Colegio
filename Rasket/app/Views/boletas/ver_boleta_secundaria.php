@@ -157,106 +157,73 @@
                 <thead>
                     <tr class="bg-header-pink">
                         <td rowspan="2" class="header-cell" style="background:white; border:none; border-right:1px solid #999;">&nbsp;</td> 
-                        
                         <td style="width:30px;"><div class="vertical-text">SEP</div></td>
                         <td style="width:30px;"><div class="vertical-text">OCT</div></td>
                         <td style="width:30px;"><div class="vertical-text">NOV</div></td>
                         <td class="bg-prom-periodo" rowspan="2" style="width:35px;"><div class="vertical-text">PROM<br>1er</div></td>
-                        
                         <td style="width:30px;"><div class="vertical-text">DIC</div></td>
                         <td style="width:30px;"><div class="vertical-text">ENE</div></td>
                         <td style="width:30px;"><div class="vertical-text">FEB</div></td>
                         <td style="width:30px;"><div class="vertical-text">MAR</div></td>
                         <td class="bg-prom-periodo" rowspan="2" style="width:35px;"><div class="vertical-text">PROM<br>2do</div></td>
-                        
                         <td style="width:30px;"><div class="vertical-text">ABR</div></td>
                         <td style="width:30px;"><div class="vertical-text">MAY</div></td>
                         <td style="width:30px;"><div class="vertical-text">JUN</div></td>
                         <td class="bg-prom-periodo" rowspan="2" style="width:35px;"><div class="vertical-text">PROM<br>3er</div></td>
-                        
                         <td rowspan="2" style="width:35px;"><div class="vertical-text">Total<br>faltas</div></td>
                         <td class="bg-prom-final" rowspan="2" style="width:40px;"><div class="vertical-text">PROM<br>FINAL</div></td>
                     </tr>
-                    
                     
                 </thead>
                 <tbody>
                     
                     <?php 
-                    // =================================================================
-                    // FUNCIÓN DE RENDERIZADO
-                    // =================================================================
-                    function renderBloque($materias, $datos_promedios = null) {
-                        if(empty($materias)) return;
+                    // Función de renderizado interna 
+                    function renderSeccionDinamica($seccion) {
+                        $materias = $seccion['materias'];
+                        $proms = $seccion['promedios'];
+                        
+                        
 
-                        foreach($materias as $m): 
-                        ?>
+                        foreach($materias as $m): ?>
                         <tr>
-                            <td class="materia-col">
-                                <?= html_entity_decode($m['nombre'] ?? $m['nombre_materia']) ?>
-                            </td>
-                            
-                            <td><?= pNota($m['notas'][1]??'') ?></td>
-                            <td><?= pNota($m['notas'][2]??'') ?></td>
-                            <td><?= pNota($m['notas'][3]??'') ?></td>
-                            <td class="bg-prom-periodo"><?= pNota($m['p_t1']??'') ?></td>
-                            
-                            <td><?= pNota($m['notas'][4]??'') ?></td>
-                            <td><?= pNota($m['notas'][5]??'') ?></td>
-                            <td><?= pNota($m['notas'][6]??'') ?></td>
-                            <td><?= pNota($m['notas'][7]??'') ?></td>
-                            <td class="bg-prom-periodo"><?= pNota($m['p_t2']??'') ?></td>
-
-                            <td><?= pNota($m['notas'][8]??'') ?></td>
-                            <td><?= pNota($m['notas'][9]??'') ?></td>
-                            <td><?= pNota($m['notas'][10]??'') ?></td>
-                            <td class="bg-prom-periodo"><?= pNota($m['p_t3']??'') ?></td>
-                            
-                            <td></td> <td class="bg-prom-final"><?= pNota($m['final']??'') ?></td>
+                            <td class="materia-col"><?= esc($m['nombre']) ?></td>
+                            <td><?= pNota($m['notas'][1]??'') ?></td> <td><?= pNota($m['notas'][2]??'') ?></td> <td><?= pNota($m['notas'][3]??'') ?></td>
+                            <td class="bg-prom-periodo"><?= pNota($m['p_t1']) ?></td>
+                            <td><?= pNota($m['notas'][4]??'') ?></td> <td><?= pNota($m['notas'][5]??'') ?></td> <td><?= pNota($m['notas'][6]??'') ?></td> <td><?= pNota($m['notas'][7]??'') ?></td>
+                            <td class="bg-prom-periodo"><?= pNota($m['p_t2']) ?></td>
+                            <td><?= pNota($m['notas'][8]??'') ?></td> <td><?= pNota($m['notas'][9]??'') ?></td> <td><?= pNota($m['notas'][10]??'') ?></td>
+                            <td class="bg-prom-periodo"><?= pNota($m['p_t3']) ?></td>
+                            <td></td> <td class="bg-prom-final"><?= pNota($m['final']) ?></td>
                         </tr>
                         <?php endforeach; 
 
-                        // =========================================================
-                        // FILA AZUL DE PROMEDIOS DEL BLOQUE
-                        // =========================================================
+                        // FILA PROMEDIOS DE LA SECCIÓN
                         ?>
                         <tr class="bg-prom-periodo">
                             <td style="text-align:left; padding-left:5px;">PROMEDIO</td>
-                            
-                            <td><?= isset($datos_promedios[1]) ? pNota($datos_promedios[1]) : '' ?></td>
-                            <td><?= isset($datos_promedios[2]) ? pNota($datos_promedios[2]) : '' ?></td>
-                            <td><?= isset($datos_promedios[3]) ? pNota($datos_promedios[3]) : '' ?></td>
-                            
-                            <td><?= isset($datos_promedios['p_t1']) ? pNota($datos_promedios['p_t1']) : '' ?></td>
-                            
-                            <td><?= isset($datos_promedios[4]) ? pNota($datos_promedios[4]) : '' ?></td>
-                            <td><?= isset($datos_promedios[5]) ? pNota($datos_promedios[5]) : '' ?></td>
-                            <td><?= isset($datos_promedios[6]) ? pNota($datos_promedios[6]) : '' ?></td>
-                            <td><?= isset($datos_promedios[7]) ? pNota($datos_promedios[7]) : '' ?></td>
-                            
-                            <td><?= isset($datos_promedios['p_t2']) ? pNota($datos_promedios['p_t2']) : '' ?></td>
-                            
-                            <td><?= isset($datos_promedios[8]) ? pNota($datos_promedios[8]) : '' ?></td>
-                            <td><?= isset($datos_promedios[9]) ? pNota($datos_promedios[9]) : '' ?></td>
-                            <td><?= isset($datos_promedios[10]) ? pNota($datos_promedios[10]) : '' ?></td>
-                            
-                            <td><?= isset($datos_promedios['p_t3']) ? pNota($datos_promedios['p_t3']) : '' ?></td>
-                            
-                            <td></td>
-                            <td class="bg-prom-final"><?= isset($datos_promedios['final']) ? pNota($datos_promedios['final']) : '' ?></td>
+                            <td><?= pNota($proms[1]) ?></td> <td><?= pNota($proms[2]) ?></td> <td><?= pNota($proms[3]) ?></td>
+                            <td><?= pNota($proms['p_t1']) ?></td>
+                            <td><?= pNota($proms[4]) ?></td> <td><?= pNota($proms[5]) ?></td> <td><?= pNota($proms[6]) ?></td> <td><?= pNota($proms[7]) ?></td>
+                            <td><?= pNota($proms['p_t2']) ?></td>
+                            <td><?= pNota($proms[8]) ?></td> <td><?= pNota($proms[9]) ?></td> <td><?= pNota($proms[10]) ?></td>
+                            <td><?= pNota($proms['p_t3']) ?></td>
+                            <td></td> <td class="bg-prom-final"><?= pNota($proms['final']) ?></td>
                         </tr>
                     <?php } ?>
-                    
+
                     <?php 
-                        // 1. LLAMADA BLOQUE ACADÉMICO
-                        // Usamos los promedios específicos de académicas
-                        renderBloque($bloque_academico, $promedios_academico ?? null); 
-                    ?>
-                    
-                    <?php 
-                        // 2. LLAMADA BLOQUE TALLERES
-                        // Usamos los promedios específicos de talleres
-                        renderBloque($bloque_talleres, $promedios_talleres ?? null); 
+                    // ITERAR TODAS LAS SECCIONES DINÁMICAMENTE
+                    if(!empty($secciones_espanol)) {
+                        foreach($secciones_espanol as $seccion) {
+                            renderSeccionDinamica($seccion);
+                        }
+                    }
+                    if(!empty($secciones_ingles)) {
+                        foreach($secciones_ingles as $seccion) {
+                            renderSeccionDinamica($seccion);
+                        }
+                    }
                     ?>
 
                 </tbody>
