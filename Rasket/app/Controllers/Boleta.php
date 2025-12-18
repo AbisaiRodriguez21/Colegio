@@ -38,12 +38,12 @@ class Boleta extends BaseController
             return $this->_procesarSecundaria($model, $id_grado, $id_alumno, $alumno, $cicloInfo);
         }
         // B) Bachillerato
-        elseif (strpos($nombreGrado, 'bachiller') !== false || strpos($nombreGrado, 'prepa') !== false) {
+        elseif (strpos($nombreGrado, 'bachillerato') !== false || strpos($nombreGrado, 'prepa') !== false) {
             return $this->_procesarBachiller($model, $id_grado, $id_alumno, $alumno, $cicloInfo);
         }
         // C) Kinder (Pendiente)
         elseif (strpos($nombreGrado, 'kinder') !== false || strpos($nombreGrado, 'maternal') !== false) {
-            die("Módulo de Kinder en construcción");
+            return $this->_procesarKinder($model, $id_grado, $id_alumno, $alumno, $cicloInfo);
         }
         // D) Primaria (Default)
         else {
@@ -485,5 +485,53 @@ class Boleta extends BaseController
         ];
 
         return view('boletas/ver_boleta_bachillerato', $data);
+    }
+
+    // =========================================================================
+    // 5. MÓDULO KINDER 
+    // =========================================================================
+    private function _procesarKinder($model, $id_grado, $id_alumno, $alumno, $cicloInfo)
+    {
+        $id_ciclo = $cicloInfo['id_ciclo'];
+
+        // 1. Obtener Configuración JSON
+        $gradoInfo = $model->getInfoGrado($id_grado);
+        $config_json = json_decode($gradoInfo['boleta_config'] ?? '{}', true);
+
+        // 2. Obtener Datos
+        $materias_db = $model->getMaterias($id_grado);
+        $calificaciones = $model->getCalificaciones($id_alumno, $id_grado, $id_ciclo);
+
+        // 3. Mapear materias
+        $materias_map = [];
+        foreach ($materias_db as $m) {
+            $m['nombre'] = html_entity_decode($m['nombre_materia']);
+            $materias_map[$m['id_materia']] = $m;
+        }
+
+        // 4. Procesar Estructura Kinder (Left/Right) usando el Modelo
+        $estructura = $model->procesarKinder($config_json, $materias_map, $calificaciones);
+
+        // Navegación
+        $listaAlumnos = $model->getAlumnosPorGrado($id_grado);
+        $ids = array_column($listaAlumnos, 'id'); 
+        $pos = array_search($id_alumno, $ids);
+        $id_ant = ($pos > 0) ? $ids[$pos - 1] : null;
+        $id_sig = ($pos < count($ids) - 1) ? $ids[$pos + 1] : null;
+
+        
+        $momentos = [1, 2, 3]; 
+
+        $data = [
+            'alumno' => $alumno, 'ciclo' => $cicloInfo, 'id_grado' => $id_grado,
+            'id_anterior' => $id_ant, 'id_siguiente' => $id_sig,
+            
+            'left_groups'  => $estructura['left'],
+            'right_groups' => $estructura['right'],
+            'translateType'=> $estructura['translateType'],
+            'momentos'     => $momentos
+        ];
+
+        return view('boletas/ver_boleta_kinder', $data);
     }
 }

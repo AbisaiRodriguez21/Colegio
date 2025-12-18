@@ -37,7 +37,7 @@ class Calificaciones extends BaseController
     // =========================================================================
     public function actualizar()
     {
-        // Solo permitimos peticiones AJAX
+        // 1. Verificación de seguridad básica: Solo aceptamos peticiones AJAX
         if (!$this->request->isAJAX()) {
             return $this->response->setStatusCode(403)->setBody("Prohibido");
         }
@@ -45,12 +45,20 @@ class Calificaciones extends BaseController
         $request = $this->request;
         $session = session();
 
-        // 1. Recibir datos del formulario
+        // --- CANDADO DE SEGURIDAD (NUEVO) ---
+        // Si el usuario es Alumno (Nivel 7), rechazamos la petición inmediatamente.
+        // Esto protege el sistema incluso si intentan hackear la vista.
+        if ($session->get('nivel') == 7) {
+            return $this->response->setJSON(['status' => 'error', 'msg' => 'No tienes permisos para editar.']);
+        }
+        // ------------------------------------
+
+        // 2. Recibir datos del formulario
         $id_cal = $request->getPost('scoreId');
         $valor  = $request->getPost('value');
         $tipo   = $request->getPost('type'); 
 
-        // 2. Obtenemos el ID del usuario logueado (quién hace el cambio)
+        // 3. Obtenemos el ID del usuario logueado (quién hace el cambio)
         $id_usuario = $session->get('id'); 
 
         if (!$id_cal || !isset($valor) || !$id_usuario) {
@@ -59,7 +67,7 @@ class Calificaciones extends BaseController
 
         $model = new CalificacionesModel();
 
-        // 3. Ejecutar actualización pasando el ID de usuario
+        // 4. Ejecutar actualización pasando el ID de usuario
         $resultado = $model->updateCalificacion($id_cal, $tipo, $valor, $id_usuario);
 
         if ($resultado) {

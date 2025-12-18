@@ -70,10 +70,11 @@ $routes->get('correo/ver/(:num)', 'Correo::ver/$1'); // Ver detalle de un correo
 $routes->get('correo/ajax_ver/(:num)', 'Correo::ajax_ver/$1'); // Ver detalle vía AJAX
 $routes->post('correo/acciones', 'Correo::acciones_masivas'); // Acciones masivas
 
-// Rutas para el Módulo de Boletas
+// =============================================================================
+// Rutas para el Módulo de Boletas (VER E IMPRIMIR)
+// =============================================================================
 
 $routes->get('boleta/lista/(:num)', 'Boleta::lista_alumnos/$1'); // Ruta para la Lista de Alumnos por Grado
-
 $routes->get('boleta/ver/(:num)/(:num)', 'Boleta::ver/$1/$2'); // Ruta para ver la boleta individual. recibe grado y alumno
 
 // =============================================================================
@@ -81,11 +82,33 @@ $routes->get('boleta/ver/(:num)/(:num)', 'Boleta::ver/$1/$2'); // Ruta para ver 
 // =============================================================================
 
 // 1. La pantalla de la sábana (GET)
-// Esta es la ruta estándar
 $routes->get('calificaciones/editar/(:num)', 'Calificaciones::editar/$1');
 
-// 2. Ruta Alias (Para que funcione el link que intentaste abrir 'boleta/calificar/22')
+// 2. Ruta Alias 
 $routes->get('boleta/calificar/(:num)', 'Calificaciones::editar/$1');
 
 // 3. La ruta oculta para guardar los datos por AJAX (POST)
 $routes->post('calificaciones/actualizar', 'Calificaciones::actualizar');
+
+// =============================================================================
+// RUTAS PARA CALIFICAR BOLETA BIMESTRE (TERCER MODULO/APARTADO)
+// =============================================================================
+
+// 1. URL para ver la lista
+$routes->get('calificaciones_bimestre/lista/(:num)', 'CalificacionesBimestre::lista/$1');
+
+// 2. URL para ver la boleta completa
+$routes->get('calificaciones_bimestre/alumno/(:num)/(:num)', 'CalificacionesBimestre::alumno_completo/$1/$2');
+
+// 3. URL interna para guardar (AJAX)
+$routes->post('calificaciones_bimestre/actualizar', 'CalificacionesBimestre::actualizar');
+
+// =============================================================================
+// --- Rutas para el Módulo de Calificaciones Bimestrales ---
+// =============================================================================
+
+// 1. Ruta para ver/editar la boleta completa (Esto arregla el error 404 al navegar)
+$routes->get('calificaciones_bimestre/alumno_completo/(:num)/(:num)', 'CalificacionesBimestre::alumno_completo/$1/$2');
+
+// 2. Ruta para el guardado AJAX (Para que guarde los cambios)
+$routes->post('calificaciones_bimestre/actualizar', 'CalificacionesBimestre::actualizar');

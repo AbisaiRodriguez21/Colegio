@@ -47,7 +47,6 @@ class CalificacionesModel extends Model
         $activeConfig = $this->getConfiguracionActiva($grado['nivel_grado']);
 
         // B. Obtener Catálogo de Materias (ID => Nombre)
-        // Esto sirve para pintar los encabezados de las columnas
         $materiasRaw = $this->db->table('materia')
             ->select('id_materia, nombre_materia')
             ->where('id_grados', $id_grado)
@@ -129,7 +128,7 @@ class CalificacionesModel extends Model
     // =========================================================================
     public function updateCalificacion($id_cal, $tipo, $valor, $id_usuario)
     {
-        // CAMBIO: La bandera ahora es directamente el ID del usuario que edita.
+        // ID del usuario que edita.
         $bandera = $id_usuario;
 
         $data = [];
@@ -139,16 +138,15 @@ class CalificacionesModel extends Model
             $data = [
                 'calificacion'  => $valor,
                 'fechaInsertar' => date('Y-m-d H:i:s'),
-                'bandera'       => $bandera // Guardamos el ID del usuario
+                'bandera'       => $bandera 
             ];
         } 
         // Caso 2: Editar Faltas
         elseif ($tipo === 'absence') {
             $data = [
-                'faltas' => $valor
-                // Opcional: Si también quieres registrar quién editó la falta, descomenta esto:
-                // 'bandera' => $bandera,
-                // 'fechaInsertar' => date('Y-m-d H:i:s')
+                'faltas' => $valor,
+                'bandera' => $bandera,
+                'fechaInsertar' => date('Y-m-d H:i:s')
             ];
         }
 

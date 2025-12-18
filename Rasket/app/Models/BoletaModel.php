@@ -78,7 +78,7 @@ class BoletaModel extends Model
 
     /**
      * Obtiene la configuración activa (Ciclo y Mes)
-     * Se conecta a 'mesycicloactivo' (id=1 es Primaria, pero se usa general)
+     * Se conecta a 'mesycicloactivo' 
      */
     public function getCicloActivo()
     {
@@ -91,7 +91,7 @@ class BoletaModel extends Model
     }
 
     /**
-     * Obtiene la información de un grado específico (incluyendo JSONs)
+     * Obtiene la información de un grado específico (incluyendo JSONs) - PRIMARIA
      */
     public function getInfoGrado($id_grado) {
         return $this->db->table('grados')
@@ -166,54 +166,56 @@ class BoletaModel extends Model
     // 3. LÓGICA DE SECUNDARIA
     // =========================================================================
 
-    /**
-     * CLASIFICADOR EXCLUSIVO PARA SECUNDARIA
-     * Usa Listas Blancas (Whitelists) para separar Académicas de Talleres.
-     */
-    public function clasificarSecundaria($materias_procesadas)
+    public function clasificarSecundaria($materias_procesadas, $id_grado)
     {
         $bloque_academico = [];
         $bloque_talleres = [];
 
-        // 1. LISTA BLANCA ACADÉMICA (M2 que suben)
-        $whitelist_academica = ['TECNOLOGÍA', 'EDUCACIÓN FÍSICA', 'ARTES', 'INFORMATICA'];
+        // 1. OBTENER EL JSON DE CONFIGURACIÓN DE LA BASE DE DATOS
+        $gradoInfo = $this->db->table('grados')
+                              ->select('boleta_config')
+                              ->where('id_grado', $id_grado)
+                              ->get()
+                              ->getRowArray();
+        
+        $config = json_decode($gradoInfo['boleta_config'] ?? '{}', true);
 
-        // 2. LISTA BLANCA TALLERES (M2/AR que se quedan abajo)
-        $whitelist_talleres = ['NATACIÓN', 'TKD', 'DANZA', 'BILINGUAL', 'TUTORIA', 'TUTORÍA', 'COMPUTACIÓN'];
+        // 2. EXTRAER LOS IDs DE LOS GRUPOS DEL JSON
+        $ids_academicas = $config['subject_groups'][0]['subjects'] ?? [];
+        $ids_talleres   = $config['subject_groups'][1]['subjects'] ?? [];
 
+        // 3. MAPEAR MATERIAS POR ID PARA ACCESO RÁPIDO
+        $mapa_materias = [];
         foreach ($materias_procesadas as $mat) {
-            
-            $grupo  = strtoupper(trim($mat['GrupoMat'] ?? 'OTRO'));
-            
-            $nombreRaw = $mat['nombre_materia'] ?? $mat['nombre'] ?? '';
-            $nombre = strtoupper(trim(html_entity_decode($nombreRaw))); 
-
-            // --- FILTRO A: BLOQUE ACADÉMICO ---
-            
-            // Regla 1: Todo M1 entra directo
-            if ($grupo === 'M1') {
-                $bloque_academico[] = $mat;
-                continue; 
+            $id = $mat['id_materia'] ?? $mat['id'] ?? 0;
+            if ($id > 0) {
+                $mapa_materias[$id] = $mat;
             }
+        }
 
-            // Regla 2: M2 solo si está en la lista blanca académica
-            if ($grupo === 'M2') {
-                foreach ($whitelist_academica as $key) {
-                    if (strpos($nombre, $key) !== false) {
-                        $bloque_academico[] = $mat;
-                        continue 2; 
-                    }
-                }
-            }
+        // 4. LLENAR EL BLOQUE ACADÉMICO 
+        foreach ($ids_academicas as $id_target) {
+            $id = is_array($id_target) ? ($id_target['id'] ?? 0) : $id_target;
 
-            // --- FILTRO B: BLOQUE TALLERES ---
-            
-            foreach ($whitelist_talleres as $key) {
-                if (strpos($nombre, $key) !== false) {
-                    $bloque_talleres[] = $mat;
-                    break; 
-                }
+            if (isset($mapa_materias[$id])) {
+                $bloque_academico[] = $mapa_materias[$id];
             }
+        }
+
+        // 5. LLENAR EL BLOQUE TALLERES 
+        foreach ($ids_talleres as $id_target) {
+            $id = is_array($id_target) ? ($id_target['id'] ?? 0) : $id_target;
+
+            if (isset($mapa_materias[$id])) {
+                $bloque_talleres[] = $mapa_materias[$id];
+            }
+        }
+
+        // FALLBACK DE SEGURIDAD:
+        // Si por alguna razón el JSON está vacío o no coincidió nada (ej. error de config),
+        // devolvemos todo en "academico" para que la boleta no salga en blanco.
+        if (empty($bloque_academico) && empty($bloque_talleres)) {
+            $bloque_academico = $materias_procesadas;
         }
 
         return [
@@ -284,6 +286,82 @@ class BoletaModel extends Model
         return [
             'materias' => $boleta,
             'promedio_general' => $promedio_general
+        ];
+    }
+
+    // =========================================================================
+    // 5. LÓGICA DE KINDER 
+    // =========================================================================
+    public function procesarKinder($config_json, $materias_map, $calificaciones)
+    {
+        // Función anónima auxiliar para procesar una columna (Left o Right)
+        $procesarLado = function($ladoData) use ($materias_map, $calificaciones) {
+            $grupos_out = [];
+            
+            if (!isset($ladoData['groups']) || !is_array($ladoData['groups'])) return [];
+
+            foreach ($ladoData['groups'] as $grupo) {
+                // Si no tiene materias ni título, saltar
+                if (empty($grupo['subjects']) && empty($grupo['title'])) continue;
+
+                $grupo_procesado = [
+                    'titulo' => $grupo['title'] ?? '',
+                    'materias' => []
+                ];
+
+                if (!empty($grupo['subjects'])) {
+                    foreach ($grupo['subjects'] as $item) {
+                        // El item puede ser un ID (int) o un Objeto con configuración (array)
+                        $id_materia = is_array($item) ? ($item['id'] ?? 0) : $item;
+                        
+                        // Verificar si es un campo calculado (Ej: Inasistencias con fórmula)
+                        $is_calculated = is_array($item) && isset($item['calculated']) && $item['calculated'] === true;
+
+                        if (isset($materias_map[$id_materia])) {
+                            $mat = $materias_map[$id_materia];
+                            $notas = $calificaciones[$id_materia] ?? [];
+                            
+                            // Si es calculado (Inasistencias), aplicamos la fórmula del JSON
+                            if ($is_calculated && isset($item['calculateExpressionsByMonth'])) {
+                                foreach ($item['calculateExpressionsByMonth'] as $mes => $formula) {
+                                    $valor_capturado = $notas[$mes] ?? 0;
+                                    
+                                    // Reemplazamos %value% por el valor real
+                                    // Ej: "100 - (5 * 100 / 74)"
+                                    $math_str = str_replace('%value%', $valor_capturado, $formula);
+                                    
+                                    // Evaluamos la operación matemática de forma segura
+                                    try {
+                                        
+                                        $resultado = 0;
+                                        // Solo permitimos números y operadores básicos
+                                        if (preg_match('/^[0-9\+\-\*\/\.\(\)\s]+$/', $math_str)) {
+                                            eval("\$resultado = $math_str;");
+                                        }
+                                        // Redondeamos a enteros para porcentajes
+                                        $notas[$mes] = round($resultado); 
+                                    } catch (\Exception $e) {
+                                        $notas[$mes] = 0;
+                                    }
+                                }
+                                $mat['es_calculado'] = true;
+                                $mat['es_porcentaje'] = $grupo['isPercentage'] ?? false;
+                            }
+
+                            $mat['notas'] = $notas;
+                            $grupo_procesado['materias'][] = $mat;
+                        }
+                    }
+                }
+                $grupos_out[] = $grupo_procesado;
+            }
+            return $grupos_out;
+        };
+
+        return [
+            'left'  => $procesarLado($config_json['left'] ?? []),
+            'right' => $procesarLado($config_json['right'] ?? []),
+            'translateType' => $config_json['scoreTranslateType'] ?? 'number'
         ];
     }
 }
