@@ -10,20 +10,64 @@ use CodeIgniter\Controller;
 class Alumnos extends BaseController 
 {
     // =========================================================================
-    // 1. REGISTRO DE ALUMNOS (NIVEL 7)
+    // VERIFICADOR DE PERMISOS
     // =========================================================================
+    
+    private function _verificarPermisos()
+    {
+        // 1. Obtener nivel de la sesión
+        $nivelUsuario = session()->get('nivel'); 
+
+        // 2. Definir quiénes NO pasan 
+        $nivelesProhibidos = [7]; 
+
+        // 3. Checar
+        if (in_array($nivelUsuario, $nivelesProhibidos)) {
+            return false; // Acceso Denegado
+        }
+
+        return true; // Acceso Permitido
+    }
+
+    // =========================================================================
+    // 1. PANTALLAS DE CAPTURA
+    // =========================================================================
+
     public function registro() 
+    {
+        // CANDADO ACTIVADO
+        if (!$this->_verificarPermisos()) {
+            return redirect()->to(base_url('dashboard'))->with('error', 'No tienes permiso para acceder a esta sección.');
+        }
+
+        return $this->_cargarFormulario('Registro de Alumnos', 1);
+    }
+
+    public function preinscripciones() 
+    {
+        // CANDADO ACTIVADO
+        if (!$this->_verificarPermisos()) {
+            return redirect()->to(base_url('dashboard'))->with('error', 'No tienes permiso para acceder a esta sección.');
+        }
+
+        return $this->_cargarFormulario('Preinscripciones', 2);
+    }
+
+    // =========================================================================
+    // 2. LÓGICA INTERNA
+    // =========================================================================
+
+    private function _cargarFormulario($titulo, $estatus)
     {
         $gradoModel = new GradoModel();
         $cicloModel = new CicloEscolarModel();
         $userModel  = new UserModel();
 
-        // PREDICCIÓN VISUAL: Calculamos qué matrícula sigue para mostrársela al usuario
-        // OJO: Esta no se guarda todavía, es solo informativa.
         $prediccion = $userModel->generarProximaMatricula();
 
         $data = [
-            'title'             => 'Registro de Alumnos',
+            'title'             => $titulo,
+            'estatus_form'      => $estatus,
             'grados'            => $gradoModel->orderBy('id_grado', 'ASC')->asArray()->findAll(),
             'ciclos'            => $cicloModel->orderBy('nombreCicloEscolar', 'ASC')->asArray()->findAll(),
             'proxima_matricula' => $prediccion
@@ -32,26 +76,35 @@ class Alumnos extends BaseController
         return view('alumnos/registro', $data);
     }
 
+    // =========================================================================
+    // 3. GUARDADO 
+    // =========================================================================
     public function guardar()
     {
+        if (!$this->_verificarPermisos()) {
+            return redirect()->to(base_url('dashboard'))->with('error', 'Acción no autorizada.');
+        }
+
         $model = new UserModel();
         
-        // SEGURIDAD DE CARRERA:
-        // Ignoramos la matrícula que vio el usuario y calculamos la real en este milisegundo
-        // para asegurar que sea única si dos personas guardan al mismo tiempo.
+        // 1. Generar matrícula real al momento 
         $matriculaReal = $model->generarProximaMatricula();
 
-        // Obtenemos los datos del formulario (Nombre, dirección, etc.)
+        // 2. Obtener datos
         $data = $this->obtenerDatosDelPost();
         
-        // INYECTAMOS LOS DATOS DE SISTEMA
+        // 3. Inyectar datos de sistema
         $data['matricula'] = $matriculaReal;
-        $data['email']     = $matriculaReal . '@sjs.edu.mx'; // Email institucional automático
-        $data['estatus']   = 2; // 2 = Alumno Activo (según tu lógica)
+        $data['email']     = $matriculaReal . '@sjs.edu.mx'; 
+        
+        // Estatus dinámico (o forzar preinscripción si falla)
+        $data['estatus']   = $this->request->getPost('estatus') ?? 2; 
+        
+        $tipoRegistro = ($data['estatus'] == 1) ? 'Alumno registrado' : 'Preinscripción guardada';
 
         if ($model->insert($data)) {
-            return redirect()->to('alumnos/registro')
-                             ->with('success', 'Alumno registrado exitosamente. Matrícula asignada: ' . $matriculaReal);
+            return redirect()->back()
+                             ->with('success', "¡ÉXITO! $tipoRegistro correctamente.\nMatrícula asignada: $matriculaReal");
         } else {
             return redirect()->back()
                              ->with('error', 'Ocurrió un error al guardar.')
@@ -59,60 +112,36 @@ class Alumnos extends BaseController
         }
     }
 
-    public function preinscripciones() 
-    {
-        $gradoModel = new GradoModel();
-        $cicloModel = new CicloEscolarModel();
-
-        $data = [
-            'title'  => 'Preinscripciones', 
-            'grados' => $gradoModel->orderBy('id_grado', 'ASC')->asArray()->findAll(),
-            'ciclos' => $cicloModel->orderBy('nombreCicloEscolar', 'ASC')->asArray()->findAll()
-        ];
-        
-        return view('alumnos/preinscripciones', $data);
-    }
-
-    public function guardar_preinscripcion()
-    {
-        $model = new UserModel();
-        
-        $data = $this->obtenerDatosDelPost();
-        $data['estatus'] = 1; 
-
-        $model->insert($data); 
-
-        return redirect()->to('alumnos/preinscripciones')
-                         ->with('success', 'Preinscripción guardada exitosamente.');
-    }
-
-
+    // =========================================================================
+    // 4. MAPEO DE DATOS
+    // =========================================================================
     private function obtenerDatosDelPost() {
         return [
-            // Datos Personales
-            'Nombre'         => $this->request->getPost('Nombre'),
-            'ap_Alumno'      => $this->request->getPost('ap_Alumno'),
-            'am_Alumno'      => $this->request->getPost('am_Alumno'),
-            'curp'           => $this->request->getPost('curp'),
-            'rfc'            => $this->request->getPost('rfc'),
-            'nia'            => $this->request->getPost('nia'),
+            // Identidad (Mayúsculas para estandarizar)
+            'Nombre'         => strtoupper($this->request->getPost('Nombre')),
+            'ap_Alumno'      => strtoupper($this->request->getPost('ap_Alumno')),
+            'am_Alumno'      => strtoupper($this->request->getPost('am_Alumno')),
+            'curp'           => strtoupper($this->request->getPost('curp')),
+            'rfc'            => strtoupper($this->request->getPost('rfc')),
+            'nia'            => strtoupper($this->request->getPost('nia')),
             'fechaNacAlumno' => $this->request->getPost('fechaNacAlumno'),
             'sexo_alum'      => $this->request->getPost('sexo_alum'),
             
             // Contacto
-            'direccion'      => $this->request->getPost('direccion'),
+            'direccion'      => strtoupper($this->request->getPost('direccion')),
             'cp_alum'        => $this->request->getPost('cp_alum'),
             'telefono_alum'  => $this->request->getPost('telefono_alum'),
-            // 'email' se genera automáticamente en guardar()
-            
-            // Seguridad
-            'pass'           => '123456789', // CONTRASEÑA POR DEFECTO FIJA
+            'mail_alumn'     => $this->request->getPost('email_tutor'), 
             
             // Académico
             'grado'            => $this->request->getPost('grado'),
-            'extra'            => $this->request->getPost('extra'),
             'generacionactiva' => $this->request->getPost('cicloEscolar'), 
-            'nivel'            => 7, // 7 = Alumno
+            'extra'            => $this->request->getPost('extra'),
+            
+            // Fijos
+            'pass'             => '123456789', 
+            'nivel'            => 7, 
+            'activo'           => 1 
         ];
     }
 }

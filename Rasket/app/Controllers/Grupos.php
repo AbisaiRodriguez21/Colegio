@@ -1,10 +1,37 @@
 <?php namespace App\Controllers;
 
 use App\Models\GruposModel;
+use CodeIgniter\Controller;
 
 class Grupos extends BaseController {
 
+    // =========================================================================
+    // 0. SEGURIDAD: CANDADO (NUEVO)
+    // =========================================================================
+    private function _verificarPermisos()
+    {
+        $nivelUsuario = session()->get('nivel');
+        
+        // LISTA NEGRA: Alumnos (7) NO pasan
+        $nivelesProhibidos = [7];
+
+        if (in_array($nivelUsuario, $nivelesProhibidos)) {
+            return false;
+        }
+        return true;
+    }
+
+    // =========================================================================
+    // 1. PANTALLA PRINCIPAL
+    // =========================================================================
     public function index() {
+        
+        // CANDADO ACTIVADO
+        if (!$this->_verificarPermisos()) {
+            return redirect()->to(base_url('dashboard'))->with('error', 'No tienes permiso para ver los grupos.');
+        }
+
+        // --- TU CÓDIGO ORIGINAL (INTACTO) ---
         $model = new GruposModel();
 
         $data = [
@@ -15,7 +42,17 @@ class Grupos extends BaseController {
         return view('grupos/lista_grupos', $data);
     }
 
+    // =========================================================================
+    // 2. FILTRO AJAX
+    // =========================================================================
     public function filtrar() {
+        
+        // CANDADO ACTIVADO (Respuesta 403 para AJAX)
+        if (!$this->_verificarPermisos()) {
+            return $this->response->setStatusCode(403)->setBody('Acceso denegado');
+        }
+
+        // --- TU CÓDIGO ORIGINAL (INTACTO) ---
         $request = \Config\Services::request();
         $gradoId = $request->getPost('id_grado'); 
         

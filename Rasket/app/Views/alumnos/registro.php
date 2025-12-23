@@ -3,6 +3,7 @@
 
 <head>
     <?php
+        // TÍTULO DINÁMICO 
         echo view("partials/title-meta", array("title" => $title ?? 'Registro de Alumno')); 
     ?>
     <?= $this->include("partials/head-css") ?>
@@ -18,8 +19,12 @@
 
                 <div class="row">
                     <div class="col-12">
-                        <h4 class="page-title">Registro de Alumnos</h4>
-                        <p class="text-muted mb-4">Formulario para registrar un nuevo alumno en el sistema.</p>
+                        <h4 class="page-title"><?= esc($title) ?></h4>
+                        <p class="text-muted mb-4">
+                            <?= ($estatus_form == 1) 
+                                ? 'Formulario para registrar un nuevo alumno activo en el sistema.' 
+                                : 'Formulario para registrar un aspirante.' ?>
+                        </p>
                     </div>
                 </div>
 
@@ -30,7 +35,7 @@
 
                                 <?php if (session()->getFlashdata('success')): ?>
                                     <div class="alert alert-success text-center">
-                                        <i class="mdi mdi-check-circle"></i> <?= session()->getFlashdata('success') ?>
+                                        <i class="mdi mdi-check-circle"></i> <?= nl2br(esc(session()->getFlashdata('success'))) ?>
                                     </div>
                                 <?php endif; ?>
 
@@ -41,6 +46,8 @@
                                 <?php endif; ?>
 
                                 <form method="post" action="<?= base_url('alumnos/guardar') ?>">
+                                    
+                                    <input type="hidden" name="estatus" value="<?= esc($estatus_form) ?>">
                             
                                     <div class="row">
                                         <div class="col-lg-4 col-md-6 mb-4">
@@ -58,7 +65,7 @@
                                         <div class="col-lg-4 col-md-6 mb-4">
                                             <div class="form-group">
                                                 <label class="form-label">Apellido Materno</label>
-                                                <input type="text" name="am_Alumno" class="form-control">
+                                                <input type="text" name="am_Alumno" class="form-control" required>
                                             </div>
                                         </div>
                                     </div>
@@ -67,7 +74,7 @@
                                         <div class="col-lg-4 col-md-6 mb-4">
                                             <div class="form-group">
                                                 <label class="form-label">CURP</label>
-                                                <input type="text" name="curp" id="curp" class="form-control" required>
+                                                <input type="text" name="curp" id="curp" class="form-control">
                                             </div>
                                         </div>
                                         <div class="col-lg-4 col-md-6 mb-4">
@@ -122,21 +129,25 @@
                                                 <input type="text" name="telefono_alum" class="form-control">
                                             </div>
                                         </div>
-                                        <div class="col-lg-4 col-md-6 mb-4"></div>
+                                        <div class="col-lg-4 col-md-6 mb-4">
+                                             <div class="form-group">
+                                                <label class="form-label">Email Tutor</label>
+                                                <input type="email" name="email_tutor" class="form-control">
+                                            </div>
+                                        </div>
                                     </div>
 
-                                    
                                     <div class="row">
                                         <div class="col-lg-4 col-md-6 mb-4">
                                             <div class="form-group">
                                                 <label class="form-label">Matrícula</label>
-                                                <input type="text" class="form-control fw-bold" 
+                                                <input type="text" class="form-control" 
                                                        value="<?= $proxima_matricula ?? '' ?>" readonly>
                                             </div>
                                         </div>
                                         <div class="col-lg-4 col-md-6 mb-4">
                                             <div class="form-group">
-                                                <label class="form-label">Email</label>
+                                                <label class="form-label">Email institucional</label>
                                                 <input type="email" class="form-control" 
                                                        value="<?= ($proxima_matricula ?? '') . '@sjs.edu.mx' ?>" readonly>
                                             </div>
@@ -190,7 +201,8 @@
 
                                     <div class="text-end mt-3">
                                         <button type="submit" class="btn btn-primary px-4 py-2">
-                                            <i class="mdi mdi-content-save"></i> Guardar Registro
+                                            <i class="mdi mdi-content-save"></i> 
+                                            <?= ($estatus_form == 1) ? 'Guardar Registro' : 'Guardar Preinscripción' ?>
                                         </button>
                                     </div>
                                 </form>
@@ -208,10 +220,6 @@
     
     <?= $this->include("partials/vendor-scripts") ?>
 
-    <script>
-        // Ya no se requiere JS para la contraseña ni para la matrícula
-        // Todo está manejado visualmente por PHP y lógicamente por el Backend.
-    </script>
 
 </body>
 </html>

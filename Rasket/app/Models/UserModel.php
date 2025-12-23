@@ -15,7 +15,7 @@ class UserModel extends Model
         'fechaNacAlumno', 'sexo_alum', 
         'direccion', 'cp_alum', 'telefono_alum',
         'email',       // Institucional
-        'mail_alumn',  // Tutor (según tu BD anterior)
+        'mail_alumn',  // Tutor 
         'grado', 'generacionactiva', 
         'extra'
     ];
