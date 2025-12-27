@@ -36,6 +36,9 @@ $routes->get('profesor/asignar/(:num)', 'ProfesorLista::asignar/$1');
 // Ruta para procesar el formulario del switch
 $routes->post('profesor/guardar_materia', 'ProfesorLista::guardar_materia');
 
+// Ruta para guardar la carga por grado completo
+$routes->post('profesor/guardar_carga_grado', 'ProfesorLista::guardar_carga_grado');
+
 // Alumnos
 $routes->match(['get', 'post'], 'alumno', 'Alumno::index'); 
 $routes->get('alumnos/registro', 'Alumnos::registro'); 
@@ -58,9 +61,8 @@ $routes->group('', ['filter' => 'auth'], function ($routes) {
 });
 
 //pagos
-$routes->get('verificar-pagos', 'VerificarPagos::index'); 
+$routes->get('verificar-pagos', 'VerificarPagos::index');
 $routes->post('verificar-pagos/validar', 'VerificarPagos::validar');
-$routes->get('verificar-pagos/ajaxList', 'VerificarPagos::ajaxList');
 
 // Rutas de Correo
 $routes->get('correo', 'Correo::index');          // Dashboard Principal (Inbox)

@@ -9,25 +9,7 @@ use CodeIgniter\Controller;
 
 class Alumnos extends BaseController 
 {
-    // =========================================================================
-    // VERIFICADOR DE PERMISOS
-    // =========================================================================
     
-    private function _verificarPermisos()
-    {
-        // 1. Obtener nivel de la sesión
-        $nivelUsuario = session()->get('nivel'); 
-
-        // 2. Definir quiénes NO pasan 
-        $nivelesProhibidos = [7]; 
-
-        // 3. Checar
-        if (in_array($nivelUsuario, $nivelesProhibidos)) {
-            return false; // Acceso Denegado
-        }
-
-        return true; // Acceso Permitido
-    }
 
     // =========================================================================
     // 1. PANTALLAS DE CAPTURA

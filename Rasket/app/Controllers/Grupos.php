@@ -5,21 +5,7 @@ use CodeIgniter\Controller;
 
 class Grupos extends BaseController {
 
-    // =========================================================================
-    // 0. SEGURIDAD: CANDADO (NUEVO)
-    // =========================================================================
-    private function _verificarPermisos()
-    {
-        $nivelUsuario = session()->get('nivel');
-        
-        // LISTA NEGRA: Alumnos (7) NO pasan
-        $nivelesProhibidos = [7];
-
-        if (in_array($nivelUsuario, $nivelesProhibidos)) {
-            return false;
-        }
-        return true;
-    }
+    
 
     // =========================================================================
     // 1. PANTALLA PRINCIPAL

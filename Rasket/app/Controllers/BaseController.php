@@ -57,4 +57,26 @@ abstract class BaseController extends Controller
 
         // E.g.: $this->session = \Config\Services::session();
     }
+
+
+    // ========================================================================
+    // FUNCIONES AUXILIARES DE SEGURIDAD 
+    // ========================================================================
+    protected function _verificarPermisos($nivelesProhibidos = [7])
+    {
+        // 1. Obtener nivel de la sesión
+        $nivelUsuario = session()->get('nivel'); 
+
+        // 2. Si no hay sesión, bloquéalo también (seguridad extra)
+        if (!$nivelUsuario) {
+            return false;
+        }
+
+        // 3. Checar si está en la lista negra
+        if (in_array($nivelUsuario, $nivelesProhibidos)) {
+            return false; // Acceso Denegado
+        }
+
+        return true; // Acceso Permitido
+    }
 }

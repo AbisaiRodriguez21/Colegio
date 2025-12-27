@@ -29,7 +29,7 @@
 
                                 <div class="row mb-3">
                                     <div class="col-md-6">
-                                        <h4 class="header-title">Listado de Pagos</h4>
+                                        <h4 class="header-title">Listado de Pagos Pendientes</h4>
                                     </div>
                                     <div class="col-md-6">
                                         <form action="<?= base_url('verificar-pagos') ?>" method="get" id="form-busqueda">
@@ -39,7 +39,7 @@
                                                        name="q" 
                                                        id="input-busqueda"
                                                        class="form-control" 
-                                                       placeholder="Escribe para buscar..." 
+                                                       placeholder="Buscar por nombre o email..." 
                                                        value="<?= esc($busqueda) ?>" 
                                                        autocomplete="off">
                                             </div>
@@ -63,18 +63,18 @@
                                         <tbody>
                                             <?php if (!empty($pagos)): ?>
                                                 <?php foreach ($pagos as $pago): ?>
-                                                    <tr>
-                                                        <td><?= $pago['fechaEnvio']; ?></td>
+                                                    <tr id="fila-pago-<?= $pago['id_pago'] ?>">
+                                                        <td><?= esc($pago['fechaEnvio']); ?></td>
                                                         <td>
-                                                            <strong><?= strtoupper($pago['Nombre'] . ' ' . $pago['ap_Alumno']); ?></strong>
+                                                            <strong><?= strtoupper(esc($pago['Nombre'] . ' ' . $pago['ap_Alumno'])); ?></strong>
                                                         </td>
-                                                        <td class="hidden-xs"><?= $pago['email']; ?></td>
+                                                        <td class="hidden-xs"><?= esc($pago['email']); ?></td>
                                                         <td class="hidden-xs">
                                                             $<?= number_format($pago['cantidad'], 2); ?>
-                                                            <br><small class="text-muted"><?= $pago['concepto']; ?></small>
+                                                            <br><small class="text-muted"><?= esc($pago['concepto']); ?></small>
                                                         </td>
                                                         <td class="hidden-xs">
-                                                            <span class="badge bg-info"><?= $pago['nombreGrado'] ?? 'Sin Grado'; ?></span>
+                                                            <span class="badge bg-info"><?= esc($pago['nombreGrado'] ?? 'Sin Grado'); ?></span>
                                                         </td>
                                                         <td class="hidden-xs text-center">
                                                             <?php if (!empty($pago['ficha'])): ?>
@@ -82,7 +82,7 @@
                                                                         type="button" 
                                                                         data-bs-toggle="modal" 
                                                                         data-bs-target="#modal-ticket" 
-                                                                        data-src="pagos/<?= $pago['ficha']; ?>">
+                                                                        data-src="pagos/<?= esc($pago['ficha']); ?>">
                                                                     <i class="fas fa-image"></i> Ver
                                                                 </button>
                                                             <?php else: ?>
@@ -91,79 +91,173 @@
                                                         </td>
                                                         <td class="text-center">
                                                             <button class="btn btn-sm btn-primary btn-validar-pago" data-id="<?= $pago['id_pago']; ?>">
-                                                                Validar
+                                                                <i class="bx bx-check-double"></i> Validar
                                                             </button>
                                                         </td>
                                                     </tr>
                                                 <?php endforeach; ?>
                                             <?php else: ?>
                                                 <tr>
-                                                    <td colspan="7" class="text-center py-4">No se encontraron resultados.</td>
+                                                    <td colspan="7" class="text-center py-4">No hay pagos pendientes de validación.</td>
                                                 </tr>
                                             <?php endif; ?>
                                         </tbody>
                                     </table>
                                 </div>
 
-                                <div class="d-flex justify-content-center mt-3">
-                                    <?= $pager->links('default', 'bootstrap_pagination') ?>
-                                </div>
+                                <?php if ($info_paginacion['total'] > 0): ?>
+                                    <div class="row mt-3 align-items-center">
+                                        <div class="col-sm-12 col-md-5">
+                                            <div class="dataTables_info">
+                                                Mostrando <strong><?= $info_paginacion['inicio'] ?></strong> a <strong><?= $info_paginacion['fin'] ?></strong> de <strong><?= number_format($info_paginacion['total']) ?></strong> registros
+                                            </div>
+                                        </div>
+                                        <div class="col-sm-12 col-md-7">
+                                            <div class="d-flex justify-content-end">
+                                                <?= $pager->links('default', 'bootstrap_pagos') ?>
+                                            </div>
+                                        </div>
+                                    </div>
+                                <?php endif; ?>
 
-                            </div> </div> </div> </div> </div> </div> <?= $this->include("partials/footer") ?>
+                            </div> 
+                        </div> 
+                    </div> 
+                </div> 
 
-    </div> <div class="modal fade" id="modal-ticket" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
+            </div> 
+            <?= $this->include("partials/footer") ?>
+        </div>
+    </div> 
+
+    <!-- MODAL -->
+    <div class="modal fade" id="modal-ticket" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg"> <div class="modal-content">
                 <div class="modal-header">
                      <h5 class="modal-title">Comprobante</h5>
                      <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="modal-body text-center">
-                    <img id="imagen-ticket-modal" src="" class="img-fluid border rounded">
+                <div class="modal-body text-center bg-light p-0" id="contenedor-visualizador">
                 </div>
             </div>
         </div>
     </div>
 
     <?= $this->include("partials/vendor-scripts") ?>
+    
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
         document.addEventListener("DOMContentLoaded", function() {
             
-            // Lógica para Búsqueda Automática (Sin botón)
+            // 1. Buscador automático
             const inputBusqueda = document.getElementById('input-busqueda');
             const formBusqueda = document.getElementById('form-busqueda');
             let timeout = null;
 
-            inputBusqueda.addEventListener('input', function() {
-                clearTimeout(timeout);
-                timeout = setTimeout(() => {
-                    formBusqueda.submit(); 
-                }, 600);
-            });
-            
-            const valorActual = inputBusqueda.value;
-            if(valorActual) {
-                inputBusqueda.focus();
-                inputBusqueda.setSelectionRange(valorActual.length, valorActual.length);
+            if(inputBusqueda){
+                inputBusqueda.addEventListener('input', function() {
+                    clearTimeout(timeout);
+                    timeout = setTimeout(() => { formBusqueda.submit(); }, 600);
+                });
+                
+                const valorActual = inputBusqueda.value;
+                if(valorActual) {
+                    inputBusqueda.focus();
+                    inputBusqueda.setSelectionRange(valorActual.length, valorActual.length);
+                }
             }
 
+            // 2. LÓGICA DEL MODAL (PDF vs IMAGEN)
             const ticketModal = document.getElementById('modal-ticket');
             if (ticketModal) {
                 ticketModal.addEventListener('show.bs.modal', function (event) {
                     const button = event.relatedTarget;
-                    const srcImagen = button.getAttribute('data-src');
-                    document.getElementById('imagen-ticket-modal').src = srcImagen;
+                    const srcArchivo = button.getAttribute('data-src'); // Ejemplo: pagos/archivo.pdf
+                    
+                    // Construimos la ruta completa
+                    const urlCompleta = '<?= base_url() ?>/' + srcArchivo;
+                    
+                    // Obtenemos el contenedor
+                    const contenedor = document.getElementById('contenedor-visualizador');
+                    
+                    // Obtenemos la extensión del archivo
+                    const extension = srcArchivo.split('.').pop().toLowerCase();
+                    
+                    // DECISIÓN: ¿Es PDF o Imagen?
+                    if (extension === 'pdf') {
+                        // Insertamos un IFRAME para leer el PDF
+                        contenedor.innerHTML = `
+                            <iframe src="${urlCompleta}" width="100%" height="600px" style="border:none;">
+                                Tu navegador no soporta la visualización de PDFs.
+                                <a href="${urlCompleta}" target="_blank">Descargar PDF</a>
+                            </iframe>`;
+                    } else {
+                        // Insertamos una IMAGEN normal
+                        contenedor.innerHTML = `
+                            <div class="p-3">
+                                <img src="${urlCompleta}" class="img-fluid border rounded shadow-sm" alt="Comprobante">
+                            </div>`;
+                    }
+                });
+                
+                // Limpiar el modal al cerrar para que no se quede el archivo anterior cargado
+                ticketModal.addEventListener('hidden.bs.modal', function () {
+                    document.getElementById('contenedor-visualizador').innerHTML = '';
                 });
             }
 
+            // 3. Validación AJAX
             const botonesValidar = document.querySelectorAll('.btn-validar-pago');
             botonesValidar.forEach(btn => {
                 btn.addEventListener('click', function() {
                     let idPago = this.getAttribute('data-id');
-                    alert("ID a validar: " + idPago);
+                    
+                    Swal.fire({
+                        title: '¿Validar este pago?',
+                        text: "El pago se marcará como verificado.",
+                        icon: 'question',
+                        showCancelButton: true,
+                        confirmButtonColor: '#34c38f',
+                        cancelButtonColor: '#f46a6a',
+                        confirmButtonText: 'Sí, validar',
+                        cancelButtonText: 'Cancelar'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            realizarValidacion(idPago);
+                        }
+                    });
                 });
             });
+
+            function realizarValidacion(idPago) {
+                const formData = new FormData();
+                formData.append('id_pago', idPago);
+
+                fetch('<?= base_url("verificar-pagos/validar") ?>', {
+                    method: 'POST',
+                    body: formData,
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        Swal.fire('¡Validado!', data.msg, 'success');
+                        const fila = document.getElementById('fila-pago-' + idPago);
+                        if(fila) {
+                            fila.style.transition = "all 0.5s";
+                            fila.style.opacity = "0";
+                            setTimeout(() => fila.remove(), 500);
+                        }
+                    } else {
+                        Swal.fire('Error', data.msg, 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    Swal.fire('Error', 'Problema de conexión.', 'error');
+                });
+            }
         });
     </script>
 
