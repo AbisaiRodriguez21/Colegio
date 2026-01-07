@@ -31,6 +31,7 @@ class Auth extends BaseController
                 'am'         => $user['am_Alumno'] ?? '',        
                 'nivel'      => $user['nivel'] ?? '',             
                 'foto'       => $user['foto'] ?? '',    
+                'nivelT'     => $user['nivelT'] ?? 0,
             ]);
 
             return redirect()->to(base_url('dashboard'));

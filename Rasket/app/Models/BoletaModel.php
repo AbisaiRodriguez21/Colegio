@@ -95,7 +95,7 @@ class BoletaModel extends Model
      */
     public function getInfoGrado($id_grado) {
         return $this->db->table('grados')
-            ->select('id_grado, nombreGrado, nivel_grado, boleta_config, boleta_ing_config') // Agregamos los campos JSON
+            ->select('id_grado, nombreGrado, nivel_grado, boleta_config, boleta_ing_config') 
             ->where('id_grado', $id_grado)
             ->get()->getRowArray();
     }

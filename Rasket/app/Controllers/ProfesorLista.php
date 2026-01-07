@@ -151,7 +151,6 @@ class ProfesorLista extends BaseController
             
             // Para cada materia, calculamos su estado
             foreach ($materias as &$materia) {
-                // Pequeña protección extra por si tu BD usa 'Id_materia' o 'id_materia'
                 $idMat = $materia['Id_materia'] ?? $materia['id_materia'];
                 
                 $estado = $model->verificarEstadoMateria($idMat, $id);
@@ -174,7 +173,7 @@ class ProfesorLista extends BaseController
     // =========================================================================
 
     /**
-     * Da de baja a un profesor (Cambia estatus a 3).
+     * Da de baja a un profesor 
      */
     public function eliminar($id)
     {

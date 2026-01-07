@@ -31,14 +31,14 @@ class ProfesorModel extends Model
     // =========================================================================
 
     /**
-     * Obtiene profesores activos (nivel 9 o el que uses para profes)
+     * Obtiene profesores activos
      */
     public function getProfesoresActivos()
     {
-        // Nota: Ajusta el nivel '5' o '9' según tu configuración real de profesores
+        
         return $this->select('usr.*, estatus_usr.nombre AS nombre_nivel')
                     ->join('estatus_usr', 'usr.estatus = estatus_usr.Id')
-                    ->where('usr.nivel', 5) // Ajusta si tus profes son nivel 5
+                    ->where('usr.nivel', 5) 
                     ->where('usr.estatus', 1)
                     ->findAll();
     }

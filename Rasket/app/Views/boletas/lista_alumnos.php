@@ -1,9 +1,11 @@
 <!DOCTYPE html>
 <html lang="es" data-bs-theme="light" data-topbar-color="light" data-menu-color="light">
+
 <head>
     <?= view("partials/title-meta", ["title" => "Lista de Alumnos"]) ?>
     <?= $this->include("partials/head-css") ?>
 </head>
+
 <body>
     <div class="wrapper">
         <?= $this->include("partials/menu") ?>
@@ -37,30 +39,42 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <?php if(!empty($alumnos)): ?>
-                                        <?php 
+                                    <?php if (!empty($alumnos)): ?>
+                                        <?php
                                         // Inicializamos contador
                                         $contador = 1;
-                                        foreach($alumnos as $a): 
+                                        foreach ($alumnos as $a):
                                         ?>
                                             <tr>
                                                 <td class="text-muted fw-bold"><?= $contador++ ?></td>
-                                                
+
                                                 <td><?= esc($a['matricula']) ?></td>
                                                 <td class="fw-bold">
                                                     <?= esc($a['ap_Alumno']) ?> <?= esc($a['am_Alumno']) ?> <?= esc($a['Nombre']) ?>
                                                 </td>
                                                 <td><span class="badge bg-success">Activo</span></td>
                                                 <td class="text-center">
-                                                    <a href="<?= base_url('boleta/ver/' . $id_grado . '/' . $a['id']) ?>" 
-                                                       class="btn btn-sm btn-primary">
+                                                    <?php
+                                                    // Lógica para decidir a dónde apunta el link
+                                                    if (isset($is_titular) && $is_titular) {
+                                                        // Ruta para Titular (Solo lleva ID Alumno, el grado lo sabe por sesión)
+                                                        $urlBoleta = base_url('titular/ver-boleta/' . $a['id']);
+                                                    } else {
+                                                        // Ruta para Admin (Lleva ID Grado y ID Alumno)
+                                                        $urlBoleta = base_url('boleta/ver/' . $id_grado . '/' . $a['id']);
+                                                    }
+                                                    ?>
+
+                                                    <a href="<?= $urlBoleta ?>" class="btn btn-sm btn-primary">
                                                         <i class="bx bx-file"></i> Ver Boleta
                                                     </a>
                                                 </td>
                                             </tr>
                                         <?php endforeach; ?>
                                     <?php else: ?>
-                                        <tr><td colspan="5" class="text-center">No hay alumnos.</td></tr>
+                                        <tr>
+                                            <td colspan="5" class="text-center">No hay alumnos.</td>
+                                        </tr>
                                     <?php endif; ?>
                                 </tbody>
                             </table>
@@ -74,4 +88,5 @@
     </div>
     <?= $this->include("partials/vendor-scripts") ?>
 </body>
+
 </html>

@@ -1,34 +1,46 @@
-<?php 
-// 1. Configuración visual
-$pager->setSurroundCount(2); 
+<?php
 
-// 2. CORRECCIÓN: Llamamos al Servicio Global para saber la página real
+$pager->setSurroundCount(2);
+
+// 1. OBTENEMOS LOS NÚMEROS REALES
+// Usamos el servicio global para asegurar que tenemos el número exacto
 $pagerService = \Config\Services::pager();
-$paginaActual = $pagerService->getCurrentPage(); 
+$paginaActual = $pagerService->getCurrentPage();
+$totalPaginas = $pagerService->getPageCount();
 
-// 3. Preparamos la URL actual para modificarle el ?page=X
-$uri = current_url(true);
+// 2. PREPARAMOS LA URL
+// Esto asegura que no se pierdan filtros como ?q=busqueda&orden=DESC
+$uri = service('request')->getUri();
+$uri->setQuery(service('request')->getServer('QUERY_STRING'));
 ?>
 
 <nav aria-label="Navegación">
-    <ul class="pagination justify-content-center m-0">
+    <ul class="pagination justify-content-end m-0">
 
-        <?php if ($pager->hasPrevious()) : ?>
+        <?php if ($paginaActual > 1) : ?>
             <li class="page-item">
                 <a class="page-link" href="<?= $pager->getFirst() ?>" aria-label="Primera">
                     <span aria-hidden="true">&laquo;&laquo;</span>
                 </a>
             </li>
-            
-            <li class="page-item">
-                <a class="page-link" href="<?= (string) $uri->addQuery('page', $paginaActual - 1) ?>" aria-label="Anterior">
-                    <span aria-hidden="true">&laquo; Anterior</span>
-                </a>
-            </li>
-        <?php else: ?>
+        <?php else : ?>
             <li class="page-item disabled">
                 <span class="page-link">&laquo;&laquo;</span>
             </li>
+        <?php endif ?>
+
+        <?php if ($paginaActual > 1) : ?>
+            <?php 
+                $uriAnterior = clone $uri; 
+                // Restamos 1 matemáticamente
+                $linkAnterior = $uriAnterior->addQuery('page', $paginaActual - 1);
+            ?>
+            <li class="page-item">
+                <a class="page-link" href="<?= (string)$linkAnterior ?>" aria-label="Anterior">
+                    <span aria-hidden="true">&laquo; Anterior</span>
+                </a>
+            </li>
+        <?php else : ?>
             <li class="page-item disabled">
                 <span class="page-link">&laquo; Anterior</span>
             </li>
@@ -42,22 +54,30 @@ $uri = current_url(true);
             </li>
         <?php endforeach ?>
 
-        <?php if ($pager->hasNext()) : ?>
+        <?php if ($paginaActual < $totalPaginas) : ?>
+            <?php 
+                $uriSiguiente = clone $uri;
+                // Sumamos 1 matemáticamente
+                $linkSiguiente = $uriSiguiente->addQuery('page', $paginaActual + 1);
+            ?>
             <li class="page-item">
-                <a class="page-link" href="<?= (string) $uri->addQuery('page', $paginaActual + 1) ?>" aria-label="Siguiente">
+                <a class="page-link" href="<?= (string)$linkSiguiente ?>" aria-label="Siguiente">
                     <span aria-hidden="true">Siguiente &raquo;</span>
                 </a>
             </li>
-            
+        <?php else : ?>
+            <li class="page-item disabled">
+                <span class="page-link">Siguiente &raquo;</span>
+            </li>
+        <?php endif ?>
+
+        <?php if ($paginaActual < $totalPaginas) : ?>
             <li class="page-item">
                 <a class="page-link" href="<?= $pager->getLast() ?>" aria-label="Última">
                     <span aria-hidden="true">&raquo;&raquo;</span>
                 </a>
             </li>
-        <?php else: ?>
-            <li class="page-item disabled">
-                <span class="page-link">Siguiente &raquo;</span>
-            </li>
+        <?php else : ?>
             <li class="page-item disabled">
                 <span class="page-link">&raquo;&raquo;</span>
             </li>

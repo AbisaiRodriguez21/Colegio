@@ -137,35 +137,40 @@
                                         </div>
                                     </div>
 
-                                    <div class="row">
+                                    <div class="row  p-3 rounded mb-3 border">
+                                        <div class="col-12 mb-2">
+                                            <h5 class="text-primary"><i class="mdi mdi-robot"></i> Datos Generados por Sistema</h5>
+                                        </div>
                                         <div class="col-lg-4 col-md-6 mb-4">
                                             <div class="form-group">
-                                                <label class="form-label">Matrícula</label>
-                                                <input type="text" class="form-control" 
-                                                       value="<?= $proxima_matricula ?? '' ?>" readonly>
+                                                <label class="form-label fw-bold">Matrícula</label>
+                                                <input type="text" class="form-control" disabled 
+                                                       placeholder="Se generará al guardar" 
+                                                       style="background-color: #e9ecef; font-weight: bold; color: #555;">
+                                                <small class="text-muted">El sistema asignará la matrícula consecutiva al confirmar.</small>
                                             </div>
                                         </div>
                                         <div class="col-lg-4 col-md-6 mb-4">
                                             <div class="form-group">
-                                                <label class="form-label">Email institucional</label>
-                                                <input type="email" class="form-control" 
-                                                       value="<?= ($proxima_matricula ?? '') . '@sjs.edu.mx' ?>" readonly>
+                                                <label class="form-label fw-bold">Email institucional</label>
+                                                <input type="text" class="form-control" disabled 
+                                                       placeholder="matricula@sjs.edu.mx"
+                                                       style="background-color: #e9ecef;">
                                             </div>
                                         </div>
                                         <div class="col-lg-4 col-md-6 mb-4">
                                             <div class="form-group">
-                                                <label class="form-label">Contraseña por defecto</label>
-                                                <input type="text" class="form-control" 
-                                                       value="123456789" readonly>
+                                                <label class="form-label fw-bold">Contraseña por defecto</label>
+                                                <input type="text" class="form-control" value="123456789" readonly 
+                                                       style="background-color: #e9ecef;">
                                             </div>
                                         </div>
                                     </div>
-
                                     <div class="row">
                                         <div class="col-lg-6 col-md-6 mb-4">
                                             <div class="form-group">
                                                 <label class="form-label">Grado inicial del alumno</label>
-                                                <select name="grado" class="form-control" required>
+                                                <select name="grado" class="form-control">
                                                     <option value="">Seleccionar Grado</option>
                                                     <?php foreach ($grados as $grado): ?>
                                                         <option value="<?= $grado['id_grado'] ?>">
@@ -219,7 +224,6 @@
     </div>
     
     <?= $this->include("partials/vendor-scripts") ?>
-
 
 </body>
 </html>

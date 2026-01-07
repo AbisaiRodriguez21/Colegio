@@ -38,6 +38,7 @@ class Filters extends BaseFilters
         'performance'   => PerformanceMetrics::class,
         'auth'          => Auth::class,
         'noauth'        => NoAuth::class,
+        'adminAuth'  => \App\Filters\AdminAuth::class, // Filtro de Autenticación para Admin
     ];
 
     /**

@@ -2,14 +2,12 @@
      <div class="container-fluid">
           <div class="navbar-header">
                <div class="d-flex align-items-center gap-2">
-                    <!-- Menu Toggle Button -->
                     <div class="topbar-item">
                          <button type="button" class="button-toggle-menu topbar-button">
                               <iconify-icon icon="solar:hamburger-menu-broken" class="fs-24 align-middle"></iconify-icon>
                          </button>
                     </div>
 
-                    <!-- App Search-->
                     <form class="app-search d-none d-md-block me-auto">
                          <div class="position-relative">
                               <input type="search" class="form-control" placeholder="Search..." autocomplete="off" value="">
@@ -19,7 +17,6 @@
                </div>
 
                <div class="d-flex align-items-center gap-1">
-                    <!-- Theme Color (Light/Dark) -->
                     <div class="topbar-item">
                          <button type="button" class="topbar-button" data-toggle="theme">
                               <iconify-icon icon="solar:moon-broken" class="fs-24 align-middle light-mode"></iconify-icon>
@@ -27,7 +24,6 @@
                          </button>
                     </div>
 
-                    <!-- Category -->
                     <div class="dropdown topbar-item d-none d-lg-flex">
                          <button type="button" class="topbar-button" data-toggle="fullscreen">
                               <iconify-icon icon="solar:full-screen-broken" class="fs-24 align-middle fullscreen"></iconify-icon>
@@ -35,7 +31,6 @@
                          </button>
                     </div>
 
-                    <!-- Notification -->
                     <div class="dropdown topbar-item">
                          <button type="button" class="topbar-button position-relative" id="page-header-notifications-dropdown" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                               <iconify-icon icon="solar:bell-bing-broken" class="fs-24 align-middle"></iconify-icon>
@@ -55,7 +50,6 @@
                                    </div>
                               </div>
                               <div data-simplebar style="max-height: 280px;">
-                                   <!-- Item -->
                                    <a href="javascript:void(0);" class="dropdown-item py-3 border-bottom text-wrap">
                                         <div class="d-flex">
                                              <div class="flex-shrink-0">
@@ -66,7 +60,6 @@
                                              </div>
                                         </div>
                                    </a>
-                                   <!-- Item -->
                                    <a href="javascript:void(0);" class="dropdown-item py-3 border-bottom">
                                         <div class="d-flex">
                                              <div class="flex-shrink-0">
@@ -84,7 +77,6 @@
                                              </div>
                                         </div>
                                    </a>
-                                   <!-- Item -->
                                    <a href="javascript:void(0);" class="dropdown-item py-3 border-bottom">
                                         <div class="d-flex">
                                              <div class="flex-shrink-0">
@@ -98,7 +90,6 @@
                                              </div>
                                         </div>
                                    </a>
-                                   <!-- Item -->
                                    <a href="javascript:void(0);" class="dropdown-item py-3 border-bottom">
                                         <div class="d-flex">
                                              <div class="flex-shrink-0">
@@ -114,7 +105,6 @@
                                              </div>
                                         </div>
                                    </a>
-                                   <!-- Item -->
                                    <a href="javascript:void(0);" class="dropdown-item py-3 border-bottom">
                                         <div class="d-flex">
                                              <div class="flex-shrink-0">
@@ -135,14 +125,12 @@
                          </div>
                     </div>
 
-                    <!-- Theme Setting -->
                     <div class="topbar-item d-none d-md-flex">
                          <button type="button" class="topbar-button" id="theme-settings-btn" data-bs-toggle="offcanvas" data-bs-target="#theme-settings-offcanvas" aria-controls="theme-settings-offcanvas">
                               <iconify-icon icon="solar:settings-broken" class="fs-24 align-middle"></iconify-icon>
                          </button>
                     </div>
 
-                    <!-- User -->
                     <?php
                     $foto = session('foto');
                     if ($foto) {
@@ -161,17 +149,14 @@
                          aria-haspopup="true"
                          aria-expanded="false">
 
-                         <!-- Foto del usuario -->
                          <img class="rounded-circle" width="32" height="32"
                               src="<?= esc($fotoUsuario) ?>" alt="avatar">
 
-                         <!-- Nombre visible siempre -->
                          <span class="fw-semibold text-dark">
                               <?= esc($nombreUsuario) ?>
                          </span>
                     </a>
 
-                    <!-- Menú desplegable -->
                     <div class="dropdown-menu dropdown-menu-end">
                          <h6 class="dropdown-header">Bienvenido <?= esc($nombreUsuario) ?>!</h6>
 
@@ -187,5 +172,35 @@
      </div>
 </header>
 
-<!-- Right Sidebar (Theme Settings) -->
 <?= $this->include('partials/right-sidebar') ?>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    // Buscamos el botón por su CLASE, no por ID, porque así viene en tu HTML
+    const toggleBtn = document.querySelector('.button-toggle-menu');
+    
+    if(toggleBtn) {
+        toggleBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            const width = window.innerWidth;
+            const html = document.documentElement;
+            const body = document.body;
+            
+            if (width >= 992) {
+                // ESCRITORIO: Cambiar entre menú grande y pequeño
+                const currentSize = html.getAttribute('data-sidebar-size');
+                if (currentSize === 'sm') {
+                    html.setAttribute('data-sidebar-size', 'lg');
+                } else {
+                    html.setAttribute('data-sidebar-size', 'sm');
+                }
+            } else {
+                // MÓVIL: Mostrar u ocultar el menú
+                // 'sidebar-enable' es la clase estándar para mostrar el menú móvil en Rasket
+                body.classList.toggle('sidebar-enable');
+            }
+        });
+    }
+});
+</script>

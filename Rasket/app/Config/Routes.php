@@ -15,102 +15,120 @@ $routes->setTranslateURIDashes(false);
 $routes->set404Override();
 $routes->setAutoRoute(false);
 
-// Login
+// =============================================================================
+// RUTAS PÚBLICAS (ACCESO LIBRE)
+// =============================================================================
 $routes->get('login', 'Auth::index');
 $routes->post('auth/attemptLogin', 'Auth::attemptLogin');
 $routes->get('logout', 'Auth::logout');
-
-// Dashboard
 $routes->get('/', 'Home::index');
-$routes->get('dashboard', 'Dashboard::index');
 
-// Test BD
-$routes->get('testdb', 'TestDB::index');
-
-// Profesores
-$routes->get('lista-profesores', 'ProfesorLista::index');
-$routes->get('profesor/ver/(:num)', 'ProfesorLista::ver/$1');
-$routes->get('profesor/eliminar/(:num)', 'ProfesorLista::eliminar/$1');
-// Asignar carga de materias
-$routes->get('profesor/asignar/(:num)', 'ProfesorLista::asignar/$1');
-// Ruta para procesar el formulario del switch
-$routes->post('profesor/guardar_materia', 'ProfesorLista::guardar_materia');
-
-// Ruta para guardar la carga por grado completo
-$routes->post('profesor/guardar_carga_grado', 'ProfesorLista::guardar_carga_grado');
-
-// Alumnos
-$routes->match(['get', 'post'], 'alumno', 'Alumno::index'); 
-$routes->get('alumnos/registro', 'Alumnos::registro'); 
-$routes->post('alumnos/guardar', 'Alumnos::guardar'); 
-// Rutas de Alumnos (Preinscripciones) 
-$routes->get('alumnos/preinscripciones', 'Alumnos::preinscripciones'); 
-$routes->post('alumnos/guardar_preinscripcion', 'Alumnos::guardar_preinscripcion'); 
-
-//Lista grupos
-$routes->get('grupos/lista', 'Grupos::index');   
-$routes->post('grupos/filtrar', 'Grupos::filtrar');
-
-// Usuarios
-$routes->get('crear-usuario', 'Dashboard::crearUsuario');
-
-// Protegidas
+// =============================================================================
+// RUTAS GENERALES (Cualquier usuario logueado: Admin, Profe, Alumno)
+// =============================================================================
 $routes->group('', ['filter' => 'auth'], function ($routes) {
-    $routes->get('/', 'Home::index');
-    $routes->get('dashboard/obtenerGrados/(:num)', 'Dashboard::obtenerGrados/$1');
+    
+    // Dashboard General
+    $routes->get('dashboard', 'Dashboard::index');
+    $routes->get('dashboard/obtenerGrados/(:num)', 'Dashboard::obtenerGrados/$1'); // AJAX compartido
+
+    // Módulo de Correo (Todos lo usan)
+    $routes->get('correo', 'Correo::index');          
+    $routes->get('correo/redactar', 'Correo::redactar'); 
+    $routes->post('correo/enviar', 'Correo::enviar');    
+    $routes->get('correo/ver/(:num)', 'Correo::ver/$1'); 
+    $routes->get('correo/ajax_ver/(:num)', 'Correo::ajax_ver/$1'); 
+    $routes->post('correo/acciones', 'Correo::acciones_masivas');
+
+    // Aquí van las rutas futuras exclusivas del alumno ("alumno/mis-calificaciones")
+    $routes->get('alumno/boleta', 'AlumnoViewController::verBoleta');
+
+    // --- RUTAS DE TITULAR DE GRUPO ---
+    // No llevan ID en la URL, usan la sesión.
+    $routes->get('titular/mi-grupo', 'TitularViewController::verGrupo');
+    $routes->get('titular/calificar', 'TitularViewController::calificarGrupo');
+    $routes->get('titular/ver-boleta/(:num)', 'TitularViewController::verBoletaAlumno/$1');
+
+    // Calificaciones (Edición Celda por Celda AJAX)
+    $routes->post('calificaciones/actualizar', 'Calificaciones::actualizar');
+
 });
 
-//pagos
-$routes->get('verificar-pagos', 'VerificarPagos::index');
-$routes->post('verificar-pagos/validar', 'VerificarPagos::validar');
-
-// Rutas de Correo
-$routes->get('correo', 'Correo::index');          // Dashboard Principal (Inbox)
-$routes->get('correo/redactar', 'Correo::redactar'); // Formulario de Redacción
-$routes->post('correo/enviar', 'Correo::enviar');    // Acción de enviar
-$routes->get('correo/ver/(:num)', 'Correo::ver/$1'); // Ver detalle de un correo
-$routes->get('correo/ajax_ver/(:num)', 'Correo::ajax_ver/$1'); // Ver detalle vía AJAX
-$routes->post('correo/acciones', 'Correo::acciones_masivas'); // Acciones masivas
 
 // =============================================================================
-// Rutas para el Módulo de Boletas (VER E IMPRIMIR)
+// ⛔ ZONA ADMINISTRATIVA Y DOCENTE (PROTEGIDA POR 'adminAuth')
 // =============================================================================
+// Aquí metemos TODO lo que un alumno NO DEBE VER.
+// El filtro 'adminAuth' revisa que session('nivel') sea 1 o 2.
 
-$routes->get('boleta/lista/(:num)', 'Boleta::lista_alumnos/$1'); // Ruta para la Lista de Alumnos por Grado
-$routes->get('boleta/ver/(:num)/(:num)', 'Boleta::ver/$1/$2'); // Ruta para ver la boleta individual. recibe grado y alumno
+$routes->group('', ['filter' => 'adminAuth'], function ($routes) {
 
-// =============================================================================
-// RUTAS PARA CALIFICAR BOLETA (PROFESORES)
-// =============================================================================
+    // Test BD
+    $routes->get('testdb', 'TestDB::index');
 
-// 1. La pantalla de la sábana (GET)
-$routes->get('calificaciones/editar/(:num)', 'Calificaciones::editar/$1');
+    // Profesores
+    $routes->get('lista-profesores', 'ProfesorLista::index');
+    $routes->get('profesor/ver/(:num)', 'ProfesorLista::ver/$1');
+    $routes->get('profesor/eliminar/(:num)', 'ProfesorLista::eliminar/$1');
+    $routes->get('profesor/asignar/(:num)', 'ProfesorLista::asignar/$1');
+    $routes->post('profesor/guardar_materia', 'ProfesorLista::guardar_materia');
+    $routes->post('profesor/guardar_carga_grado', 'ProfesorLista::guardar_carga_grado');
 
-// 2. Ruta Alias 
-$routes->get('boleta/calificar/(:num)', 'Calificaciones::editar/$1');
+    // Gestión de Alumnos (Admin gestiona alumnos)
+    $routes->match(['get', 'post'], 'alumno', 'Alumno::index'); 
+    $routes->get('alumnos/registro', 'Alumnos::registro'); 
+    $routes->post('alumnos/guardar', 'Alumnos::guardar'); 
+    $routes->get('alumnos/preinscripciones', 'Alumnos::preinscripciones'); 
+    // Nota: preinscripciones podría ser pública si es externa, pero si es interna va aquí.
+    
+    // Lista grupos
+    $routes->get('grupos/lista', 'Grupos::index');   
+    $routes->post('grupos/filtrar', 'Grupos::filtrar');
 
-// 3. La ruta oculta para guardar los datos por AJAX (POST)
-$routes->post('calificaciones/actualizar', 'Calificaciones::actualizar');
+    // Usuarios
+    $routes->get('crear-usuario', 'Dashboard::crearUsuario');
 
-// =============================================================================
-// RUTAS PARA CALIFICAR BOLETA BIMESTRE (TERCER MODULO/APARTADO)
-// =============================================================================
+    // Verificar Pagos
+    $routes->get('verificar-pagos', 'VerificarPagos::index');
+    $routes->post('verificar-pagos/validar', 'VerificarPagos::validar');
 
-// 1. URL para ver la lista
-$routes->get('calificaciones_bimestre/lista/(:num)', 'CalificacionesBimestre::lista/$1');
+    // Boletas (Admin y Profes)
+    $routes->get('boleta/lista/(:num)', 'Boleta::lista_alumnos/$1');
+    $routes->get('boleta/ver/(:num)/(:num)', 'Boleta::ver/$1/$2');
+    $routes->get('boleta/calificar/(:num)', 'Calificaciones::editar/$1');
+    $routes->get('calificaciones/editar/(:num)', 'Calificaciones::editar/$1');
 
-// 2. URL para ver la boleta completa
-$routes->get('calificaciones_bimestre/alumno/(:num)/(:num)', 'CalificacionesBimestre::alumno_completo/$1/$2');
+    // Calificaciones Bimestrales
+    $routes->get('calificaciones_bimestre/lista/(:num)', 'CalificacionesBimestre::lista/$1');
+    $routes->get('calificaciones_bimestre/alumno/(:num)/(:num)', 'CalificacionesBimestre::alumno_completo/$1/$2');
+    $routes->get('calificaciones_bimestre/alumno_completo/(:num)/(:num)', 'CalificacionesBimestre::alumno_completo/$1/$2');
+    $routes->post('calificaciones_bimestre/actualizar', 'CalificacionesBimestre::actualizar');
 
-// 3. URL interna para guardar (AJAX)
-$routes->post('calificaciones_bimestre/actualizar', 'CalificacionesBimestre::actualizar');
+    // Asignaciones Especiales
+    $routes->get('asignar-area', 'AsignarArea::index'); 
+    $routes->post('asignar-area/actualizar', 'AsignarArea::actualizar'); 
+    $routes->get('asignar-titulares', 'AsignarTitulares::index'); 
+    $routes->post('asignar-titulares/guardar', 'AsignarTitulares::guardar'); 
 
-// =============================================================================
-// --- Rutas para el Módulo de Calificaciones Bimestrales ---
-// =============================================================================
+    // Registro Profesor y Grados
+    $routes->get('registro-profesor', 'RegistroProfesor::nuevo');         
+    $routes->post('registro-profesor/guardar', 'RegistroProfesor::guardar');
+    $routes->get('registro-profesor/municipios/(:segment)', 'RegistroProfesor::getMunicipios/$1'); 
+    $routes->get('registro-profesor/localidades/(:segment)', 'RegistroProfesor::getLocalidades/$1');
+    
+    $routes->get('registro/grados', 'RegistroProfesor::grados');              
+    $routes->post('registro/grados/guardar', 'RegistroProfesor::guardarGrado'); 
+    $routes->get('registro/grados/eliminar/(:num)', 'RegistroProfesor::eliminarGrado/$1'); 
 
-// 1. Ruta para ver/editar la boleta completa (Esto arregla el error 404 al navegar)
-$routes->get('calificaciones_bimestre/alumno_completo/(:num)/(:num)', 'CalificacionesBimestre::alumno_completo/$1/$2');
+    // Niveles
+    $routes->get('niveles', 'Niveles::index');           
+    $routes->get('niveles/fetch', 'Niveles::fetch');    
+    // Ruta para cambiar contraseña rápida
+    $routes->post('niveles/actualizar-pass', 'Niveles::actualizarPassword');
 
-// 2. Ruta para el guardado AJAX (Para que guarde los cambios)
-$routes->post('calificaciones_bimestre/actualizar', 'CalificacionesBimestre::actualizar');
+    // Cambio de Grado
+    $routes->get('cambio-grado', 'CambioGradoController::index');
+    $routes->post('cambio-grado/baja', 'CambioGradoController::darBaja');
+    $routes->get('cambio-grado/get-datos', 'CambioGradoController::getDatosModal'); 
+    $routes->post('cambio-grado/activar', 'CambioGradoController::activar');
+});

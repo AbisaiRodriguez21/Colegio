@@ -28,35 +28,42 @@
                             <div class="card-body">
 
                                 <?php if (session()->getFlashdata('success')): ?>
-                                    <div class="alert alert-success text-center"><?= session()->getFlashdata('success') ?></div>
+                                    <div class="alert alert-success text-center">
+                                        <i class="mdi mdi-check-circle"></i> <?= nl2br(esc(session()->getFlashdata('success'))) ?>
+                                    </div>
                                 <?php endif; ?>
 
-                                <!-- EL FORMULARIO APUNTA A LA RUTA DE PREINSCRIPCIÓN -->
-                                <form method="post" action="<?= base_url('alumnos/guardar_preinscripcion') ?>">
+                                <?php if (session()->getFlashdata('error')): ?>
+                                    <div class="alert alert-danger text-center">
+                                        <i class="mdi mdi-alert-circle"></i> <?= session()->getFlashdata('error') ?>
+                                    </div>
+                                <?php endif; ?>
+
+                                <form method="post" action="<?= base_url('alumnos/guardar') ?>">
+                                    
+                                    <input type="hidden" name="estatus" value="2">
                             
-                                    <!-- Fila 1 -->
                                     <div class="row">
                                         <div class="col-lg-4 col-md-6 mb-4">
                                             <div class="form-group">
                                                 <label class="form-label">Nombre</label>
-                                                <input type="text" name="Nombre" class="form-control">
+                                                <input type="text" name="Nombre" class="form-control" required>
                                             </div>
                                         </div>
                                         <div class="col-lg-4 col-md-6 mb-4">
                                             <div class="form-group">
                                                 <label class="form-label">Apellido Paterno</label>
-                                                <input type="text" name="ap_Alumno" class="form-control">
+                                                <input type="text" name="ap_Alumno" class="form-control" required>
                                             </div>
                                         </div>
                                         <div class="col-lg-4 col-md-6 mb-4">
                                             <div class="form-group">
                                                 <label class="form-label">Apellido Materno</label>
-                                                <input type="text" name="am_Alumno" class="form-control">
+                                                <input type="text" name="am_Alumno" class="form-control" required>
                                             </div>
                                         </div>
                                     </div>
 
-                                    <!-- Fila 2 -->
                                     <div class="row">
                                         <div class="col-lg-4 col-md-6 mb-4">
                                             <div class="form-group">
@@ -78,7 +85,6 @@
                                         </div>
                                     </div>
 
-                                    <!-- Fila 3 -->
                                     <div class="row">
                                         <div class="col-lg-4 col-md-6 mb-4">
                                             <div class="form-group">
@@ -96,9 +102,14 @@
                                                 </select>
                                             </div>
                                         </div>
+                                        <div class="col-lg-4 col-md-6 mb-4">
+                                            <div class="form-group">
+                                                <label class="form-label">Email Tutor</label>
+                                                <input type="email" name="email_tutor" class="form-control">
+                                            </div>
+                                        </div>
                                     </div>
 
-                                    <!-- Fila 4 -->
                                     <div class="row">
                                         <div class="col-lg-4 col-md-6 mb-4">
                                             <div class="form-group">
@@ -120,34 +131,40 @@
                                         </div>
                                     </div>
 
-                                    <!-- Fila 5 -->
-                                    <div class="row">
+                                    <div class="row p-3 rounded mb-3 border">
+                                        <div class="col-12 mb-2">
+                                            <h5 class="text-primary"><i class="mdi mdi-robot"></i> Asignación de Matrícula</h5>
+                                        </div>
                                         <div class="col-lg-4 col-md-6 mb-4">
                                             <div class="form-group">
-                                                <label class="form-label">Matrícula</label>
-                                                <input type="text" name="matricula" id="matricula" class="form-control">
+                                                <label class="form-label fw-bold">Matrícula</label>
+                                                <input type="text" class="form-control" disabled 
+                                                       placeholder="Se generará al guardar" 
+                                                       style="background-color: #e9ecef; font-weight: bold; color: #555;">
                                             </div>
                                         </div>
                                         <div class="col-lg-4 col-md-6 mb-4">
                                             <div class="form-group">
-                                                <label class="form-label">Email institucional</label>
-                                                <input type="email" name="email" id="email" class="form-control" readonly>
+                                                <label class="form-label fw-bold">Email institucional</label>
+                                                <input type="text" class="form-control" disabled 
+                                                       placeholder="matricula@sjs.edu.mx"
+                                                       style="background-color: #e9ecef;">
                                             </div>
                                         </div>
                                         <div class="col-lg-4 col-md-6 mb-4">
                                             <div class="form-group">
-                                                <label class="form-label">Contraseña</label>
-                                                <input type="text" name="pass" id="pass" class="form-control" readonly>
+                                                <label class="form-label fw-bold">Contraseña por defecto</label>
+                                                <input type="text" class="form-control" value="123456789" readonly 
+                                                       style="background-color: #e9ecef;">
                                             </div>
                                         </div>
                                     </div>
 
-                                    <!-- Fila 6 (Grados y Ciclos) -->
                                     <div class="row">
                                         <div class="col-lg-6 col-md-6 mb-4">
                                             <div class="form-group">
                                                 <label class="form-label">Grado de Preinscripción</label>
-                                                <select name="grado" class="form-control" required>
+                                                <select name="grado" class="form-control">
                                                     <option value="">Seleccionar Grado</option>
                                                     <?php foreach ($grados as $grado): ?>
                                                         <option value="<?= $grado['id_grado'] ?>">
@@ -172,7 +189,6 @@
                                         </div>
                                     </div>
 
-                                    <!-- Fila 7 -->
                                     <div class="row">
                                         <div class="col-12 mb-4">
                                             <div class="form-group">
@@ -183,7 +199,9 @@
                                     </div>
 
                                     <div class="text-start mt-3">
-                                        <button type="submit" class="btn btn-success px-4 py-2">Guardar Preinscripción</button>
+                                        <button type="submit" class="btn btn-success px-4 py-2">
+                                            <i class="mdi mdi-content-save"></i> Guardar Preinscripción
+                                        </button>
                                     </div>
                                 </form>
 
@@ -199,32 +217,6 @@
     </div>
     
     <?= $this->include("partials/vendor-scripts") ?>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            
-            const matriculaInput = document.getElementById('matricula');
-            const emailInput = document.getElementById('email');
-            const curpInput = document.getElementById('curp');
-            const passInput = document.getElementById('pass');
-
-            if (matriculaInput && emailInput) {
-                matriculaInput.addEventListener('input', function() {
-                    if (this.value.trim() === '') {
-                        emailInput.value = '';
-                    } else {
-                        emailInput.value = this.value + '@sjs.edu.mx';
-                    }
-                });
-            }
-
-            if (curpInput && passInput) {
-                curpInput.addEventListener('blur', function() {
-                    passInput.value = this.value;
-                });
-            }
-        });
-    </script>
 
 </body>
 </html>

@@ -43,16 +43,12 @@ class Alumnos extends BaseController
     {
         $gradoModel = new GradoModel();
         $cicloModel = new CicloEscolarModel();
-        $userModel  = new UserModel();
-
-        $prediccion = $userModel->generarProximaMatricula();
 
         $data = [
-            'title'             => $titulo,
-            'estatus_form'      => $estatus,
-            'grados'            => $gradoModel->orderBy('id_grado', 'ASC')->asArray()->findAll(),
-            'ciclos'            => $cicloModel->orderBy('nombreCicloEscolar', 'ASC')->asArray()->findAll(),
-            'proxima_matricula' => $prediccion
+            'title'         => $titulo,
+            'estatus_form'  => $estatus,
+            'grados'        => $gradoModel->orderBy('id_grado', 'ASC')->asArray()->findAll(),
+            'ciclos'        => $cicloModel->orderBy('nombreCicloEscolar', 'ASC')->asArray()->findAll(),
         ];
         
         return view('alumnos/registro', $data);
@@ -69,24 +65,28 @@ class Alumnos extends BaseController
 
         $model = new UserModel();
         
-        // 1. Generar matrícula real al momento 
-        $matriculaReal = $model->generarProximaMatricula();
-
-        // 2. Obtener datos
+        // 1. Obtener datos LIMPIOS (Sin acentos y en Mayúsculas)
         $data = $this->obtenerDatosDelPost();
+        
+        // 2. Generar matrícula real
+        $matriculaReal = $model->generarProximaMatricula();
         
         // 3. Inyectar datos de sistema
         $data['matricula'] = $matriculaReal;
         $data['email']     = $matriculaReal . '@sjs.edu.mx'; 
         
-        // Estatus dinámico (o forzar preinscripción si falla)
-        $data['estatus']   = $this->request->getPost('estatus') ?? 2; 
-        
-        $tipoRegistro = ($data['estatus'] == 1) ? 'Alumno registrado' : 'Preinscripción guardada';
+        // 4. Estatus SIEMPRE es 2
+        $data['estatus']   = 2; 
 
         if ($model->insert($data)) {
-            return redirect()->back()
-                             ->with('success', "¡ÉXITO! $tipoRegistro correctamente.\nMatrícula asignada: $matriculaReal");
+            // Muestra Matrícula y Correo
+            $mensajeExito = "¡REGISTRO EXITOSO!\n\n";
+            $mensajeExito .= "El alumno se guardó correctamente.\n";
+            $mensajeExito .= "--------------------------------------\n";
+            $mensajeExito .= "Matrícula: " . $matriculaReal . "\n";
+            $mensajeExito .= "Correo: " . $data['email'];
+
+            return redirect()->back()->with('success', $mensajeExito);
         } else {
             return redirect()->back()
                              ->with('error', 'Ocurrió un error al guardar.')
@@ -95,35 +95,64 @@ class Alumnos extends BaseController
     }
 
     // =========================================================================
-    // 4. MAPEO DE DATOS
+    // 4. MAPEO Y LIMPIEZA DE DATOS
     // =========================================================================
     private function obtenerDatosDelPost() {
+        
+        // LÓGICA DE GRADO: Si no seleccionan nada, asignamos 18 (Sin Grado)
+        $gradoSeleccionado = $this->request->getPost('grado');
+        $idGradoFinal = (!empty($gradoSeleccionado)) ? $gradoSeleccionado : 18;
+
         return [
-            // Identidad (Mayúsculas para estandarizar)
-            'Nombre'         => strtoupper($this->request->getPost('Nombre')),
-            'ap_Alumno'      => strtoupper($this->request->getPost('ap_Alumno')),
-            'am_Alumno'      => strtoupper($this->request->getPost('am_Alumno')),
-            'curp'           => strtoupper($this->request->getPost('curp')),
-            'rfc'            => strtoupper($this->request->getPost('rfc')),
-            'nia'            => strtoupper($this->request->getPost('nia')),
+            // Limpieza específica: Sin acentos, con Ñ, todo mayúsculas
+            'Nombre'         => $this->_sanitizarInput($this->request->getPost('Nombre')),
+            'ap_Alumno'      => $this->_sanitizarInput($this->request->getPost('ap_Alumno')),
+            'am_Alumno'      => $this->_sanitizarInput($this->request->getPost('am_Alumno')),
+            'curp'           => $this->_sanitizarInput($this->request->getPost('curp')),
+            'rfc'            => $this->_sanitizarInput($this->request->getPost('rfc')),
+            'nia'            => $this->_sanitizarInput($this->request->getPost('nia')),
+            'direccion'      => $this->_sanitizarInput($this->request->getPost('direccion')),
+            
+            // Estos campos no necesitan limpieza de texto
             'fechaNacAlumno' => $this->request->getPost('fechaNacAlumno'),
             'sexo_alum'      => $this->request->getPost('sexo_alum'),
-            
-            // Contacto
-            'direccion'      => strtoupper($this->request->getPost('direccion')),
             'cp_alum'        => $this->request->getPost('cp_alum'),
             'telefono_alum'  => $this->request->getPost('telefono_alum'),
             'mail_alumn'     => $this->request->getPost('email_tutor'), 
             
-            // Académico
-            'grado'            => $this->request->getPost('grado'),
+            'grado'          => $idGradoFinal, // <--- AQUÍ USAMOS EL VALOR CALCULADO
+            
             'generacionactiva' => $this->request->getPost('cicloEscolar'), 
-            'extra'            => $this->request->getPost('extra'),
+            'extra'          => $this->request->getPost('extra'),
             
             // Fijos
-            'pass'             => '123456789', 
-            'nivel'            => 7, 
-            'activo'           => 1 
+            'pass'           => '123456789', 
+            'nivel'          => 7, 
+            'activo'         => 1 
         ];
+    }
+
+    // =========================================================================
+    // 5. HELPER: QUITA ACENTOS Y CONVIERTE A MAYÚSCULAS
+    // =========================================================================
+    private function _sanitizarInput($texto)
+    {
+        if (empty($texto)) return '';
+
+        // 1. Mapa EXCLUSIVO para vocales (La Ñ no está aquí, así que se salva)
+        $acentos = [
+            'á' => 'a', 'é' => 'e', 'í' => 'i', 'ó' => 'o', 'ú' => 'u',
+            'Á' => 'A', 'É' => 'E', 'Í' => 'I', 'Ó' => 'O', 'Ú' => 'U',
+            'à' => 'a', 'è' => 'e', 'ì' => 'i', 'ò' => 'o', 'ù' => 'u',
+            'À' => 'A', 'È' => 'E', 'Ì' => 'I', 'Ò' => 'O', 'Ù' => 'U',
+            'ä' => 'a', 'ë' => 'e', 'ï' => 'i', 'ö' => 'o', 'ü' => 'u',
+            'Ä' => 'A', 'Ë' => 'E', 'Ï' => 'I', 'Ö' => 'O', 'Ü' => 'U'
+        ];
+
+        // 2. Reemplazamos solo las vocales acentuadas
+        $textoSinAcentos = strtr($texto, $acentos);
+
+        // 3. Convertimos a Mayúsculas usando MB_STRTOUPPER
+        return mb_strtoupper($textoSinAcentos, 'UTF-8');
     }
 }

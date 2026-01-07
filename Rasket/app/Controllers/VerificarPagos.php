@@ -9,7 +9,6 @@ class VerificarPagos extends BaseController
     // =========================================================================
     public function index()
     {
-        // 1. Seguridad
         if (!$this->_verificarPermisos()) {
             return redirect()->to(base_url('dashboard'))->with('error', 'Acceso denegado.');
         }
@@ -17,31 +16,34 @@ class VerificarPagos extends BaseController
         $request = \Config\Services::request();
         $model = new PagoModel();
 
-        // 2. Parámetros de búsqueda y paginación
+        // 1. Obtener parámetros (Búsqueda, Paginación y ORDENAMIENTO)
         $busqueda = $request->getGet('q');
-        $perPage  = 30; // Mostrar 30 por página como en tu ejemplo
+        $columna  = $request->getGet('columna') ?? 'fecha'; // Por defecto fecha
+        $dir      = $request->getGet('dir') ?? 'DESC';      // Por defecto descendente
+        $perPage  = 30;
 
-        // 3. Obtener datos
-        $pagos = $model->getPagosPendientes($busqueda, $perPage);
+        // 2. Pasamos columna y dir al modelo
+        $pagos = $model->getPagosPendientes($busqueda, $perPage, $columna, $dir);
         $pager = $model->pager;
 
-        // 4. Cálculos para el texto "Mostrando X-Y de Z"
+        // 3. Cálculos de totales
         $totalRows = $pager->getTotal();
         $currentPage = $pager->getCurrentPage();
-        
         $inicio = ($totalRows > 0) ? ($currentPage - 1) * $perPage + 1 : 0;
         $fin    = ($currentPage * $perPage);
         if ($fin > $totalRows) $fin = $totalRows;
 
         $data = [
-            'pagos'     => $pagos,
-            'pager'     => $pager,
-            'busqueda'  => $busqueda,
-            // Datos para el texto informativo
+            'pagos'    => $pagos,
+            'pager'    => $pager,
+            'busqueda' => $busqueda,
+            // 4. Pasamos el orden actual a la vista para pintar las flechas
+            'ordenActual' => [
+                'columna' => $columna,
+                'dir'     => $dir
+            ],
             'info_paginacion' => [
-                'inicio' => $inicio,
-                'fin'    => $fin,
-                'total'  => $totalRows
+                'inicio' => $inicio, 'fin' => $fin, 'total' => $totalRows
             ]
         ];
 
@@ -63,7 +65,6 @@ class VerificarPagos extends BaseController
         $idPago = $request->getPost('id_pago');
         
         // 3. Obtener SOLO el NOMBRE del usuario logueado
-        // Si quieres nombre y apellido, puedes concatenar: session('Nombre') . ' ' . session('ap_Alumno');
         $quienValida = session('nombre'); 
 
         // Validación extra por si la sesión no trajera el nombre (evitar que se guarde vacío)
