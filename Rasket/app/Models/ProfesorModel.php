@@ -14,7 +14,6 @@ class ProfesorModel extends Model
 
     /**
      * Obtiene el ID del ciclo escolar más reciente (el mayor ID).
-     * Basado en tu tabla 'cicloescolar'.
      */
     public function getCicloActivo()
     {
@@ -73,8 +72,7 @@ class ProfesorModel extends Model
     {
         return $this->db->table('materia_asignadaoriginal MA')
             ->select('M.nombre_materia, G.nombreGrado, MA.activo')
-            // Asumiendo que la tabla de nombres de materias es 'materiaoriginal' basado en tu historial
-            // Si tu tabla de nombres es 'materia', cambia 'materiaoriginal' por 'materia' abajo.
+           
             ->join('materia M', 'MA.id_materia = M.Id_materia', 'inner') 
             ->join('grados G', 'M.id_grados = G.id_grado', 'inner')
             ->where('MA.id_usr', $id)
@@ -109,11 +107,7 @@ class ProfesorModel extends Model
     // 3. LÓGICA DE ESTADOS Y ASIGNACIÓN
     // =========================================================================
 
-    /**
-     * Verifica estado para pintar los switches.
-     * CAMBIO: Se eliminó la verificación de "Ocupada". 
-     * Ahora solo existen dos estados: 'propia' (Asignada a mí) o 'libre' (Disponible).
-     */
+    
     public function verificarEstadoMateria($id_materia, $id_profesor_actual)
     {
         // Solo verificamos si el profesor ACTUAL la tiene asignada
@@ -132,7 +126,7 @@ class ProfesorModel extends Model
     }
 
     /**
-     * GUARDA LA CARGA MASIVA DE UN GRADO (VERSIÓN CORREGIDA Y ROBUSTA)
+     * GUARDA LA CARGA MASIVA DE UN GRADO PARA UN PROFESOR
      */
     public function guardarCargaMasiva($id_profesor, $id_grado, $materias_seleccionadas)
     {
@@ -144,8 +138,7 @@ class ProfesorModel extends Model
         // 2. Obtener materias del grado para saber cuáles tocar
         $todasLasMaterias = $this->getMateriasPorGrado($id_grado);
 
-        // --- CORRECCIÓN DE MAYÚSCULAS/MINÚSCULAS ---
-        // Verificamos si la base de datos devuelve 'Id_materia' o 'id_materia'
+        
         $columnaID = 'id_materia'; 
         if (!empty($todasLasMaterias)) {
             $primeraFila = (array)$todasLasMaterias[0];

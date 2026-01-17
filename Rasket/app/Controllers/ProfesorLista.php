@@ -144,7 +144,7 @@ class ProfesorLista extends BaseController
         // 2. Obtener Grados
         $grados = $model->getGrados();
         
-        // 3. Estructura Maestra: Vamos a meter las materias DENTRO de cada grado
+        // 3. Vamos a meter las materias DENTRO de cada grado
         foreach ($grados as &$grado) {
             // Buscamos las materias de este grado
             $materias = $model->getMateriasPorGrado($grado['id_grado']);

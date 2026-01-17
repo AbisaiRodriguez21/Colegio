@@ -131,4 +131,8 @@ $routes->group('', ['filter' => 'adminAuth'], function ($routes) {
     $routes->post('cambio-grado/baja', 'CambioGradoController::darBaja');
     $routes->get('cambio-grado/get-datos', 'CambioGradoController::getDatosModal'); 
     $routes->post('cambio-grado/activar', 'CambioGradoController::activar');
+
+    // Configuración Global (del Mes y Ciclo Activo)
+    $routes->get('globalconfig/getDatos/(:num)', 'GlobalConfig::getDatos/$1');
+$routes->post('globalconfig/update', 'GlobalConfig::update');
 });

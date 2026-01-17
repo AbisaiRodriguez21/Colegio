@@ -80,7 +80,7 @@ class Niveles extends BaseController
 
         $model = new NivelesModel();
         
-        // Guardamos tal cual (sin encriptar por solicitud)
+        // Guardamos tal cual
         if ($model->update($idUsuario, ['pass' => $newPass])) {
             return $this->response->setJSON(['status' => 'success']);
         } else {

@@ -81,6 +81,17 @@ if ($nivelUsuario == 1 || $nivelUsuario == 2) {
             <?php if ($nivelUsuario == 1 || $nivelUsuario == 2): ?>
 
                 <li class="nav-item">
+    <a href="#" class="nav-link" onclick="abrirConfiguracion(1, 'Configurar Primaria/Secundaria'); return false;">
+        <span class="nav-text">PRIMARIA - SECUNDARIA</span>
+</li>
+
+<li class="nav-item">
+    <a href="#" class="nav-link" onclick="abrirConfiguracion(2, 'Configurar Bachillerato'); return false;">
+        <span class="nav-text">BACHILLERATO</span>
+    </a>
+</li>
+
+                <li class="nav-item">
                     <a class="nav-link" href="<?= base_url('dashboard') ?>">
                         <span class="nav-icon"><iconify-icon icon="solar:home-2-broken"></iconify-icon></span>
                         <span class="nav-text"> Dashboard </span>
