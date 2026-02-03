@@ -1,4 +1,5 @@
 <?php
+
 use App\Models\BoletaModel;
 
 $nivelUsuario = session()->get('nivel'); // Obtenemos el nivel (1=Admin, 7=Alumno)
@@ -19,46 +20,105 @@ if ($nivelUsuario == 1 || $nivelUsuario == 2) {
         padding-top: 8px;
         padding-bottom: 8px;
     }
+
     .nav-text.multiline-text {
         white-space: normal !important;
         line-height: 1.2 !important;
         display: block;
         max-width: 170px;
     }
+
     @media (max-width: 991.98px) {
         .main-nav {
-            position: fixed !important; 
-            top: 0; left: 0; bottom: 0;
+            position: fixed !important;
+            top: 0;
+            left: 0;
+            bottom: 0;
             height: 100vh !important;
             width: 260px !important;
             z-index: 9999 !important;
-            background: #fff; 
+            background: #fff;
             transform: translateX(-100%);
             transition: transform 0.3s ease-in-out;
-            box-shadow: 0 0 15px rgba(0,0,0,0.5);
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
         }
-        body .main-content, body .page-content, div.main-content {
-            margin-left: 0 !important; width: 100% !important; min-width: 100vw !important; max-width: 100% !important; padding-left: 15px !important; padding-right: 15px !important;
+
+        body .main-content,
+        body .page-content,
+        div.main-content {
+            margin-left: 0 !important;
+            width: 100% !important;
+            min-width: 100vw !important;
+            max-width: 100% !important;
+            padding-left: 15px !important;
+            padding-right: 15px !important;
         }
-        footer.footer { left: 0 !important; width: 100% !important; margin-left: 0 !important; }
-        body.sidebar-enable .main-nav { transform: translateX(0) !important; }
+
+        footer.footer {
+            left: 0 !important;
+            width: 100% !important;
+            margin-left: 0 !important;
+        }
+
+        body.sidebar-enable .main-nav {
+            transform: translateX(0) !important;
+        }
+
         body.sidebar-enable::before {
-            content: ""; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 9998; backdrop-filter: blur(2px);
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 9998;
+            backdrop-filter: blur(2px);
         }
-        body.dark-mode-active .main-nav { background-color: #222736 !important; border-right: 1px solid #383e50; }
+
+        body.dark-mode-active .main-nav {
+            background-color: #222736 !important;
+            border-right: 1px solid #383e50;
+        }
     }
+
     @media (min-width: 992px) {
         .main-nav {
-            position: fixed; top: 0; left: 0; width: 250px; height: 100vh; z-index: 1002; background: #fff; border-right: 1px solid #f1f1f1; transition: all 0.3s ease;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 250px;
+            height: 100vh;
+            z-index: 1002;
+            background: #fff;
+            border-right: 1px solid #f1f1f1;
+            transition: all 0.3s ease;
         }
-        body .main-content { margin-left: 250px; transition: all 0.3s ease; }
-        html[data-sidebar-size="sm"] .main-nav { width: 70px; }
-        html[data-sidebar-size="sm"] body .main-content { margin-left: 70px; }
+
+        body .main-content {
+            margin-left: 250px;
+            transition: all 0.3s ease;
+        }
+
+        html[data-sidebar-size="sm"] .main-nav {
+            width: 70px;
+        }
+
+        html[data-sidebar-size="sm"] body .main-content {
+            margin-left: 70px;
+        }
+
         html[data-sidebar-size="sm"] .main-nav .nav-text,
         html[data-sidebar-size="sm"] .main-nav .menu-title,
         html[data-sidebar-size="sm"] .main-nav .nav-arrow,
-        html[data-sidebar-size="sm"] .logo-box img { display: none !important; }
-        body.dark-mode-active .main-nav { background-color: #222736; border-right: 1px solid #32394e; }
+        html[data-sidebar-size="sm"] .logo-box img {
+            display: none !important;
+        }
+
+        body.dark-mode-active .main-nav {
+            background-color: #222736;
+            border-right: 1px solid #32394e;
+        }
     }
 </style>
 
@@ -81,15 +141,15 @@ if ($nivelUsuario == 1 || $nivelUsuario == 2) {
             <?php if ($nivelUsuario == 1 || $nivelUsuario == 2): ?>
 
                 <li class="nav-item">
-    <a href="#" class="nav-link" onclick="abrirConfiguracion(1, 'Configurar Primaria/Secundaria'); return false;">
-        <span class="nav-text">PRIMARIA - SECUNDARIA</span>
-</li>
+                    <a href="#" class="nav-link" onclick="abrirConfiguracion(1, 'Configurar Primaria/Secundaria'); return false;">
+                        <span class="nav-text">PRIMARIA - SECUNDARIA</span>
+                </li>
 
-<li class="nav-item">
-    <a href="#" class="nav-link" onclick="abrirConfiguracion(2, 'Configurar Bachillerato'); return false;">
-        <span class="nav-text">BACHILLERATO</span>
-    </a>
-</li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link" onclick="abrirConfiguracion(2, 'Configurar Bachillerato'); return false;">
+                        <span class="nav-text">BACHILLERATO</span>
+                    </a>
+                </li>
 
                 <li class="nav-item">
                     <a class="nav-link" href="<?= base_url('dashboard') ?>">
@@ -235,28 +295,32 @@ if ($nivelUsuario == 1 || $nivelUsuario == 2) {
                 </li>
 
             <?php elseif ($nivelUsuario == 7): ?>
-                
                 <li class="nav-item">
-                    <a class="nav-link" href="<?= base_url('alumno/boleta') ?>"> 
+                    <a class="nav-link" href="<?= base_url('alumno/dashboard') ?>">
+                        <span class="nav-text">Dashboard</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="<?= base_url('alumno/boleta') ?>">
                         <span class="nav-icon"><iconify-icon icon="solar:document-text-broken"></iconify-icon></span>
                         <span class="nav-text"> Ver Boleta </span>
                     </a>
                 </li>
 
                 <li class="nav-item">
-                    <a class="nav-link" href="#">
+                    <a class="nav-link" href="<?= base_url('alumno/contenido') ?>">
                         <span class="nav-icon"><iconify-icon icon="solar:folder-with-files-broken"></iconify-icon></span>
                         <span class="nav-text"> Ver Contenidos </span>
                     </a>
                 </li>
 
                 <li class="nav-item">
-                    <a class="nav-link" href="#">
+                    <a class="nav-link" href="http://www.sjs.edu.mx/administracion/convenios-internos/" target="_blank">
                         <span class="nav-icon"><iconify-icon icon="solar:diploma-broken"></iconify-icon></span>
                         <span class="nav-text multiline-text"> Convenios universitarios </span>
                     </a>
                 </li>
-                
+
                 <li class="nav-item mt-4">
                     <a class="nav-link text-danger" href="<?= base_url('logout') ?>">
                         <span class="nav-icon"><iconify-icon icon="solar:logout-broken"></iconify-icon></span>
@@ -266,17 +330,17 @@ if ($nivelUsuario == 1 || $nivelUsuario == 2) {
 
 
             <?php elseif ($nivelUsuario == 9): ?>
-                
+
                 <?php
-                    // Pequeña lógica visual: Obtener nombre del grado asignado
-                    $idGradoT = session()->get('nivelT');
-                    $nombreGradoT = "Mi Grupo";
-                    
-                    if($idGradoT) {
-                        $db = \Config\Database::connect();
-                        $rowG = $db->table('grados')->select('nombreGrado')->where('id_grado', $idGradoT)->get()->getRow();
-                        if($rowG) $nombreGradoT = $rowG->nombreGrado;
-                    }
+                // Pequeña lógica visual: Obtener nombre del grado asignado
+                $idGradoT = session()->get('nivelT');
+                $nombreGradoT = "Mi Grupo";
+
+                if ($idGradoT) {
+                    $db = \Config\Database::connect();
+                    $rowG = $db->table('grados')->select('nombreGrado')->where('id_grado', $idGradoT)->get()->getRow();
+                    if ($rowG) $nombreGradoT = $rowG->nombreGrado;
+                }
                 ?>
 
                 <li class="nav-item">
@@ -292,7 +356,7 @@ if ($nivelUsuario == 1 || $nivelUsuario == 2) {
                         <span class="nav-text"> Calificar Boleta </span>
                     </a>
                 </li>
-                 
+
                 <li class="nav-item mt-4">
                     <a class="nav-link text-danger" href="<?= base_url('logout') ?>">
                         <span class="nav-icon"><iconify-icon icon="solar:logout-broken"></iconify-icon></span>
@@ -301,18 +365,18 @@ if ($nivelUsuario == 1 || $nivelUsuario == 2) {
                 </li>
 
             <?php endif; ?>
-            </ul>
+        </ul>
     </div>
 </div>
 
 <script>
-document.addEventListener('click', function(event) {
-    if (document.body.classList.contains('sidebar-enable')) {
-        const menu = document.querySelector('.main-nav');
-        const toggleBtn = document.querySelector('.button-toggle-menu');
-        if (menu && !menu.contains(event.target) && (!toggleBtn || !toggleBtn.contains(event.target))) {
-            document.body.classList.remove('sidebar-enable');
+    document.addEventListener('click', function(event) {
+        if (document.body.classList.contains('sidebar-enable')) {
+            const menu = document.querySelector('.main-nav');
+            const toggleBtn = document.querySelector('.button-toggle-menu');
+            if (menu && !menu.contains(event.target) && (!toggleBtn || !toggleBtn.contains(event.target))) {
+                document.body.classList.remove('sidebar-enable');
+            }
         }
-    }
-});
+    });
 </script>

@@ -7,7 +7,7 @@ use CodeIgniter\Model;
 class UsuarioModel extends Model
 {
     protected $table = 'usr';
-    protected $primaryKey = 'email';
+    protected $primaryKey = 'id';
     protected $allowedFields = [
         'email', 'pass', 'Nombre', 'ap_Alumno', 'am_Alumno',
         'estatus', 'nivel', 'foto'

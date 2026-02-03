@@ -8,7 +8,7 @@ class CambioGradoModel extends Model
     protected $primaryKey = 'id';
     protected $allowedFields = ['estatus', 'activo', 'grado']; 
 
-    // --- CONSULTAS EXISTENTES (Iguales) ---
+    // --- CONSULTAS EXISTENTES  ---
     public function getAlumnos($busqueda = null, $porPagina = 20)
     {
         $builder = $this->select('usr.*, grados.nombreGrado, estatus_usr.nombre as nombre_estatus')

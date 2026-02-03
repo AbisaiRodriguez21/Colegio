@@ -33,8 +33,34 @@ class Auth extends BaseController
                 'foto'       => $user['foto'] ?? '',    
                 'nivelT'     => $user['nivelT'] ?? 0,
             ]);
+// === ENRUTADOR INTELIGENTE DE NIVELES ===
+            
+            $nivelUsuario = $user['nivel'];
 
-            return redirect()->to(base_url('dashboard'));
+            // CASO 1: ALUMNOS (Nivel 7)
+            if ($nivelUsuario == 7) {
+                return redirect()->to(base_url('alumno/dashboard'));
+            }
+            
+            // CASO 2: ADMINISTRADORES (Nivel 1 y 2)
+            elseif ($nivelUsuario == 1 || $nivelUsuario == 2) {
+                // Ellos van al dashboard general (admin)
+                return redirect()->to(base_url('dashboard'));
+            }
+
+            // CASO 3: DOCENTES (Nivel 9 - Ejemplo)
+            elseif ($nivelUsuario == 9) {
+                
+                // CAMBIAR LA RUTA CUANDO YA SE TENGA LA VISTA CORRESPONDIENTE
+                return redirect()->to(base_url('dashboard'));
+            }
+
+            // CAMBIAR LA RUTA CUANDO YA SE TENGA LA VISTA CORRESPONDIENTE
+            else {
+                return redirect()->to(base_url('dashboard'));
+            }
+            // ==========================================
+
         } else {
             return redirect()->back()->with('error', 'Usuario o contraseña incorrectos.');
         }

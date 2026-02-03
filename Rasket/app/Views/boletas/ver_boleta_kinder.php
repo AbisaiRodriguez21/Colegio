@@ -96,7 +96,22 @@
 
     <div class="container mt-3 mb-3 no-print">
         <div class="d-flex justify-content-between align-items-center">
-            <a href="<?= base_url('boleta/lista/' . $id_grado) ?>" class="btn btn-secondary btn-sm"><i class="bx bx-arrow-back"></i> Regresar</a>
+            <?php
+            // Lógica de "Salida de Emergencia"
+            if (session('nivel') == 7) {
+                // ALUMNO
+                // Siempre vuelve a su Dashboard, sin importar qué estaba viendo
+                $rutaRegreso = base_url('alumno/dashboard');
+            } else {
+                // PROFES / ADMINS / TITULARES
+                // Siempre vuelven a la "Lista de Alumnos" de este grado específico.
+                $rutaRegreso = base_url('boleta/lista/' . $id_grado);
+            }
+            ?>
+
+            <a href="<?= $rutaRegreso ?>" class="btn btn-secondary btn-sm">
+                <i class='bx bx-arrow-back'></i> Regresar
+            </a>
             <div>
                 <?php if($id_anterior): ?>
                     <a href="<?= base_url('boleta/ver/' . $id_grado . '/' . $id_anterior) ?>" class="btn btn-light border"><i class="bx bx-chevron-left"></i></a>

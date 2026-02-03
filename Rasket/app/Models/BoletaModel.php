@@ -122,10 +122,10 @@ class BoletaModel extends Model
     public function getAlumnosPorGrado($id_grado)
     {
         return $this->db->table('usr')
-            ->select('id, generacionactiva, matricula, Nombre, ap_Alumno, am_Alumno, email, activo')
+            ->select('id, generacionactiva, matricula, Nombre, ap_Alumno, am_Alumno, email, estatus')
             ->where('grado', $id_grado)
-            ->where('activo', 1)
-            ->where('generacionactiva', 11)
+            ->where('estatus', 1)       
+            ->where('nivel', 7)        
             ->orderBy('ap_Alumno', 'ASC')
             ->get()->getResultArray();
     }

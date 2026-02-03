@@ -36,7 +36,7 @@ class PagoModel extends Model
                         ->where('u.estatus', 2)     
                         ->where('pago.validar_ficha', 48); 
 
-        // LÓGICA DE BÚSQUEDA (Igual que antes)
+        // LÓGICA DE BÚSQUEDA 
         if (!empty($busqueda)) {
             $builder->groupStart(); 
                 $builder->like('u.Nombre', $busqueda)

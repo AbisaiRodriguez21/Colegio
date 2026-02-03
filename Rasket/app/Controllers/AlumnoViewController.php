@@ -214,7 +214,7 @@ class AlumnoViewController extends BaseController
     }
 
     // =========================================================================
-    // 3. HELPERS DE CÁLCULO (Copiados y adaptados de Boleta.php para no romper lógica)
+    // 3. HELPERS DE CÁLCULO 
     // =========================================================================
 
     private function _helperProcesarPrimaria($configJson, $materias_map, $calificaciones) {

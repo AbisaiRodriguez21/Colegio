@@ -6,10 +6,24 @@ class CalificacionesModel extends Model
 {
     protected $table = 'calificacion';
     protected $primaryKey = 'Id_cal';
-    protected $allowedFields = ['calificacion', 'faltas', 'bandera', 'fechaInsertar', 'comentarios'];
+
+    // --- CORRECCIÓN CRÍTICA 1: AGREGAR CAMPOS LLAVE ---
+    // Sin esto, el INSERT fallaba silenciosamente porque CodeIgniter borraba los IDs.
+    protected $allowedFields = [
+        'id_usr', 
+        'id_materia', 
+        'id_grado', 
+        'id_mes', 
+        'cicloEscolar', 
+        'calificacion', 
+        'faltas', 
+        'bandera', 
+        'fechaInsertar', 
+        'comentarios'
+    ];
 
     // =========================================================================
-    // 1. CONFIGURACIÓN DEL CICLO 
+    // 1. CONFIGURACIÓN DEL CICLO (CORREGIDA VISUALMENTE)
     // =========================================================================
     public function getConfiguracionActiva($nivel_grado)
     {
@@ -18,13 +32,41 @@ class CalificacionesModel extends Model
         if ($nivel_grado == 5) { $id_config = 2; } 
         elseif ($nivel_grado <= 2) { $id_config = 3; } 
 
+        // 1. Obtenemos qué ID de mes/periodo está activo en la tabla de control
         $builder = $this->db->table('mesycicloactivo MA');
-        $builder->select('MA.id_mes, MA.id_ciclo, M.nombre as nombre_mes, CE.nombreCicloEscolar');
-        $builder->join('mes M', 'MA.id_mes = M.id');
+        $builder->select('MA.id_mes, MA.id_ciclo, CE.nombreCicloEscolar');
         $builder->join('cicloescolar CE', 'MA.id_ciclo = CE.id_cicloEscolar');
         $builder->where('MA.id', $id_config);
 
-        return $builder->get()->getRowArray();
+        $data = $builder->get()->getRowArray();
+
+        if (!$data) return null;
+
+        // 2. Buscamos el NOMBRE REAL en la tabla correcta según el nivel
+        if ($id_config == 2) { 
+            // CASO BACHILLERATO: Consultamos la tabla 'bimestres'
+            // NOTA: Aquí usamos 'bimestres' en lugar del arreglo manual
+            $bimestre = $this->db->table('bimestres')
+                             ->select('nombre')
+                             ->where('id', $data['id_mes'])
+                             ->get()->getRow();
+            
+            // Formato final: "1° Periodo (AGO-SEP)"
+            $nombreReal = $bimestre ? $bimestre->nombre : 'Periodo Desconocido';
+            $data['nombre_mes'] = $data['id_mes'] . '° Periodo (' . $nombreReal . ')';
+
+        } else {
+            // CASO PRIMARIA/SECUNDARIA: Consultamos la tabla 'mes' (Calendario normal)
+            $mesInfo = $this->db->table('mes')
+                            ->select('nombre')
+                            ->where('id', $data['id_mes'])
+                            ->get()->getRow();
+            
+            // Formato final: "Septiembre", "Octubre", etc.
+            $data['nombre_mes'] = $mesInfo ? $mesInfo->nombre : 'Mes Desconocido';
+        }
+
+        return $data;
     }
 
     // =========================================================================
@@ -43,7 +85,7 @@ class CalificacionesModel extends Model
         // Se decodifica el JSON 
         $configJson = json_decode($grado['sabana_calif_config'] ?? '{"groups":[]}', true);
         
-        // Obtenemos qué Mes y Ciclo están abiertos para captura
+        // Obtenemos qué Mes y Ciclo están abiertos para captura (Usando la función corregida arriba)
         $activeConfig = $this->getConfiguracionActiva($grado['nivel_grado']);
 
         // B. Obtener Catálogo de Materias (ID => Nombre)
@@ -63,6 +105,7 @@ class CalificacionesModel extends Model
         $id_ciclo = $activeConfig['id_ciclo'];
         $id_mes   = $activeConfig['id_mes'];
 
+        // NOTA: Usamos la lógica robusta del sitio viejo (Estatus Activo + Nivel Alumno)
         $sql = "SELECT 
                     u.id as id_alumno,
                     u.matricula,
@@ -74,13 +117,12 @@ class CalificacionesModel extends Model
                     c.bandera
                 FROM usr u
                 LEFT JOIN calificacion c ON u.id = c.id_usr 
-                     AND c.id_grado = ? 
-                     AND c.cicloEscolar = ? 
-                     AND c.id_mes = ?
+                      AND c.id_grado = ? 
+                      AND c.cicloEscolar = ? 
+                      AND c.id_mes = ?
                 WHERE u.grado = ? 
-                  AND u.activo = 1 
-                  AND u.nivel = 7
-                  AND u.generacionactiva = 11  
+                  AND u.estatus = 1   -- Solo activos
+                  AND u.nivel = 7     -- Solo alumnos
                 ORDER BY u.ap_Alumno, u.am_Alumno, u.Nombre";
 
         // Ejecutar consulta
@@ -124,7 +166,7 @@ class CalificacionesModel extends Model
     }
 
     // =========================================================================
-    // 3. ACTUALIZAR UNA CELDA
+    // 3. ACTUALIZAR UNA CELDA (UPDATE)
     // =========================================================================
     public function updateCalificacion($id_cal, $tipo, $valor, $id_usuario)
     {
@@ -151,5 +193,16 @@ class CalificacionesModel extends Model
         }
 
         return $this->update($id_cal, $data);
+    }
+
+    // =========================================================================
+    // 4. CREAR UNA NUEVA CALIFICACIÓN (INSERT) - NECESARIO PARA LA SÁBANA REACTIVA
+    // =========================================================================
+    public function crearCalificacion($datos)
+    {
+        // $datos debe contener: id_usr, id_materia, id_grado, cicloEscolar, id_mes, calificacion/faltas, bandera, fechaInsertar
+        // Gracias a que actualizamos $allowedFields arriba, esto ahora sí funcionará.
+        $this->insert($datos);
+        return $this->getInsertID(); // Devolvemos el ID nuevo para que el JS lo registre
     }
 }

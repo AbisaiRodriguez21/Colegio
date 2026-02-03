@@ -33,4 +33,17 @@ class GlobalConfigModel extends Model
                     ->where('id', $id_config)
                     ->first();
     }
+
+    // 4. Obtener Periodos para Bachillerato
+    public function getPeriodosBachillerato()
+    {
+        return [
+            ['id' => 1, 'nombre' => 'AGO-SEP'],
+            ['id' => 2, 'nombre' => 'OCT-NOV'],
+            ['id' => 3, 'nombre' => 'DIC-ENE'],
+            ['id' => 4, 'nombre' => 'FEB-MAR'],
+            ['id' => 5, 'nombre' => 'ABR-MAY'],
+            ['id' => 6, 'nombre' => 'JUN-JUL'],
+        ];
+    }
 }

@@ -52,8 +52,30 @@ $routes->group('', ['filter' => 'auth'], function ($routes) {
     // Calificaciones (Edición Celda por Celda AJAX)
     $routes->post('calificaciones/actualizar', 'Calificaciones::actualizar');
 
+
 });
 
+
+// =============================================================================
+// 1. RUTAS DE ALUMNOS (Protegidas por 'studentAuth')
+// =============================================================================
+// Nadie que no sea nivel 7 puede entrar aquí.
+$routes->group('alumno', ['filter' => 'studentAuth'], function($routes) {
+    
+    // Al entrar a /alumno/dashboard, carga el controlador nuevo
+    $routes->get('dashboard', 'Alumno\Dashboard::index');
+    
+    // Futura ruta de boletas
+    $routes->get('boleta', 'Alumno\Boleta::index'); 
+
+    $routes->post('actualizar-password', 'Alumno\Dashboard::actualizarPassword'); // Actualizar contraseña vía AJAX
+
+    $routes->get('contenido', 'Alumno\Contenido::index'); // Contenido de Materias
+
+    $routes->get('pagos', 'Alumno\Pagos::index');
+    $routes->post('pagos/guardar', 'Alumno\Pagos::guardar');
+    $routes->get('pagos/recibo/(:num)', 'Alumno\Pagos::verRecibo/$1');
+});
 
 // =============================================================================
 // ⛔ ZONA ADMINISTRATIVA Y DOCENTE (PROTEGIDA POR 'adminAuth')
@@ -97,6 +119,10 @@ $routes->group('', ['filter' => 'adminAuth'], function ($routes) {
     $routes->get('boleta/ver/(:num)/(:num)', 'Boleta::ver/$1/$2');
     $routes->get('boleta/calificar/(:num)', 'Calificaciones::editar/$1');
     $routes->get('calificaciones/editar/(:num)', 'Calificaciones::editar/$1');
+    // Descargar Plantilla de Calificaciones
+    $routes->get('calificaciones/exportarPlantilla/(:num)', 'Calificaciones::exportarPlantilla/$1');
+    // Subir Plantilla de Calificaciones
+    $routes->post('calificaciones/importar', 'Calificaciones::importar');
 
     // Calificaciones Bimestrales
     $routes->get('calificaciones_bimestre/lista/(:num)', 'CalificacionesBimestre::lista/$1');
