@@ -7,8 +7,6 @@ class CalificacionesModel extends Model
     protected $table = 'calificacion';
     protected $primaryKey = 'Id_cal';
 
-    // --- CORRECCIÓN CRÍTICA 1: AGREGAR CAMPOS LLAVE ---
-    // Sin esto, el INSERT fallaba silenciosamente porque CodeIgniter borraba los IDs.
     protected $allowedFields = [
         'id_usr', 
         'id_materia', 

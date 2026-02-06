@@ -48,7 +48,7 @@ class Pagos extends BaseController
         $request = \Config\Services::request();
         
         $folioModel = new FolioModel();
-        $pagoModel  = new PagoAlumnoModel(); // <--- USAMOS EL NUEVO MODELO
+        $pagoModel  = new PagoAlumnoModel(); 
 
         // A) Generar Folio
         $idFolio = $folioModel->generarNuevo();
@@ -57,17 +57,26 @@ class Pagos extends BaseController
         $archivo = $request->getFile('archivo_comprobante');
         $nombreArchivo = '';
 
+        // Nombre del archivo: IDALUMNO_IDFOLIO_FECHAHORA.EXT
         if ($archivo && $archivo->isValid() && !$archivo->hasMoved()) {
             $newName = $session->get('id') . '_' . $idFolio . '_' . date('YmdHis') . '.' . $archivo->getExtension();
+            // Ubicación de guardado: /public/pagos/
             $archivo->move(ROOTPATH . 'public/pagos', $newName);
             $nombreArchivo = $newName;
         }
 
+        // Calcular el monto total
+        $cantidad = $request->getPost('cantidad');
+        $recargos = $request->getPost('recargos') ?: 0;
+        //TOTAL
+        $total = $cantidad + $recargos;
+
         // C) Guardar
         $dataPago = [
             'id_usr'        => $session->get('id'),
-            'cantidad'      => $request->getPost('cantidad'),
-            'recargos'      => $request->getPost('recargos') ?: 0,
+            'cantidad'      => $cantidad,
+            'recargos'      => $recargos,
+            'total'         => $total,
             'mes'           => $request->getPost('mes'),
             'fechaPago'     => date('Y-m-d'),
             'qrp'           => $session->get('nombre') . ' ' . $session->get('apellidos'),
@@ -92,7 +101,7 @@ class Pagos extends BaseController
     public function verRecibo($idFolio)
     {
         $session = session();
-        $pagoModel = new PagoAlumnoModel(); // <--- USAMOS EL NUEVO MODELO
+        $pagoModel = new PagoAlumnoModel(); 
         $folioModel = new FolioModel();
         
         $pago = $pagoModel->where('id_folio', $idFolio)
@@ -113,10 +122,27 @@ class Pagos extends BaseController
     private function enviarCorreo($datos, $numFolio)
     {
         $email = \Config\Services::email();
-        // $email->setFrom('pagos@sjs.edu.mx', 'Sistema Pagos');
-        // $email->setTo('eve.consultores@gmail.com'); 
+        
+        $email->setFrom('pagos@sjs.edu.mx', 'Sistema Pagos SJS');
+        
+        // --- CAMBIO 1: PON AQUÍ TU CORREO PERSONAL ---
+        $email->setTo('juancarlosqqq31@gmail.com'); 
+        // ---------------------------------------------
+
         $email->setSubject("Nuevo Pago - Folio #$numFolio");
-        $email->setMessage("Alumno: {$datos['qrp']} <br> Monto: {$datos['cantidad']} <br> Concepto: {$datos['concepto']}");
-        $email->send();
+
+        // --- CAMBIO 2: USAR LA VISTA BONITA ---
+        // Cargamos la vista que creamos en el Paso 1 y le pasamos los datos
+        $mensaje = view('emails/nuevo_pago', [
+            'datos' => $datos, 
+            'folio' => $numFolio
+        ]);
+        
+        $email->setMessage($mensaje);
+        
+        // Enviamos y si falla, mostramos el error en el log (opcional para debug)
+        if (! $email->send()) {
+            log_message('error', $email->printDebugger(['headers']));
+        }
     }
 }

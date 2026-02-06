@@ -27,7 +27,7 @@
                     <tr>
                         <td><?= esc($pago['concepto']) ?></td>
                         <td><?= esc($pago['mes']) ?></td>
-                        <td class="text-end">$<?= number_format($pago['cantidad'], 2) ?></td>
+                        <td class="text-end">$<?= number_format($pago['total'], 2) ?></td>
                     </tr>
                 </tbody>
             </table>

@@ -209,9 +209,9 @@
                 </small>
             </div>
             <div>
-                <button onclick="if(window.history.length > 1){ window.history.back(); } else { window.location.href='<?= base_url('dashboard') ?>'; }" class="btn btn-outline-secondary btn-sm">
+                <a href="<?= base_url('dashboard') ?>" class="btn btn-outline-secondary btn-sm">
                     <i class='bx bx-arrow-back'></i> Salir
-                </button>
+                </a>
 
                 <!--  -->
                 <a href="<?= base_url('calificaciones/exportarPlantilla/' . $grado_info['id_grado']) ?>" target="_blank" class="btn btn-success btn-sm">
@@ -228,10 +228,10 @@
     </div>
 
     <div class="container-fluid mt-3">
-        
+
         <?php if (session()->getFlashdata('error')): ?>
             <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
-                <i class='bx bx-error-circle'></i> <strong>¡Ups! No se pudo importar:</strong> 
+                <i class='bx bx-error-circle'></i> <strong>¡Ups! No se pudo importar:</strong>
                 <br>
                 <?= session()->getFlashdata('error') ?>
                 <button type="button" class="close" data-dismiss="alert" aria-label="Close">
@@ -242,7 +242,7 @@
 
         <?php if (session()->getFlashdata('mensaje')): ?>
             <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
-                <i class='bx bx-check-circle'></i> <strong>¡Éxito!</strong> 
+                <i class='bx bx-check-circle'></i> <strong>¡Éxito!</strong>
                 <?= session()->getFlashdata('mensaje') ?>
                 <button type="button" class="close" data-dismiss="alert" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
@@ -251,7 +251,7 @@
         <?php endif; ?>
 
     </div>
-    
+
     <div class="sabana-container">
         <table class="tabla-sabana" align="center">
             <thead>
@@ -387,44 +387,44 @@
     </div>
 
     <div class="modal fade" id="modalImportar" tabindex="-1" role="dialog" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Importar Calificaciones (CSV)</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <form action="<?= base_url('calificaciones/importar') ?>" method="post" enctype="multipart/form-data">
-                <div class="modal-body">
-                    <div class="alert alert-warning" style="font-size: 12px;">
-                        <i class='bx bx-info-circle'></i> <b>Importante:</b>
-                        <ul class="mb-0 pl-3">
-                            <li>Usa solo la plantilla descargada de este sistema.</li>
-                            <li>No cambies el orden de las columnas.</li>
-                            <li>Verifica que estás subiendo el archivo del mes correcto.</li>
-                        </ul>
-                    </div>
-                    
-                    <input type="hidden" name="id_grado_actual" value="<?= $grado_info['id_grado'] ?>">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Importar Calificaciones (CSV)</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <form action="<?= base_url('calificaciones/importar') ?>" method="post" enctype="multipart/form-data">
+                    <div class="modal-body">
+                        <div class="alert alert-warning" style="font-size: 12px;">
+                            <i class='bx bx-info-circle'></i> <b>Importante:</b>
+                            <ul class="mb-0 pl-3">
+                                <li>Usa solo la plantilla descargada de este sistema.</li>
+                                <li>No cambies el orden de las columnas.</li>
+                                <li>Verifica que estás subiendo el archivo del mes correcto.</li>
+                            </ul>
+                        </div>
 
-                    <div class="form-group">
-                        <label>Seleccionar Archivo CSV:</label>
-                        <input type="file" name="archivo_csv" class="form-control-file" accept=".csv" required>
+                        <input type="hidden" name="id_grado_actual" value="<?= $grado_info['id_grado'] ?>">
+
+                        <div class="form-group">
+                            <label>Seleccionar Archivo CSV:</label>
+                            <input type="file" name="archivo_csv" class="form-control-file" accept=".csv" required>
+                        </div>
                     </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Subir y Procesar</button>
-                </div>
-            </form>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Subir y Procesar</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
-</div>
 
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
 
 
     <script>

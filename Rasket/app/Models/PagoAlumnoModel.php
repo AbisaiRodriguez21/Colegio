@@ -18,6 +18,7 @@ class PagoAlumnoModel extends Model
         'concepto', 
         'cantidad', 
         'recargos', 
+        'total',
         'modoPago', 
         'nota', 
         'ficha',         // Imagen

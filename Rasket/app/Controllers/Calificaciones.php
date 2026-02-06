@@ -240,9 +240,6 @@ class Calificaciones extends BaseController
     }
 
     // =========================================================================
-    // 4. IMPORTAR CALIFICACIONES (Procesador Inteligente)
-    // =========================================================================
-    // =========================================================================
     // 4. IMPORTAR CALIFICACIONES (Lógica Inteligente: Asignación vs Corrección)
     // =========================================================================
     public function importar()
@@ -307,15 +304,18 @@ class Calificaciones extends BaseController
             $csvCiclo = $row[$idxCiclo];
             $csvGrado = $row[$idxGrado];
 
-            if ($csvMes != $mesReal || $csvCiclo != $cicloReal) {
-                fclose($handle);
-                $msg = "Error de Periodo: El archivo corresponde al <b>Mes $csvMes (Ciclo $csvCiclo)</b>, pero el sistema espera el <b>Mes $mesReal</b>. Verifique su archivo.";
-                return redirect()->back()->with('error', $msg);
-            }
-
+            // 1. PRIMERO REVISAMOS EL GRADO (Lo más importante)
             if ($csvGrado != $idGradoActual) {
                  fclose($handle);
-                 return redirect()->back()->with('error', "El archivo pertenece a otro Grado (ID $csvGrado). Estás en el Grado ID $idGradoActual.");
+                 // Mensaje corto y claro
+                 return redirect()->back()->with('error', "❌ Error: El archivo no corresponde al grado seleccionado.");
+            }
+
+            // 2. DESPUÉS REVISAMOS EL PERIODO (Mes y Ciclo)
+            if ($csvMes != $mesReal || $csvCiclo != $cicloReal) {
+                fclose($handle);
+                // Mensaje corto y claro
+                return redirect()->back()->with('error', "❌ Error: El archivo no corresponde al periodo (Mes/Ciclo) actual.");
             }
 
             // --- PROCESAR MATERIAS ---
