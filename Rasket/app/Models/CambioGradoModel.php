@@ -8,7 +8,7 @@ class CambioGradoModel extends Model
     protected $primaryKey = 'id';
     protected $allowedFields = ['estatus', 'activo', 'grado']; 
 
-    // --- CONSULTAS EXISTENTES  ---
+    
     public function getAlumnos($busqueda = null, $porPagina = 20)
     {
         $builder = $this->select('usr.*, grados.nombreGrado, estatus_usr.nombre as nombre_estatus')
@@ -63,7 +63,7 @@ class CambioGradoModel extends Model
         return ($row) ? $row->id_ciclo : 11; 
     }
 
-    // 2. Activación y Pago (Actualizada con ciclo dinámico)
+    // 2. Activación y Pago 
     public function activarConPago($idAlumno, $idNuevoGrado, $datosPago, $idCiclo)
     {
         $db = \Config\Database::connect();

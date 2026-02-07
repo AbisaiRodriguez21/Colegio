@@ -30,9 +30,9 @@ $routes->group('', ['filter' => 'auth'], function ($routes) {
     
     // Dashboard General
     $routes->get('dashboard', 'Dashboard::index');
-    $routes->get('dashboard/obtenerGrados/(:num)', 'Dashboard::obtenerGrados/$1'); // AJAX compartido
+    $routes->get('dashboard/obtenerGrados/(:num)', 'Dashboard::obtenerGrados/$1');
 
-    // Módulo de Correo (Todos lo usan)
+    // Módulo de Correo
     $routes->get('correo', 'Correo::index');          
     $routes->get('correo/redactar', 'Correo::redactar'); 
     $routes->post('correo/enviar', 'Correo::enviar');    
@@ -40,19 +40,40 @@ $routes->group('', ['filter' => 'auth'], function ($routes) {
     $routes->get('correo/ajax_ver/(:num)', 'Correo::ajax_ver/$1'); 
     $routes->post('correo/acciones', 'Correo::acciones_masivas');
 
-    // Aquí van las rutas futuras exclusivas del alumno ("alumno/mis-calificaciones")
+    // Rutas del Alumno
     $routes->get('alumno/boleta', 'AlumnoViewController::verBoleta');
 
-    // --- RUTAS DE TITULAR DE GRUPO ---
-    // No llevan ID en la URL, usan la sesión.
-    $routes->get('titular/mi-grupo', 'TitularViewController::verGrupo');
-    $routes->get('titular/calificar', 'TitularViewController::calificarGrupo');
-    $routes->get('titular/ver-boleta/(:num)', 'TitularViewController::verBoletaAlumno/$1');
-
-    // Calificaciones (Edición Celda por Celda AJAX)
+    // ⚠️ NOTA: Dejamos 'actualizar' aquí porque si mueves esto al grupo de Titular,
+    // los maestros de materia (que no son titulares) no podrán guardar calificaciones.
+    // A menos que SOLO los titulares califiquen en tu escuela.
     $routes->post('calificaciones/actualizar', 'Calificaciones::actualizar');
+});
 
+// =============================================================================
+// Rutas BLINDADAS para el Maestro Titular (nivel 9 + grupo asignado)
+// =============================================================================
+$routes->group('titular', ['filter' => 'titularAuth'], function($routes) {
+    
+    // 1. EL NUEVO FLUJO (Selector Zen)
+    // URL final: /titular/calificar
+    $routes->get('calificar', 'Titular\SabanaController::index'); 
+    
+    // URL final: /titular/abrir-sabana
+    $routes->post('abrir-sabana', 'Titular\SabanaController::cargarSabana');
 
+    // 2. RUTAS DE GESTIÓN (Movidas desde arriba)
+    // URL final: /titular/mi-grupo
+    $routes->get('mi-grupo', 'TitularViewController::verGrupo'); 
+
+    // URL final: /titular/ver-boleta/123
+    $routes->get('ver-boleta/(:num)', 'TitularViewController::verBoletaAlumno/$1'); 
+
+    $routes->get('hoja-evaluacion', 'TitularViewController::calificarGrupo');
+
+    // Descargar Plantilla de Calificaciones
+    $routes->get('calificaciones/exportarPlantilla/(:num)', 'Calificaciones::exportarPlantilla/$1');
+    // Subir Plantilla de Calificaciones
+    $routes->post('calificaciones/importar', 'Calificaciones::importar');
 });
 
 

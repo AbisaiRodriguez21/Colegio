@@ -20,7 +20,7 @@ class AdminAuth implements FilterInterface
         $nivelUsuario = session()->get('nivel');
 
         // Niveles permitidos
-        $nivelesPermitidos = ['1']; 
+        $nivelesPermitidos = ['1', '2']; 
 
         if (!in_array($nivelUsuario, $nivelesPermitidos)) {
             // Se manda al dashboard con un error

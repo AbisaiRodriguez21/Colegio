@@ -6,18 +6,20 @@ use App\Models\CalificacionesModel;  // Para la Sábana (La solución correcta)
 
 class TitularViewController extends BaseController
 {
-    // =========================================================================
+// =========================================================================
     // 1. VER LISTA DE ALUMNOS (Mi Grupo)
     // =========================================================================
     public function verGrupo()
     {
-        // Validación de Seguridad
-        if (session('nivel') != 9 || !session('nivelT')) {
-            return redirect()->to(base_url('dashboard'))->with('error', 'No tienes un grupo asignado.');
+        // El filtro TitularAuth ya validó permisos. 
+        $id_grado_asignado = session('nivelT');
+        
+        // Validación de seguridad por si la sesión expiró parcialmente
+        if (!$id_grado_asignado) {
+             return redirect()->to(base_url('dashboard'))->with('error', 'No se detectó el grupo asignado.');
         }
 
-        $id_grado_asignado = session('nivelT');
-        $model = new BoletaModel(); // Usamos BoletaModel para la lista simple
+        $model = new BoletaModel(); 
 
         $alumnos = $model->getAlumnosPorGrado($id_grado_asignado);
         $infoGrado = $model->getInfoGrado($id_grado_asignado);
@@ -33,60 +35,56 @@ class TitularViewController extends BaseController
     }
 
     // =========================================================================
-    // 2. CALIFICAR GRUPO (Sábana - Usando CalificacionesModel)
+    // 2. CALIFICAR GRUPO (Sábana de Calificaciones)
     // =========================================================================
     public function calificarGrupo()
     {
-        // A) Validación
-        if (session('nivel') != 9 || !session('nivelT')) {
+        $id_grado = session('nivelT');
+
+        if (!$id_grado) {
             return redirect()->to(base_url('dashboard'));
         }
 
-        $id_grado = session('nivelT');
+        // 1. CAPTURAR EL MES DE LA URL
+        $mes_custom = $this->request->getGet('mes_custom'); 
 
-        // B) AQUÍ ESTÁ LA CORRECCIÓN: Usamos el modelo experto
         $model = new CalificacionesModel();
         
-        // Esta función ya devuelve todo formateado (nombre, groups, materia_map)
-        // Exactamente igual que al Administrador.
-        $data = $model->getSabana($id_grado);
+        // 2. PASARLO AL MODELO
+        $data = $model->getSabana($id_grado, $mes_custom); 
 
         if (!$data) {
             return redirect()->back()->with('error', 'No se pudo cargar la configuración de la sábana.');
         }
 
-        // C) Permisos de Edición
-        // Forzamos nivel 9 para que la vista active los inputs editables
         $data['user_level'] = 9; 
 
         return view('boletas/calificar_boleta', $data);
     }
 
     // =========================================================================
-    // 3. VER BOLETA INDIVIDUAL (PDF / Lectura)
+    // 3. VER BOLETA INDIVIDUAL (Vista de Impresión / PDF)
     // =========================================================================
     public function verBoletaAlumno($id_alumno_target)
     {
-        if (session('nivel') != 9 || !session('nivelT')) {
-            return redirect()->to(base_url('dashboard'));
-        }
-
         $id_grado_titular = session('nivelT');
-        $model = new BoletaModel(); // Usamos BoletaModel para generar la vista de impresión
+        $model = new BoletaModel(); 
 
-        // Validar que el alumno sea del grupo del titular
+        // --- VALIDACIÓN DE PERTENENCIA ---
+        // Verificamos que el alumno que intenta ver pertenezca a SU grupo.
         $db = \Config\Database::connect();
         $check = $db->table('usr')->select('grado')->where('id', $id_alumno_target)->get()->getRow();
         
         if (!$check || $check->grado != $id_grado_titular) {
-            return redirect()->to(base_url('titular/mi-grupo'))->with('error', 'Acceso denegado.');
+            return redirect()->to(base_url('titular/mi-grupo'))->with('error', 'Acceso denegado: Este alumno no pertenece a tu grupo.');
         }
 
-        // Procesar boleta (Reutilizando lógica)
+        // --- PROCESAMIENTO DE BOLETA ---
         $datosAlumno = $model->getDatosAlumno($id_alumno_target);
         $cicloInfo = $model->getCicloActivo();
         $nombreGrado = strtolower($datosAlumno['nombreGrado']);
 
+        // Delegamos a las funciones privadas (helpers) según el nivel
         if (strpos($nombreGrado, 'secundaria') !== false) {
             return $this->_procesarSecundaria($model, $id_grado_titular, $id_alumno_target, $datosAlumno, $cicloInfo);
         } elseif (strpos($nombreGrado, 'bachillerato') !== false || strpos($nombreGrado, 'prepa') !== false) {
@@ -99,7 +97,7 @@ class TitularViewController extends BaseController
     }
 
     // =========================================================================
-    // 4. HELPERS DE VISUALIZACIÓN (Copiados de AlumnoViewController)
+    // 4. HELPERS DE VISUALIZACIÓN 
     // =========================================================================
     // Estos son necesarios SOLO para la función verBoletaAlumno (PDF)
     // La sábana ya no los usa porque CalificacionesModel se encarga.

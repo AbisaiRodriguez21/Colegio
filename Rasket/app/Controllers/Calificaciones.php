@@ -42,7 +42,8 @@ class Calificaciones extends BaseController
         }
 
         $session = session();
-        
+        $id_usuario = $session->get('id'); // Tu ID (ej. 926)
+
         // 1. Seguridad
         if ($session->get('nivel') == 7) {
             return $this->response->setJSON(['status' => 'error', 'msg' => 'No tienes permisos.']);
@@ -51,17 +52,18 @@ class Calificaciones extends BaseController
         $request = $this->request;
         
         // 2. Recibir Datos
-        $id_cal     = $request->getPost('scoreId'); // Puede venir vacío si es nuevo
+        $id_cal     = $request->getPost('scoreId');
         $valor      = $request->getPost('value');
         $tipo       = $request->getPost('type');
-        $id_usuario = $session->get('id');
+        
+        // ⬅️ CLAVE 1: Recibimos el mes que mandaste desde el JavaScript
+        $id_mes_post = $request->getPost('monthId'); 
 
-        // Datos extra necesarios para INSERT (que enviaremos desde la vista)
+        // Datos extra
         $id_alumno  = $request->getPost('studentId');
         $id_materia = $request->getPost('subjectId');
         $id_grado   = $request->getPost('gradeId');
         
-        // Validar valor
         if (!isset($valor) || !$id_usuario) {
             return $this->response->setJSON(['status' => 'error', 'msg' => 'Datos incompletos']);
         }
@@ -69,9 +71,11 @@ class Calificaciones extends BaseController
         $model = new CalificacionesModel();
 
         // ---------------------------------------------------------
-        // ESCENARIO A: ACTUALIZACIÓN (Ya existe ID)
+        // ESCENARIO A: ACTUALIZACIÓN (UPDATE)
         // ---------------------------------------------------------
         if (!empty($id_cal)) {
+            // Actualizamos la calificación existente
+            // IMPORTANTE: Aquí NO cambiamos el mes, porque el registro ya existe en su mes correcto.
             $resultado = $model->updateCalificacion($id_cal, $tipo, $valor, $id_usuario);
             
             if ($resultado) {
@@ -79,31 +83,31 @@ class Calificaciones extends BaseController
             }
         } 
         // ---------------------------------------------------------
-        // ESCENARIO B: INSERCIÓN (No existe ID, es la primera vez)
+        // ESCENARIO B: INSERCIÓN (INSERT) - AQUÍ ESTABA EL ERROR
         // ---------------------------------------------------------
         else {
-            // Validamos que tengamos los datos estructurales
             if(!$id_alumno || !$id_materia || !$id_grado) {
-                return $this->response->setJSON(['status' => 'error', 'msg' => 'Faltan datos para crear el registro']);
+                return $this->response->setJSON(['status' => 'error', 'msg' => 'Faltan datos']);
             }
 
-            // Obtenemos la configuración activa ACTUAL para saber en qué mes/ciclo guardar
-            // OJO: Podríamos pasarlo desde la vista, pero es más seguro recalcularlo aquí
-            // para evitar que inyecten datos en ciclos cerrados.
+            // Consultamos la configuración global como respaldo
             $gradoInfo = $model->db->table('grados')->select('nivel_grado')->where('id_grado', $id_grado)->get()->getRow();
             $config    = $model->getConfiguracionActiva($gradoInfo->nivel_grado);
+
+            // ⬅️ CLAVE 2: LÓGICA DE PRIORIDAD
+            // Si $id_mes_post tiene datos (viene del JS), úsalo. Si no, usa el del Director ($config).
+            $id_mes_final = !empty($id_mes_post) ? $id_mes_post : $config['id_mes'];
 
             $dataInsert = [
                 'id_usr'        => $id_alumno,
                 'id_materia'    => $id_materia,
                 'id_grado'      => $id_grado,
-                'cicloEscolar'  => $config['id_ciclo'],
-                'id_mes'        => $config['id_mes'],
+                'cicloEscolar'  => $config['id_ciclo'], // El ciclo sí suele ser el mismo
+                'id_mes'        => $id_mes_final,       // ⬅️ CLAVE 3: Guardamos el mes correcto
                 'fechaInsertar' => date('Y-m-d H:i:s'),
-                'bandera'       => $id_usuario,
+                'bandera'       => $id_usuario,         // Tu ID para la jerarquía
             ];
 
-            // Asignar valor según tipo
             if ($tipo === 'score') {
                 $dataInsert['calificacion'] = $valor;
                 $dataInsert['faltas'] = 0;
@@ -115,8 +119,6 @@ class Calificaciones extends BaseController
             $newId = $model->crearCalificacion($dataInsert);
 
             if ($newId) {
-                // Retornamos el nuevo ID para que el JS actualice la celda
-                // y la próxima vez que editen, ya sea un UPDATE y no otro INSERT
                 return $this->response->setJSON([
                     'status' => 'success', 
                     'action' => 'insert', 
@@ -130,106 +132,130 @@ class Calificaciones extends BaseController
     }
 
     // =========================================================================
-    // 3. EXPORTAR PLANTILLA CSV (Generador Inteligente)
+    // 3. EXPORTAR PLANTILLA (CSV) - LÓGICA INTELIGENTE
+    // =========================================================================
+    // =========================================================================
+    // 3. EXPORTAR PLANTILLA CON DATOS (Para editar masivamente)
     // =========================================================================
     public function exportarPlantilla($id_grado)
     {
         $session = session();
-        
-        // 1. Seguridad básica
         if (!$session->has('id')) return redirect()->to('/login');
 
-        // 2. Obtener los datos (Reutilizamos la lógica de la Sábana)
+        // 1. Recibir el Mes Customizado
+        $mes_custom = $this->request->getGet('mes_custom');
+
         $model = new CalificacionesModel();
-        $data  = $model->getSabana($id_grado);
-
-        if (!$data) return "Error: No hay datos para exportar.";
-
-        // Extraer variables clave
-        $alumnos     = $data['alumnos'];      // Ya vienen ordenados A-Z
-        $materiasMap = $data['materias_map']; // ID => Nombre Real
-        $configJson  = $data['config_json'];  // Estructura de grupos
-        $cicloInfo   = $data['ciclo_info'];   // IDs de contexto (Mes/Ciclo activos)
-        $gradoInfo   = $data['grado_info'];
-
-        // 3. Preparar el archivo CSV
-        $filename = 'Plantilla_' . $gradoInfo['nombreGrado'] . '_' . date('Ymd_His') . '.csv';
         
-        // Forzar descarga
-        header('Content-Type: text/csv; charset=utf-8');
-        header('Content-Disposition: attachment; filename="' . $filename . '"');
-        
-        // Abrir salida
-        $output = fopen('php://output', 'w');
+        // 2. Obtener Info del Grado
+        $gradoInfo = $model->db->table('grados')->where('id_grado', $id_grado)->get()->getRow();
+        if (!$gradoInfo) return "Grado no encontrado";
 
-        // BOM para que Excel reconozca acentos (UTF-8)
-        fprintf($output, chr(0xEF).chr(0xBB).chr(0xBF));
+        // 3. Obtener Configuración
+        $config = $model->getConfiguracionActiva($gradoInfo->nivel_grado);
 
-        // ---------------------------------------------------------
-        // A. CONSTRUIR ENCABEZADOS
-        // ---------------------------------------------------------
-        
-        // Columnas Fijas (Candados de Seguridad)
-        // id_sistema = id_usr (para el update rápido)
-        $headers = ['id_sistema', 'matricula', 'nombre_completo', 'id_grado', 'id_ciclo', 'id_mes'];
-        
-        // Columnas Dinámicas (Materias)
-        $listaMateriasOrdenadas = []; // Guardamos el orden para luego llenar las filas
+        // --- SOBRESCRITURA DEL MES (Override) ---
+        if ($mes_custom && is_numeric($mes_custom)) {
+            $config['id_mes'] = $mes_custom;
 
-        foreach ($configJson['groups'] as $grupo) {
-            if (empty($grupo['subjects'])) continue;
-
-            foreach ($grupo['subjects'] as $id_mat) {
-                // Manejo de ID si viene en array o simple
-                $real_id = is_array($id_mat) ? ($id_mat['id'] ?? 0) : $id_mat;
-                
-                // Obtener nombre real
-                $nombreRaw = $materiasMap[$real_id] ?? 'MATERIA_'.$real_id;
-
-                // --- ALGORITMO ACORTADOR DE NOMBRES ---
-                // 1. Convertir a mayúsculas y quitar acentos básicos
-                $cleanName = strtoupper($this->limpiarTexto($nombreRaw));
-                // 2. Quedarnos solo con letras y números (quitar / . , -)
-                $cleanName = preg_replace('/[^A-Z0-9]/', '', $cleanName);
-                // 3. Cortar a 20 caracteres
-                $shortName = substr($cleanName, 0, 20);
-                // 4. PEGAR EL ID (CRUCIAL PARA LA IMPORTACIÓN)
-                $headerFinal = $shortName . '_' . $real_id;
-
-                $headers[] = $headerFinal;
-                $listaMateriasOrdenadas[] = $real_id; // Guardamos el ID para saber qué escribir en la fila
+            // Obtener nombre del mes
+            $nivel = $gradoInfo->nivel_grado;
+            if ($nivel == 5) { // Bachillerato
+                $row = $model->db->table('bimestres')->select('nombre')->where('id', $mes_custom)->get()->getRow();
+                if($row) $config['nombre_mes'] = $row->nombre;
+            } elseif ($nivel == 1) { // Kinder
+                $config['nombre_mes'] = $mes_custom . " Evaluacion";
+            } else { // Primaria/Secundaria
+                $row = $model->db->table('mes')->select('nombre')->where('id', $mes_custom)->get()->getRow();
+                if($row) $config['nombre_mes'] = $row->nombre;
             }
         }
+        // ----------------------------------------
 
-        // Escribir encabezados en el archivo
-        fputcsv($output, $headers);
+        $nombre_archivo = "Plantilla_" . str_replace(' ', '_', $gradoInfo->nombreGrado) . "_" . str_replace(' ', '', $config['nombre_mes']) . ".csv";
+        $id_ciclo = $config['id_ciclo'];
+        $id_mes   = $config['id_mes']; 
 
-        // ---------------------------------------------------------
-        // B. CONSTRUIR FILAS (ALUMNOS)
-        // ---------------------------------------------------------
+        // 4. Obtener Materias (Columnas)
+        $materias = $model->db->table('materia')
+            ->select('id_materia, nombre_materia')
+            ->where('id_grados', $id_grado)
+            ->orderBy('orden', 'ASC')
+            ->get()->getResultArray();
+
+        // 5. Obtener Alumnos (Filas)
+        $alumnos = $model->db->table('usr')
+            ->select('id, matricula, ap_Alumno, am_Alumno, Nombre')
+            ->where('grado', $id_grado)
+            ->where('estatus', 1)
+            ->where('nivel', 7) 
+            ->orderBy('ap_Alumno, am_Alumno, Nombre')
+            ->get()->getResultArray();
+
+        // ---------------------------------------------------------------------
+        // 🟢 NUEVO: OBTENER CALIFICACIONES EXISTENTES
+        // ---------------------------------------------------------------------
+        $notasRaw = $model->db->table('calificacion')
+            ->select('id_usr, id_materia, calificacion')
+            ->where('id_grado', $id_grado)
+            ->where('cicloEscolar', $id_ciclo)
+            ->where('id_mes', $id_mes) // <--- Clave: Solo las del mes seleccionado
+            ->get()->getResultArray();
+
+        // Convertimos a un Mapa para búsqueda rápida: $mapa[id_alumno][id_materia] = calificacion
+        $mapaNotas = [];
+        foreach ($notasRaw as $row) {
+            $mapaNotas[$row['id_usr']][$row['id_materia']] = $row['calificacion'];
+        }
+        // ---------------------------------------------------------------------
+
+        // 6. GENERAR CSV
+        header('Content-Type: text/csv; charset=utf-8');
+        header('Content-Disposition: attachment; filename=' . $nombre_archivo);
+
+        $output = fopen('php://output', 'w');
+
+        // A. ENCABEZADOS (Orden visual preferido)
+        $csv_headers = ['id_sistema', 'matricula', 'nombre_completo', 'id_grado', 'id_ciclo', 'id_mes'];
+
+        foreach ($materias as $mat) {
+            $cleanName = preg_replace('/[^A-Za-z0-9 ]/', '', $mat['nombre_materia']);
+            $csv_headers[] = strtoupper($cleanName) . '_' . $mat['id_materia'];
+        }
+
+        fputcsv($output, $csv_headers);
+
+        // B. DATOS
         foreach ($alumnos as $alumno) {
-            $row = [];
+            $nombreCompleto = $alumno['ap_Alumno'] . ' ' . $alumno['am_Alumno'] . ' ' . $alumno['Nombre'];
+            
+            $fila = [
+                $alumno['id'],       
+                $alumno['matricula'],
+                $nombreCompleto,     
+                $id_grado,           
+                $id_ciclo,           
+                $id_mes              
+            ];
 
-            // 1. Datos Fijos (Validación Contextual)
-            $row[] = $alumno['id'];             // id_sistema
-            $row[] = $alumno['matricula'];      // matricula
-            $row[] = $alumno['nombre'];         // nombre_completo (Visual)
-            $row[] = $gradoInfo['id_grado'];    // Candado Grado
-            $row[] = $cicloInfo['id_ciclo'];    // Candado Ciclo
-            $row[] = $cicloInfo['id_mes'];      // Candado Mes (Periodo)
+            // Rellenar materias con DATOS REALES del mapa
+            foreach ($materias as $m) {
+                $id_alumno  = $alumno['id'];
+                $id_materia = $m['id_materia'];
 
-            // 2. Datos Dinámicos (Calificaciones)
-            foreach ($listaMateriasOrdenadas as $idMateria) {
-                // Verificamos si ya tiene nota en la sábana
-                $nota = isset($alumno['notas'][$idMateria]) ? $alumno['notas'][$idMateria]['calificacion'] : '';
-                $row[] = $nota;
+                // Si existe nota en el mapa, la ponemos. Si no, va vacío.
+                if (isset($mapaNotas[$id_alumno][$id_materia])) {
+                    $fila[] = $mapaNotas[$id_alumno][$id_materia];
+                } else {
+                    $fila[] = ''; // Casilla vacía para calificar
+                }
             }
 
-            fputcsv($output, $row);
+            fputcsv($output, $fila);
         }
 
         fclose($output);
-        exit;
+        exit(); 
     }
 
     // Helper para limpiar acentos (simple)
@@ -237,6 +263,23 @@ class Calificaciones extends BaseController
         $originales = 'ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõöøùúûýýþÿŔŕ';
         $modificadas = 'aaaaaaaceeeeiiiidnoooooouuuuybsaaaaaaaceeeeiiiidnoooooouuuyybyRr';
         return strtr(utf8_decode($cadena), utf8_decode($originales), $modificadas);
+    }
+
+    // Helper privado para traducir ID de mes a Nombre legible
+    private function _obtenerNombreMes($id_mes, $nivel_grado) {
+        $db = \Config\Database::connect();
+        $nombre = "Desconocido ($id_mes)";
+
+        if ($nivel_grado == 5) { // Bachillerato (Tabla bimestres)
+            $row = $db->table('bimestres')->select('nombre')->where('id', $id_mes)->get()->getRow();
+            if ($row) $nombre = $row->nombre;
+        } elseif ($nivel_grado == 1) { // Kinder
+            $nombre = $id_mes . "° Evaluación";
+        } else { // Primaria/Secundaria (Tabla mes)
+            $row = $db->table('mes')->select('mes')->where('id', $id_mes)->get()->getRow();
+            if ($row) $nombre = $row->mes; // O 'nombre' según tu tabla
+        }
+        return $nombre;
     }
 
     // =========================================================================
@@ -249,147 +292,147 @@ class Calificaciones extends BaseController
 
         // 1. Validar Archivo
         $file = $this->request->getFile('archivo_csv');
-        $idGradoActual = $this->request->getPost('id_grado_actual');
-
         if (!$file->isValid() || $file->getExtension() !== 'csv') {
-            return redirect()->back()->with('error', 'Archivo inválido. Debe ser CSV.');
+            return redirect()->back()->with('error', 'El archivo no es válido o no es CSV.');
         }
 
-        // 2. Obtener Configuración Activa del Sistema
+        // Datos esperados por la vista
+        $id_grado_esperado = $this->request->getPost('id_grado_actual');
+        $id_mes_esperado   = $this->request->getPost('id_mes_esperado');
+
+        $handle = fopen($file->getTempName(), 'r');
+        if (!$handle) return redirect()->back()->with('error', 'No se pudo leer el archivo.');
+
+        // 2. Leer Encabezados
+        $headers = fgetcsv($handle); 
+        $idx_id_usr   = array_search('id_sistema', $headers);
+        $idx_id_grado = array_search('id_grado', $headers);
+        $idx_id_ciclo = array_search('id_ciclo', $headers);
+        $idx_id_mes   = array_search('id_mes', $headers);
+
+        if ($idx_id_usr === false || $idx_id_grado === false || $idx_id_mes === false) {
+             fclose($handle);
+             return redirect()->back()->with('error', 'Formato incorrecto: Faltan columnas clave (id_sistema, id_grado, id_mes).');
+        }
+
         $model = new CalificacionesModel();
         
-        $gradoInfo = $model->db->table('grados')->select('nivel_grado')->where('id_grado', $idGradoActual)->get()->getRow();
-        $configActiva = $model->getConfiguracionActiva($gradoInfo->nivel_grado);
-        
-        $cicloReal = $configActiva['id_ciclo'];
-        $mesReal   = $configActiva['id_mes'];
+        // CONTADORES HUMANOS
+        $countNuevos = 0;      // Estaba en 0 y cambió a valor, O no existía registro
+        $countCambios = 0;     // Tenía valor y cambió a otro valor
 
-        // 3. Leer CSV
-        $handle = fopen($file->getTempName(), 'r');
-        
-        // A. Leer Encabezados
-        $headers = fgetcsv($handle);
-        
-        $idxSistema = array_search('id_sistema', $headers);
-        $idxGrado   = array_search('id_grado', $headers);
-        $idxCiclo   = array_search('id_ciclo', $headers);
-        $idxMes     = array_search('id_mes', $headers);
-
-        // Detectar materias
-        $mapaMaterias = []; 
-        foreach ($headers as $index => $colName) {
-            $parts = explode('_', $colName);
-            $possibleId = end($parts);
-            if (is_numeric($possibleId) && !in_array($colName, ['id_sistema','id_grado','id_ciclo','id_mes'])) {
-                $mapaMaterias[$index] = $possibleId;
-            }
-        }
-
-        if ($idxSistema === false) {
-            fclose($handle);
-            return redirect()->back()->with('error', 'Formato inválido: Falta columna id_sistema.');
-        }
-
-        // B. Procesar Filas
-        // Contadores Semánticos (Lo que le importa al maestro)
-        $countNuevas     = 0; // Inserts + Updates desde 0
-        $countCorregidas = 0; // Updates de valor a valor
-        $countIgnoradas  = 0; // Sin cambios
+        // Leer primera fila para validar contexto
+        $firstRow = fgets($handle); 
+        rewind($handle); 
+        fgetcsv($handle); // Saltar headers
 
         while (($row = fgetcsv($handle)) !== false) {
-            $idAlumno = $row[$idxSistema];
             
-            // --- CANDADO DE SEGURIDAD ---
-            $csvMes   = $row[$idxMes];
-            $csvCiclo = $row[$idxCiclo];
-            $csvGrado = $row[$idxGrado];
+            $csv_id_alumno = $row[$idx_id_usr];
+            $csv_id_grado  = $row[$idx_id_grado];
+            $csv_id_mes    = $row[$idx_id_mes];
+            $csv_id_ciclo  = $row[$idx_id_ciclo];
 
-            // 1. PRIMERO REVISAMOS EL GRADO (Lo más importante)
-            if ($csvGrado != $idGradoActual) {
-                 fclose($handle);
-                 // Mensaje corto y claro
-                 return redirect()->back()->with('error', "❌ Error: El archivo no corresponde al grado seleccionado.");
-            }
-
-            // 2. DESPUÉS REVISAMOS EL PERIODO (Mes y Ciclo)
-            if ($csvMes != $mesReal || $csvCiclo != $cicloReal) {
+            // -----------------------------------------------------------------
+            // 🔒 CANDADO DE SEGURIDAD (HUMANIZADO)
+            // -----------------------------------------------------------------
+            
+            // Validar Grado
+            if ($csv_id_grado != $id_grado_esperado) {
                 fclose($handle);
-                // Mensaje corto y claro
-                return redirect()->back()->with('error', "❌ Error: El archivo no corresponde al periodo (Mes/Ciclo) actual.");
+                // Obtenemos nombres de grados para el mensaje
+                $gActual = $model->db->table('grados')->select('nombreGrado')->where('id_grado', $id_grado_esperado)->get()->getRow();
+                $gArchivo = $model->db->table('grados')->select('nombreGrado')->where('id_grado', $csv_id_grado)->get()->getRow();
+                
+                $txtActual = $gActual ? $gActual->nombreGrado : "ID $id_grado_esperado";
+                $txtArchivo = $gArchivo ? $gArchivo->nombreGrado : "ID $csv_id_grado";
+
+                return redirect()->back()->with('error', "ERROR DE SEGURIDAD: Estás subiendo un archivo de <b>$txtArchivo</b> en la pantalla de <b>$txtActual</b>.");
             }
 
-            // --- PROCESAR MATERIAS ---
-            foreach ($mapaMaterias as $colIndex => $idMateria) {
-                $calificacionCSV = trim($row[$colIndex] ?? '');
+            // Validar Mes
+            if ($csv_id_mes != $id_mes_esperado) {
+                fclose($handle);
+                
+                // Consultamos el nivel del grado para saber en qué tabla buscar el nombre del mes
+                $gradoInfo = $model->db->table('grados')->select('nivel_grado')->where('id_grado', $id_grado_esperado)->get()->getRow();
+                $nivel = $gradoInfo ? $gradoInfo->nivel_grado : 0;
 
-                // Si está vacío, saltamos
-                if ($calificacionCSV === '') continue;
+                // Usamos la función auxiliar para obtener nombres reales
+                $nombreMesArchivo = $this->_obtenerNombreMes($csv_id_mes, $nivel);
+                $nombreMesPantalla = $this->_obtenerNombreMes($id_mes_esperado, $nivel);
 
-                // Verificar si ya existe registro
-                $existe = $model->where([
-                    'id_usr' => $idAlumno,
-                    'id_materia' => $idMateria,
-                    'id_mes' => $mesReal,
-                    'cicloEscolar' => $cicloReal,
-                    'id_grado' => $idGradoActual
-                ])->first();
+                return redirect()->back()->with('error', "ERROR DE SEGURIDAD: El archivo corresponde a <b>$nombreMesArchivo</b>, pero estás ubicado en la sección de <b>$nombreMesPantalla</b>. Verifica tu selección.");
+            }
+            // -----------------------------------------------------------------
 
-                if ($existe) {
-                    // --- ANÁLISIS INTELIGENTE ---
-                    $valorViejo = $existe['calificacion'];
-                    
-                    // Solo actuamos si son diferentes (Comparamos loose para 9 == 9.0)
-                    if ($valorViejo != $calificacionCSV) {
+            // Procesar Materias
+            foreach ($headers as $index => $header) {
+                if (preg_match('/_(\d+)$/', $header, $matches)) {
+                    $id_materia = $matches[1];
+                    $valorNuevo = trim($row[$index]); // El valor que viene del Excel
+
+                    // Solo procesamos si es numérico (ignoramos celdas vacías del excel si las hubiera)
+                    if ($valorNuevo !== '' && is_numeric($valorNuevo)) {
                         
-                        // ACTUALIZAR EN BD
-                        $model->updateCalificacion($existe['Id_cal'], 'score', $calificacionCSV, $session->get('id'));
+                        // Buscamos calificación existente en BD
+                        $existe = $model->db->table('calificacion')
+                            ->select('Id_cal, calificacion')
+                            ->where('id_usr', $csv_id_alumno)
+                            ->where('id_materia', $id_materia)
+                            ->where('id_grado', $csv_id_grado)
+                            ->where('id_mes', $csv_id_mes)
+                            ->where('cicloEscolar', $csv_id_ciclo)
+                            ->get()->getRow();
 
-                        // CLASIFICAR PARA EL MENSAJE
-                        // Si era 0, cuenta como "Nueva Asignación". Si era otro número, es "Corrección".
-                        if ($valorViejo == 0) {
-                            $countNuevas++;
+                        if ($existe) {
+                            $valorAnterior = floatval($existe->calificacion); // Lo que hay en BD
+                            $valorNuevoFloat = floatval($valorNuevo);        // Lo que viene del Excel
+
+                            // Si son iguales, NO HACEMOS NADA (Ni update, ni contar)
+                            if ($valorAnterior == $valorNuevoFloat) {
+                                continue; 
+                            }
+
+                            // UPDATE SQL
+                            $model->updateCalificacion($existe->Id_cal, 'score', $valorNuevo, $session->get('id'));
+
+                            // LOGICA DE CONTADORES INTELIGENTE
+                            // Si antes era 0 y ahora es algo (ej: 8), cuenta como NUEVO para el usuario
+                            if ($valorAnterior == 0 && $valorNuevoFloat >= 0) {
+                                $countNuevos++;
+                            } else {
+                                // Si antes era 8 y ahora es 9 (o 0), cuenta como CAMBIO
+                                $countCambios++;
+                            }
+
                         } else {
-                            $countCorregidas++;
+                            // INSERT SQL (Siempre es nuevo)
+                            $dataInsert = [
+                                'id_usr'        => $csv_id_alumno,
+                                'id_materia'    => $id_materia,
+                                'id_grado'      => $csv_id_grado,
+                                'cicloEscolar'  => $csv_id_ciclo,
+                                'id_mes'        => $csv_id_mes,
+                                'calificacion'  => $valorNuevo,
+                                'faltas'        => 0,
+                                'fechaInsertar' => date('Y-m-d H:i:s'),
+                                'bandera'       => $session->get('id')
+                            ];
+                            $model->crearCalificacion($dataInsert);
+                            $countNuevos++;
                         }
-
-                    } else {
-                        // Son iguales, no hacemos nada
-                        $countIgnoradas++;
                     }
-
-                } else {
-                    // --- INSERT (Siempre es Nueva Asignación) ---
-                    $dataInsert = [
-                        'id_usr'        => $idAlumno,
-                        'id_materia'    => $idMateria,
-                        'id_grado'      => $idGradoActual,
-                        'cicloEscolar'  => $cicloReal,
-                        'id_mes'        => $mesReal,
-                        'calificacion'  => $calificacionCSV,
-                        'faltas'        => 0,
-                        'fechaInsertar' => date('Y-m-d H:i:s'),
-                        'bandera'       => $session->get('id')
-                    ];
-                    $model->crearCalificacion($dataInsert);
-                    $countNuevas++;
                 }
             }
         }
 
         fclose($handle);
 
-        // --- MENSAJE FINAL DETALLADO ---
-        if ($countNuevas == 0 && $countCorregidas == 0) {
-            $mensajeFinal = "El archivo se procesó pero <b>no se encontraron cambios</b> (todos los datos son idénticos a los actuales).";
+        if ($countCambios > 0 || $countNuevos > 0) {
+            return redirect()->back()->with('mensaje', "Importación exitosa: <b>$countNuevos</b> calificaciones nuevas, <b>$countCambios</b> correcciones.");
         } else {
-            // Construimos el mensaje dinámico
-            $partes = [];
-            if ($countNuevas > 0)     $partes[] = "✅ <b>$countNuevas asignadas</b>";
-            if ($countCorregidas > 0) $partes[] = "✏️ <b>$countCorregidas corregidas</b>";
-            
-            $mensajeFinal = "Proceso terminado: " . implode(" y ", $partes) . ".";
+            return redirect()->back()->with('error', 'El archivo se procesó pero no contenía cambios ni calificaciones nuevas.');
         }
-
-        return redirect()->back()->with('mensaje', $mensajeFinal);
     }
 }

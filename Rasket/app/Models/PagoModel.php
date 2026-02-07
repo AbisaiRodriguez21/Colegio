@@ -23,7 +23,6 @@ class PagoModel extends Model
             'ticket' => 'pago.ficha'
         ];
 
-        // Si envían una columna rara, usamos 'fecha' por defecto
         $campoOrden = $columnasPermitidas[$columna] ?? 'pago.fechaEnvio';
         
         // Asegurar que el orden sea solo ASC o DESC

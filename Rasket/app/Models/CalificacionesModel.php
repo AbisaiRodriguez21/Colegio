@@ -43,7 +43,6 @@ class CalificacionesModel extends Model
         // 2. Buscamos el NOMBRE REAL en la tabla correcta según el nivel
         if ($id_config == 2) { 
             // CASO BACHILLERATO: Consultamos la tabla 'bimestres'
-            // NOTA: Aquí usamos 'bimestres' en lugar del arreglo manual
             $bimestre = $this->db->table('bimestres')
                              ->select('nombre')
                              ->where('id', $data['id_mes'])
@@ -68,9 +67,10 @@ class CalificacionesModel extends Model
     }
 
     // =========================================================================
-    // 2. CONSTRUIR LA SÁBANA DE CALIFICACIONES
+    // 2. CONSTRUIR LA SÁBANA DE CALIFICACIONES 
     // =========================================================================
-    public function getSabana($id_grado)
+    // Modificamos para aceptar un mes opcional. Si viene null, usa el del sistema.
+    public function getSabana($id_grado, $mes_custom = null)
     {
         // A. Obtener Info del Grado y su Configuración JSON
         $grado = $this->db->table('grados')
@@ -83,9 +83,35 @@ class CalificacionesModel extends Model
         // Se decodifica el JSON 
         $configJson = json_decode($grado['sabana_calif_config'] ?? '{"groups":[]}', true);
         
-        // Obtenemos qué Mes y Ciclo están abiertos para captura (Usando la función corregida arriba)
+        // Obtenemos configuración por defecto (lo que dicta el Admin)
         $activeConfig = $this->getConfiguracionActiva($grado['nivel_grado']);
 
+        // ---------------------------------------------------------------------
+        // SOBRESCRITURA INTELIGENTE DEL MES
+        // ---------------------------------------------------------------------
+        // Si el controlador nos mandó un mes específico (ej: Titular seleccionó "JUN-JUL")
+        if ($mes_custom !== null && is_numeric($mes_custom)) {
+            
+            // 1. Forzamos el ID del mes para la consulta SQL
+            $activeConfig['id_mes'] = $mes_custom;
+
+            // 2. Buscamos el NOMBRE correcto para que el título de la sábana cambie 
+            $nivel = $grado['nivel_grado'];
+            
+            if ($nivel == 5) { // BACHILLERATO (Tabla bimestres)
+                $rowB = $this->db->table('bimestres')->select('nombre')->where('id', $mes_custom)->get()->getRow();
+                if ($rowB) $activeConfig['nombre_mes'] = $rowB->nombre;  
+            
+            } elseif ($nivel == 1) { // KINDER
+                $activeConfig['nombre_mes'] = $mes_custom . "° Evaluación";
+            
+            } else { // PRIMARIA/SECUNDARIA (Tabla mes)
+                $rowM = $this->db->table('mes')->select('nombre')->where('id', $mes_custom)->get()->getRow();
+                if ($rowM) $activeConfig['nombre_mes'] = $rowM->nombre;
+            }
+        }
+        
+        // --------------------------------------------------------------------- 
         // B. Obtener Catálogo de Materias (ID => Nombre)
         $materiasRaw = $this->db->table('materia')
             ->select('id_materia, nombre_materia')
@@ -101,9 +127,11 @@ class CalificacionesModel extends Model
 
         // C. Obtener Alumnos y sus Calificaciones 
         $id_ciclo = $activeConfig['id_ciclo'];
-        $id_mes   = $activeConfig['id_mes'];
+        
+        // AQUÍ ES DONDE SE USA EL MES (Ya sea el global o el customizado)
+        $id_mes   = $activeConfig['id_mes']; 
 
-        // NOTA: Usamos la lógica robusta del sitio viejo (Estatus Activo + Nivel Alumno)
+        
         $sql = "SELECT 
                     u.id as id_alumno,
                     u.matricula,
@@ -156,7 +184,7 @@ class CalificacionesModel extends Model
 
         return [
             'grado_info'  => $grado,
-            'ciclo_info'  => $activeConfig,
+            'ciclo_info'  => $activeConfig, // Esto lleva el mes correcto a la vista
             'config_json' => $configJson,  // Estructura de grupos
             'materias_map'=> $materiasMap, // Nombres de materias
             'alumnos'     => $sabana       // Datos listos
@@ -198,8 +226,7 @@ class CalificacionesModel extends Model
     // =========================================================================
     public function crearCalificacion($datos)
     {
-        // $datos debe contener: id_usr, id_materia, id_grado, cicloEscolar, id_mes, calificacion/faltas, bandera, fechaInsertar
-        // Gracias a que actualizamos $allowedFields arriba, esto ahora sí funcionará.
+        // $datos debe contener: id_usr, id_materia, id_grado, cicloEscolar, id_mes, calificacion/faltas, bandera, fechaInsertar 
         $this->insert($datos);
         return $this->getInsertID(); // Devolvemos el ID nuevo para que el JS lo registre
     }

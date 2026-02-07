@@ -193,6 +193,13 @@
 </head>
 
 <body>
+    <?php
+    // LÓGICA INTELIGENTE DE RUTAS
+    // Si es Titular (9), usamos la ruta 'titular/calificaciones'
+    // Si es Admin (1) o Director (2), usamos la ruta normal 'calificaciones'
+
+    $prefix = ($user_level == 9) ? 'titular/calificaciones' : 'calificaciones';
+    ?>
 
     <div id="toast-status">Guardando...</div>
 
@@ -214,7 +221,9 @@
                 </a>
 
                 <!--  -->
-                <a href="<?= base_url('calificaciones/exportarPlantilla/' . $grado_info['id_grado']) ?>" target="_blank" class="btn btn-success btn-sm">
+                <a href="<?= base_url($prefix . '/exportarPlantilla/' . $grado_info['id_grado']) . '?mes_custom=' . $ciclo_info['id_mes'] ?>"
+                    target="_blank"
+                    class="btn btn-success btn-sm">
                     <i class='bx bx-download'></i> Descargar Plantilla
                 </a>
 
@@ -323,7 +332,7 @@
                                 // Buscamos si existe la nota para este alumno y materia
                                 $dataNota = $alumno['notas'][$real_id] ?? null;
 
-                                // --- LOGICA DE PERMISOS ACTUALIZADA ---
+                                // --- LOGICA DE PERMISOS ---
                                 $editable = false;
                                 $bandera = $dataNota['bandera'] ?? 0;
 
@@ -335,9 +344,13 @@
                                 elseif ($user_level == 2) {
                                     if (!$dataNota || $bandera == 1 || $bandera == 2) $editable = true;
                                 }
-                                // Nivel 9: Profe edita si es suyo (1) o está vacío (0)
+                                // Nivel 9: Profe edita si es suyo, está vacío, o es de otro profe.
+                                // PERO NO si es de Admin (1) o Director (2).
                                 elseif ($user_level == 9) {
-                                    if (!$dataNota || $bandera == 1) $editable = true;
+                                    // Si no hay nota... O (Si la bandera NO es 1 Y TAMPOCO es 2)
+                                    if (!$dataNota || ($bandera != 1 && $bandera != 2)) {
+                                        $editable = true;
+                                    }
                                 }
 
                                 // Valores para mostrar y data attributes
@@ -395,7 +408,7 @@
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
-                <form action="<?= base_url('calificaciones/importar') ?>" method="post" enctype="multipart/form-data">
+                <form action="<?= base_url($prefix . '/importar') ?>" method="post" enctype="multipart/form-data">
                     <div class="modal-body">
                         <div class="alert alert-warning" style="font-size: 12px;">
                             <i class='bx bx-info-circle'></i> <b>Importante:</b>
@@ -407,6 +420,8 @@
                         </div>
 
                         <input type="hidden" name="id_grado_actual" value="<?= $grado_info['id_grado'] ?>">
+
+                        <input type="hidden" name="id_mes_esperado" value="<?= $ciclo_info['id_mes'] ?>">
 
                         <div class="form-group">
                             <label>Seleccionar Archivo CSV:</label>
@@ -432,12 +447,14 @@
             const cells = document.querySelectorAll('.editable-cell');
             const toast = document.getElementById('toast-status');
 
-            // Necesitamos el ID del grado global para los Inserts
+            // Obtenemos el ID del grado Y EL ID DEL MES seleccionado
             const currentGradeId = '<?= $grado_info['id_grado'] ?>';
+            const currentMonthId = '<?= $ciclo_info['id_mes'] ?>';  
+            // -------------------------------
 
             function showToast(msg, type) {
                 toast.textContent = msg;
-                toast.className = ''; // Reset classes
+                toast.className = '';
                 toast.classList.add(type === 'success' ? 'bg-success-toast' : (type === 'error' ? 'bg-danger-toast' : 'bg-warning-toast'));
                 toast.style.display = 'block';
                 setTimeout(() => {
@@ -446,30 +463,26 @@
             }
 
             cells.forEach(cell => {
-                // Al entrar a la celda (Focus)
                 cell.addEventListener('focus', function() {
-                    // Seleccionar todo el texto para facilitar edición rápida
-                    // document.execCommand('selectAll', false, null); // Opcional
+                    // Opcional: Seleccionar texto al hacer clic
+                    // document.execCommand('selectAll', false, null); 
                 });
 
-                // Al salir de la celda (Blur) -> GUARDAR
                 cell.addEventListener('blur', function() {
-                    const idCal = this.dataset.idCal; // Puede estar vacío
+                    const idCal = this.dataset.idCal;
                     const type = this.dataset.type;
                     const originalVal = this.dataset.original;
                     let newVal = this.innerText.trim();
 
-                    // Validaciones simples
-                    if (newVal === '') newVal = 0; // Si borran, poner 0
+                    if (newVal === '') newVal = 0;
                     if (isNaN(newVal)) {
-                        this.innerText = originalVal; // Revertir si no es número
+                        this.innerText = originalVal;
                         return;
                     }
 
-                    // Si no hubo cambios, no hacer nada
                     if (newVal == originalVal) return;
 
-                    // 1. UI: Indicar que se está guardando
+                    // 1. UI: Guardando...
                     this.classList.add('saving-cell');
                     showToast('Guardando...', 'warning');
 
@@ -479,12 +492,14 @@
                     formData.append('value', newVal);
                     formData.append('type', type);
 
-                    // --- DATOS EXTRA PARA INSERT ---
+                    // --- DATOS EXTRA (enviamos el mes correcto) ---
                     formData.append('studentId', this.dataset.idAlumno);
                     formData.append('subjectId', this.dataset.idMateria);
                     formData.append('gradeId', currentGradeId);
+                    formData.append('monthId', currentMonthId); // ENVIAR EL MES
+                    // ---------------------------------------------------
 
-                    // 3. Enviar AJAX (Fetch)
+                    // 3. Enviar AJAX
                     fetch('<?= base_url('calificaciones/actualizar') ?>', {
                             method: 'POST',
                             body: formData,
@@ -497,33 +512,22 @@
                             this.classList.remove('saving-cell');
 
                             if (data.status === 'success') {
-                                // Éxito
                                 this.classList.add('saved-cell');
-                                this.dataset.original = newVal; // Actualizar referencia
+                                this.dataset.original = newVal;
                                 showToast('Guardado', 'success');
 
-                                // --- CRÍTICO: Si fue un INSERT, inyectar el nuevo ID ---
                                 if (data.action === 'insert' && data.newId) {
                                     this.dataset.idCal = data.newId;
 
-                                    // OJO: Si la celda hermana (Faltas/Calif) comparte ID,
-                                    // deberíamos actualizarla también, pero como comparten fila en BD
-                                    // y aquí cada celda es independiente visualmente, lo ideal es recargar 
-                                    // o manejar lógica compleja de hermanos. 
-                                    // Por simplicidad: El insert crea el registro completo con 0 en el otro campo.
-                                    // Si editas la otra celda enseguida, ella mandará scoreId vacío y creará OTRO registro (duplicado).
-                                    // SOLUCIÓN RÁPIDA: Actualizar celdas hermanas del mismo alumno/materia.
+                                    // Actualizar celdas hermanas (mismo alumno/materia) para evitar duplicados inmediatos
                                     const siblingCells = document.querySelectorAll(
                                         `.editable-cell[data-id-alumno="${this.dataset.idAlumno}"][data-id-materia="${this.dataset.idMateria}"]`
                                     );
                                     siblingCells.forEach(sib => sib.dataset.idCal = data.newId);
                                 }
-                                // --------------------------------------------------------
 
-                                // Quitar color verde después de un rato
                                 setTimeout(() => this.classList.remove('saved-cell'), 1500);
                             } else {
-                                // Error del servidor
                                 this.classList.add('error-cell');
                                 showToast('Error: ' + data.msg, 'error');
                             }
@@ -536,7 +540,6 @@
                         });
                 });
 
-                // Prevenir Enter (para que actúe como Tab o Blur)
                 cell.addEventListener('keydown', function(e) {
                     if (e.key === 'Enter') {
                         e.preventDefault();

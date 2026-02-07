@@ -342,7 +342,9 @@ if ($nivelUsuario == 1 || $nivelUsuario == 2) {
                     if ($rowG) $nombreGradoT = $rowG->nombreGrado;
                 }
                 ?>
+                <!-- Dashboard -->
 
+                <!-- Grado Titular -->
                 <li class="nav-item">
                     <a class="nav-link" href="<?= base_url('titular/mi-grupo') ?>">
                         <span class="nav-icon"><iconify-icon icon="solar:users-group-two-rounded-broken"></iconify-icon></span>
