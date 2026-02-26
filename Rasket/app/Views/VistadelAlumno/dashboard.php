@@ -184,7 +184,7 @@
                     </div>
 
                     <div class="col-md-6 col-lg-3">
-                        <a href="#" class="text-decoration-none">
+                        <a href="http://www.sjs.edu.mx/administracion/convenios-internos/" target="_blank" class="text-decoration-none">
                             <div class="widget-card">
                                 <div class="widget-header">
                                     <span>Convenios</span>
@@ -215,6 +215,8 @@
 
                 </div> 
                 <div class="modal fade" id="modalPassword" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+
+                <!-- MODAL PARA EL CAMBIO DE CONTRASEÑA -->
         <div class="modal-dialog modal-dialog-centered modal-sm">
             <div class="modal-content">
                 <div class="modal-header bg-dark text-white">

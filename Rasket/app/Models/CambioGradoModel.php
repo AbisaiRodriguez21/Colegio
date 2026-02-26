@@ -56,7 +56,6 @@ class CambioGradoModel extends Model
     public function getCicloActivo()
     {
         $db = \Config\Database::connect();
-        // El sistema viejo usaba el registro con id=1 para Primaria/Secundaria
         $row = $db->table('mesycicloactivo')->where('id', 1)->get()->getRow();
         
         // Si existe devuelve el id_ciclo (11), si no, devuelve 11 por defecto para no fallar
@@ -78,7 +77,7 @@ class CambioGradoModel extends Model
                 return "ERROR_FOLIO_INSERT: " . $db->error()['message'];
             }
 
-            // B. PAGO (Usando $idCiclo real, no el 5)
+            // B. PAGO  
             $datosInsertar = [
                 'id_usr'        => $idAlumno,
                 'cantidad'      => $datosPago['cantidad'],
@@ -92,7 +91,7 @@ class CambioGradoModel extends Model
                 'nota'          => $datosPago['nota'],
                 'validar_ficha' => 49, 
                 'ficha'         => null, 
-                'cilcoescolar'  => $idCiclo, // <--- USO DEL CICLO REAL (11)
+                'cilcoescolar'  => $idCiclo,  
                 'id_folio'      => $siguienteNumFolio, 
                 'fechaEnvio'    => date('Y-m-d H:i:s')
             ];
@@ -104,7 +103,7 @@ class CambioGradoModel extends Model
             // C. ACTUALIZAR ALUMNO
             $datosAlumno = [
                 'estatus' => 1, 
-                'activo'  => 1, // Aseguramos activo=1
+                'activo'  => 1,  
                 'grado'   => intval($idNuevoGrado)
             ];
 
@@ -119,7 +118,7 @@ class CambioGradoModel extends Model
         }
     }
 
-    // 3. Inicialización Académica (Lógica del archivo viejo activacion.php)
+    // 3. Inicialización Académica 
     public function inicializarCalificaciones($idAlumno, $idGrado, $idCiclo)
     {
         $db = \Config\Database::connect();
@@ -165,7 +164,7 @@ class CambioGradoModel extends Model
                 }
             }
             
-            // Insertar todo de un golpe (Optimizado)
+            // Insertar todo de un golpe  
             if (!empty($dataBatch)) {
                 // Usamos ignore(true) para que si ya existen no de error
                 $db->table('calificacion')->ignore(true)->insertBatch($dataBatch);

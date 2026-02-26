@@ -80,8 +80,8 @@ class CambioGradoController extends BaseController
         // 2. OBTENER DATOS DE ENTORNO (Mes y Ciclo Real)
         $mesActualNombre = $this->getMesEspanol();
         
-        // CONSULTAMOS LA BD PARA SABER EL CICLO ACTIVO (Igual que mesyciclo.php ID=1)
-        $idCicloActivo = $model->getCicloActivo(); // Debería devolver 11
+        // CONSULTAMOS LA BD PARA SABER EL CICLO ACTIVO 
+        $idCicloActivo = $model->getCicloActivo(); 
 
         $datosPago = [
             'qrp'       => $qrp,
@@ -94,13 +94,13 @@ class CambioGradoController extends BaseController
             'mes'       => $mesActualNombre
         ];
 
-        // 3. ACTIVAR Y PAGAR (Pasamos el Ciclo Real)
+        // 3. ACTIVAR Y PAGAR 
         $resultado = $model->activarConPago($idAlumno, $nuevoGrado, $datosPago, $idCicloActivo);
 
         if (is_numeric($resultado)) {
             $folioGenerado = $resultado;
 
-            // 4. INICIALIZACIÓN ACADÉMICA (Lógica vieja de materias y ceros)
+            // 4. INICIALIZACIÓN ACADÉMICA 
             // Esto crea los registros en la tabla 'calificacion'
             $model->inicializarCalificaciones($idAlumno, $nuevoGrado, $idCicloActivo);
 

@@ -7,10 +7,9 @@ use CodeIgniter\Model;
 class FolioModel extends Model
 {
     protected $table      = 'folio';
-    protected $primaryKey = 'id'; // Según tu captura de phpMyAdmin la llave es 'id'
+    protected $primaryKey = 'id';  
     protected $allowedFields = ['num_folio'];
 
-    // Esta función hace lo que vimos en tu captura de VS Code
     public function generarNuevo()
     {
         // 1. Buscamos el número más alto actual

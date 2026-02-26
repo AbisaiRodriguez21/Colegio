@@ -2,7 +2,7 @@
 
 use App\Controllers\BaseController;
 use App\Models\BoletaModel;          // Para ver lista y PDF
-use App\Models\CalificacionesModel;  // Para la Sábana (La solución correcta)
+use App\Models\CalificacionesModel;  // Para la Sábana 
 
 class TitularViewController extends BaseController
 {

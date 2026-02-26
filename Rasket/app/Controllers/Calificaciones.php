@@ -42,7 +42,7 @@ class Calificaciones extends BaseController
         }
 
         $session = session();
-        $id_usuario = $session->get('id'); // Tu ID (ej. 926)
+        $id_usuario = $session->get('id'); 
 
         // 1. Seguridad
         if ($session->get('nivel') == 7) {
@@ -56,7 +56,7 @@ class Calificaciones extends BaseController
         $valor      = $request->getPost('value');
         $tipo       = $request->getPost('type');
         
-        // ⬅️ CLAVE 1: Recibimos el mes que mandaste desde el JavaScript
+        // Recibimos el mes que mandaste desde el JavaScript
         $id_mes_post = $request->getPost('monthId'); 
 
         // Datos extra
@@ -75,7 +75,7 @@ class Calificaciones extends BaseController
         // ---------------------------------------------------------
         if (!empty($id_cal)) {
             // Actualizamos la calificación existente
-            // IMPORTANTE: Aquí NO cambiamos el mes, porque el registro ya existe en su mes correcto.
+            // Aquí NO cambiamos el mes, porque el registro ya existe en su mes correcto.
             $resultado = $model->updateCalificacion($id_cal, $tipo, $valor, $id_usuario);
             
             if ($resultado) {
@@ -83,9 +83,10 @@ class Calificaciones extends BaseController
             }
         } 
         // ---------------------------------------------------------
-        // ESCENARIO B: INSERCIÓN (INSERT) - AQUÍ ESTABA EL ERROR
+        // ESCENARIO B: INSERCIÓN (INSERT) 
         // ---------------------------------------------------------
         else {
+            // Validamos que tengamos los datos mínimos para crear un nuevo registro
             if(!$id_alumno || !$id_materia || !$id_grado) {
                 return $this->response->setJSON(['status' => 'error', 'msg' => 'Faltan datos']);
             }
@@ -94,18 +95,18 @@ class Calificaciones extends BaseController
             $gradoInfo = $model->db->table('grados')->select('nivel_grado')->where('id_grado', $id_grado)->get()->getRow();
             $config    = $model->getConfiguracionActiva($gradoInfo->nivel_grado);
 
-            // ⬅️ CLAVE 2: LÓGICA DE PRIORIDAD
-            // Si $id_mes_post tiene datos (viene del JS), úsalo. Si no, usa el del Director ($config).
+            // LÓGICA DE PRIORIDAD
+            // Si $id_mes_post tiene datos (viene del JS), úsalo. Si no, usar la del Director ($config).
             $id_mes_final = !empty($id_mes_post) ? $id_mes_post : $config['id_mes'];
 
             $dataInsert = [
                 'id_usr'        => $id_alumno,
                 'id_materia'    => $id_materia,
                 'id_grado'      => $id_grado,
-                'cicloEscolar'  => $config['id_ciclo'], // El ciclo sí suele ser el mismo
-                'id_mes'        => $id_mes_final,       // ⬅️ CLAVE 3: Guardamos el mes correcto
+                'cicloEscolar'  => $config['id_ciclo'], 
+                'id_mes'        => $id_mes_final,       // Guardamos el mes correcto
                 'fechaInsertar' => date('Y-m-d H:i:s'),
-                'bandera'       => $id_usuario,         // Tu ID para la jerarquía
+                'bandera'       => $id_usuario,    
             ];
 
             if ($tipo === 'score') {
@@ -131,9 +132,7 @@ class Calificaciones extends BaseController
         return $this->response->setJSON(['status' => 'error', 'msg' => 'No se pudo guardar']);
     }
 
-    // =========================================================================
-    // 3. EXPORTAR PLANTILLA (CSV) - LÓGICA INTELIGENTE
-    // =========================================================================
+    
     // =========================================================================
     // 3. EXPORTAR PLANTILLA CON DATOS (Para editar masivamente)
     // =========================================================================
@@ -193,13 +192,13 @@ class Calificaciones extends BaseController
             ->get()->getResultArray();
 
         // ---------------------------------------------------------------------
-        // 🟢 NUEVO: OBTENER CALIFICACIONES EXISTENTES
+        // OBTENER CALIFICACIONES EXISTENTES
         // ---------------------------------------------------------------------
         $notasRaw = $model->db->table('calificacion')
             ->select('id_usr, id_materia, calificacion')
             ->where('id_grado', $id_grado)
             ->where('cicloEscolar', $id_ciclo)
-            ->where('id_mes', $id_mes) // <--- Clave: Solo las del mes seleccionado
+            ->where('id_mes', $id_mes) // <--- Solo las del mes seleccionado
             ->get()->getResultArray();
 
         // Convertimos a un Mapa para búsqueda rápida: $mapa[id_alumno][id_materia] = calificacion
@@ -283,7 +282,7 @@ class Calificaciones extends BaseController
     }
 
     // =========================================================================
-    // 4. IMPORTAR CALIFICACIONES (Lógica Inteligente: Asignación vs Corrección)
+    // 4. IMPORTAR CALIFICACIONES 
     // =========================================================================
     public function importar()
     {
@@ -317,14 +316,14 @@ class Calificaciones extends BaseController
 
         $model = new CalificacionesModel();
         
-        // CONTADORES HUMANOS
-        $countNuevos = 0;      // Estaba en 0 y cambió a valor, O no existía registro
-        $countCambios = 0;     // Tenía valor y cambió a otro valor
+        // CONTADORES 
+        $countNuevos = 0;      // No tenía valor y ahora tiene algo (ej: 0 -> 8)
+        $countCambios = 0;     // Tenía valor y ahora cambió (ej: 8 -> 9 o 8 -> 0)
 
         // Leer primera fila para validar contexto
         $firstRow = fgets($handle); 
         rewind($handle); 
-        fgetcsv($handle); // Saltar headers
+        fgetcsv($handle); 
 
         while (($row = fgetcsv($handle)) !== false) {
             
@@ -334,7 +333,7 @@ class Calificaciones extends BaseController
             $csv_id_ciclo  = $row[$idx_id_ciclo];
 
             // -----------------------------------------------------------------
-            // 🔒 CANDADO DE SEGURIDAD (HUMANIZADO)
+            // 🔒 CANDADO DE SEGURIDAD 
             // -----------------------------------------------------------------
             
             // Validar Grado
@@ -398,16 +397,14 @@ class Calificaciones extends BaseController
                             $model->updateCalificacion($existe->Id_cal, 'score', $valorNuevo, $session->get('id'));
 
                             // LOGICA DE CONTADORES INTELIGENTE
-                            // Si antes era 0 y ahora es algo (ej: 8), cuenta como NUEVO para el usuario
                             if ($valorAnterior == 0 && $valorNuevoFloat >= 0) {
                                 $countNuevos++;
                             } else {
-                                // Si antes era 8 y ahora es 9 (o 0), cuenta como CAMBIO
                                 $countCambios++;
                             }
 
                         } else {
-                            // INSERT SQL (Siempre es nuevo)
+                            // INSERT SQL  
                             $dataInsert = [
                                 'id_usr'        => $csv_id_alumno,
                                 'id_materia'    => $id_materia,

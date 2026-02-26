@@ -21,7 +21,7 @@ class CalificacionesModel extends Model
     ];
 
     // =========================================================================
-    // 1. CONFIGURACIÓN DEL CICLO (CORREGIDA VISUALMENTE)
+    // 1. CONFIGURACIÓN DEL CICLO 
     // =========================================================================
     public function getConfiguracionActiva($nivel_grado)
     {
@@ -69,7 +69,6 @@ class CalificacionesModel extends Model
     // =========================================================================
     // 2. CONSTRUIR LA SÁBANA DE CALIFICACIONES 
     // =========================================================================
-    // Modificamos para aceptar un mes opcional. Si viene null, usa el del sistema.
     public function getSabana($id_grado, $mes_custom = null)
     {
         // A. Obtener Info del Grado y su Configuración JSON
@@ -89,7 +88,7 @@ class CalificacionesModel extends Model
         // ---------------------------------------------------------------------
         // SOBRESCRITURA INTELIGENTE DEL MES
         // ---------------------------------------------------------------------
-        // Si el controlador nos mandó un mes específico (ej: Titular seleccionó "JUN-JUL")
+        // Si el controlador nos mandó un mes específico 
         if ($mes_custom !== null && is_numeric($mes_custom)) {
             
             // 1. Forzamos el ID del mes para la consulta SQL
@@ -112,7 +111,7 @@ class CalificacionesModel extends Model
         }
         
         // --------------------------------------------------------------------- 
-        // B. Obtener Catálogo de Materias (ID => Nombre)
+        // B. Obtener Catálogo de Materias  
         $materiasRaw = $this->db->table('materia')
             ->select('id_materia, nombre_materia')
             ->where('id_grados', $id_grado)
@@ -147,8 +146,8 @@ class CalificacionesModel extends Model
                       AND c.cicloEscolar = ? 
                       AND c.id_mes = ?
                 WHERE u.grado = ? 
-                  AND u.estatus = 1   -- Solo activos
-                  AND u.nivel = 7     -- Solo alumnos
+                  AND u.estatus = 1  
+                  AND u.nivel = 7     
                 ORDER BY u.ap_Alumno, u.am_Alumno, u.Nombre";
 
         // Ejecutar consulta
@@ -174,10 +173,10 @@ class CalificacionesModel extends Model
             // Si el alumno tiene calificación registrada la guardamos
             if ($row['Id_cal']) {
                 $sabana[$id_al]['notas'][$row['id_materia']] = [
-                    'id_cal'       => $row['Id_cal'],       // ID clave para editar
+                    'id_cal'       => $row['Id_cal'],       
                     'calificacion' => $row['calificacion'],
                     'faltas'       => $row['faltas'],
-                    'bandera'      => $row['bandera']       // Quién la editó
+                    'bandera'      => $row['bandera']       
                 ];
             }
         }
@@ -201,7 +200,7 @@ class CalificacionesModel extends Model
 
         $data = [];
         
-        // Caso 1: Editar Calificación
+        // Editar Calificación
         if ($tipo === 'score') {
             $data = [
                 'calificacion'  => $valor,
@@ -209,7 +208,7 @@ class CalificacionesModel extends Model
                 'bandera'       => $bandera 
             ];
         } 
-        // Caso 2: Editar Faltas
+        // Editar Faltas
         elseif ($tipo === 'absence') {
             $data = [
                 'faltas' => $valor,
@@ -222,7 +221,7 @@ class CalificacionesModel extends Model
     }
 
     // =========================================================================
-    // 4. CREAR UNA NUEVA CALIFICACIÓN (INSERT) - NECESARIO PARA LA SÁBANA REACTIVA
+    // 4. CREAR UNA NUEVA CALIFICACIÓN (INSERT)
     // =========================================================================
     public function crearCalificacion($datos)
     {
