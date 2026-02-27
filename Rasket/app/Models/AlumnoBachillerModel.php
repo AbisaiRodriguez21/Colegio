@@ -18,8 +18,8 @@ class AlumnoBachillerModel extends Model
     {
         return $this->select('usr.id, usr.Nombre, usr.ap_Alumno, usr.am_Alumno, usr.area3B, g.nombreGrado')
                     ->join('grados g', 'usr.grado = g.Id_grado')
-                    ->where('usr.nivel', 7)       // Nivel Bachiller
-                    ->where('usr.estatus', 1)     // Estatus Activo (Legacy usaba 1 aqui)
+                    ->where('usr.nivel', 7)        
+                    ->where('usr.estatus', 1)     
                     ->where('usr.grado', 33)      // ID específico de 3° Bachiller
                     ->orderBy('usr.ap_Alumno', 'ASC')
                     ->paginate($perPage);
@@ -32,7 +32,6 @@ class AlumnoBachillerModel extends Model
     {
         $db = \Config\Database::connect();
         
-        // Iniciamos una transacción (Todo o Nada)
         $db->transStart();
 
         // Recorremos los arrays paralelos
@@ -46,7 +45,6 @@ class AlumnoBachillerModel extends Model
             }
         }
 
-        // Si algo falla, transComplete() hace rollback automático
         $db->transComplete();
 
         return $db->transStatus(); // Devuelve TRUE si todo salió bien

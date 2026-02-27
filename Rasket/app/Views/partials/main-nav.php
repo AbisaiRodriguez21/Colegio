@@ -307,12 +307,12 @@ if ($nivelUsuario == 1 || $nivelUsuario == 2) {
                     </a>
                 </li>
 
-                <li class="nav-item">
+                <!-- <li class="nav-item">
                     <a class="nav-link" href="<?= base_url('alumno/contenido') ?>">
                         <span class="nav-icon"><iconify-icon icon="solar:folder-with-files-broken"></iconify-icon></span>
                         <span class="nav-text"> Ver Contenidos </span>
                     </a>
-                </li>
+                </li> -->
 
                 <li class="nav-item">
                     <a class="nav-link" href="http://www.sjs.edu.mx/administracion/convenios-internos/" target="_blank">

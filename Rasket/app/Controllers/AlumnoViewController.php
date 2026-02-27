@@ -394,4 +394,92 @@ class AlumnoViewController extends BaseController
         $promedio_general = ($total_count_semestre > 0) ? round($total_sum_semestre/$total_count_semestre, 1) : null;
         return ['secciones' => $secciones_out, 'promedio_general' => $promedio_general];
     }
+
+
+    // =========================================================================
+    // FICHA DEL ALUMNO  
+    // =========================================================================
+    public function ficha()
+    {
+        $session = session();
+        $id_alumno = $session->get('id');
+        
+        if (!$id_alumno) return redirect()->to('/login');
+
+        $model = new \App\Models\AlumnoFichaModel();
+        
+        $alumno = $model->getDatosFicha($id_alumno);
+
+        // Si por alguna razón el grado viene vacío, le ponemos un valor por defecto
+        if (!isset($alumno['nombreGrado'])) {
+            $alumno['nombreGrado'] = 'No asignado';
+        }
+
+        $data = [
+            'title'  => 'Ficha del Alumno',
+            'alumno' => $alumno
+        ];
+
+        return view('VistadelAlumno/ficha', $data);
+    }
+
+    // =========================================================================
+    // ACTUALIZAR FICHA
+    // =========================================================================
+    public function actualizarFicha()
+    {
+        $session = session();
+        $id_alumno = $session->get('id');
+        
+        if (!$id_alumno) return redirect()->to('/login');
+
+        $request = \Config\Services::request();
+
+        $dataUpdate = [
+            'nia'            => $request->getPost('nia'),
+            'Nombre'         => $request->getPost('Nombre'),
+            'ap_Alumno'      => $request->getPost('ap_Alumno'),
+            'am_Alumno'      => $request->getPost('am_Alumno'),
+            'curp'           => $request->getPost('curp'),
+            'rfc'            => $request->getPost('rfc'),
+            'fechaNacAlumno' => $request->getPost('fechaNacAlumno'),
+
+            'direccion'      => $request->getPost('direccion_alum'),
+            'cp_alum'        => $request->getPost('cp_alum'),
+            'estado'         => $request->getPost('estado'),
+            'telefono_alum'  => $request->getPost('telefono_alum'),
+            'mail_alumn'     => $request->getPost('emailTutor'), 
+            
+            'p_nombre'       => $request->getPost('p_nombre'),
+            'p_domicilio'    => $request->getPost('p_domicilio'),
+            'p_empresa'      => $request->getPost('p_empresa'),
+            'p_cargo'        => $request->getPost('p_cargo'),
+            'p_mail'         => $request->getPost('p_mail'),
+            'p_tel_particular'=> $request->getPost('p_tel_particular'),
+            'p_celular'      => $request->getPost('p_celular'),
+            'p_parentesco'   => $request->getPost('p_parentesco'),
+            'p_ultimogradoestudios' => $request->getPost('p_ultimogradoestudios'),
+
+            'm_nombre'       => $request->getPost('m_nombre'),
+            'm_domicilio'    => $request->getPost('m_domicilio'),
+            'm_empresa'      => $request->getPost('m_empresa'),
+            'm_cargo'        => $request->getPost('m_cargo'),
+            'm_mail'         => $request->getPost('m_mail'),
+            'm_tel_particular'=> $request->getPost('m_tel_particular'),
+            'm_celular'      => $request->getPost('m_celular'),
+            'm_parentesco'   => $request->getPost('m_parentesco'),
+            'm_ultimogradoestudios' => $request->getPost('m_ultimogradoestudios'),
+
+            'e_nombre'       => $request->getPost('e_nombre'),
+            'e_telefono'     => $request->getPost('e_telefono'),
+            'extra'          => $request->getPost('extra'),
+            
+            'fecha_actualizar' => date('Y-m-d H:i:s')
+        ];
+
+        $model = new \App\Models\AlumnoFichaModel();
+        $model->updateDatosContacto($id_alumno, $dataUpdate);
+
+        return redirect()->back()->with('mensaje', 'Tu información se ha actualizado correctamente.');
+    }
 }

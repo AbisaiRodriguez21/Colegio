@@ -96,6 +96,9 @@ $routes->group('alumno', ['filter' => 'studentAuth'], function($routes) {
     $routes->get('pagos', 'Alumno\Pagos::index');
     $routes->post('pagos/guardar', 'Alumno\Pagos::guardar');
     $routes->get('pagos/recibo/(:num)', 'Alumno\Pagos::verRecibo/$1');
+
+    $routes->get('ficha', 'AlumnoViewController::ficha'); // Vista para que el alumno vea su ficha 
+    $routes->post('actualizar-ficha', 'AlumnoViewController::actualizarFicha'); // Acción para actualizar ficha
 });
 
 // =============================================================================
