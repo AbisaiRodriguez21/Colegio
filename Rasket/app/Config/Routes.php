@@ -119,7 +119,7 @@ $routes->group('', ['filter' => 'adminAuth'], function ($routes) {
     $routes->get('admin/dashboard', 'Admin\DashboardAdmin::index');
 
     // Ruta para actualizar contraseña vía AJAX
-    $routes->post('actualizar-password', 'Alumno\Dashboard::actualizarPassword'); // Actualizar contraseña vía AJAX
+    $routes->post('actualizar-password', 'Alumno\Dashboard::actualizarPassword'); 
 
 
 

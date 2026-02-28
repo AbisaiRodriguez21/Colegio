@@ -293,6 +293,12 @@ if ($nivelUsuario == 1 || $nivelUsuario == 2) {
                         <span class="nav-text"> Cambio de Grado </span>
                     </a>
                 </li>
+                <li class="nav-item mt-4">
+                    <a class="nav-link text-danger" href="<?= base_url('logout') ?>">
+                        <span class="nav-icon"><iconify-icon icon="solar:logout-broken"></iconify-icon></span>
+                        <span class="nav-text"> Salir </span>
+                    </a>
+                </li>
 
             <?php elseif ($nivelUsuario == 7): ?>
                 <li class="nav-item">
