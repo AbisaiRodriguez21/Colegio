@@ -4,7 +4,7 @@ namespace App\Controllers\Alumno;
 
 use App\Controllers\BaseController;
 use App\Models\UsuarioModel;
-use App\Models\PagoAlumnoModel; // <--- USAMOS EL NUEVO MODELO
+use App\Models\PagoAlumnoModel; 
 use App\Models\FolioModel;
 use App\Models\CalificacionesModel;
 
@@ -26,7 +26,6 @@ class Pagos extends BaseController
         $config = $califModel->getConfiguracionActiva($alumno['nivel'] ?? 5); 
         $idCicloActivo = $config['id_ciclo'];
 
-        // Historial de Pagos (Usando el modelo exclusivo de alumno)
         $pagoModel = new PagoAlumnoModel(); 
         $pagos = $pagoModel->where('id_usr', $idAlumno)
                            ->where('cilcoescolar', $idCicloActivo) 
@@ -57,10 +56,10 @@ class Pagos extends BaseController
         $archivo = $request->getFile('archivo_comprobante');
         $nombreArchivo = '';
 
-        // Nombre del archivo: IDALUMNO_IDFOLIO_FECHAHORA.EXT
+        // Nombre del archivo: 
         if ($archivo && $archivo->isValid() && !$archivo->hasMoved()) {
             $newName = $session->get('id') . '_' . $idFolio . '_' . date('YmdHis') . '.' . $archivo->getExtension();
-            // Ubicación de guardado: /public/pagos/
+            // Ubicación de guardado 
             $archivo->move(ROOTPATH . 'public/pagos', $newName);
             $nombreArchivo = $newName;
         }
@@ -71,7 +70,6 @@ class Pagos extends BaseController
         //TOTAL
         $total = $cantidad + $recargos;
 
-        // C) Guardar
         $dataPago = [
             'id_usr'        => $session->get('id'),
             'cantidad'      => $cantidad,
@@ -92,7 +90,7 @@ class Pagos extends BaseController
 
         $pagoModel->insert($dataPago);
 
-        // D) Enviar Correo
+        // Enviar Correo
         $this->enviarCorreo($dataPago, $folioModel->obtenerNumero($idFolio));
 
         return redirect()->to(base_url("alumno/pagos/recibo/$idFolio"));
@@ -104,6 +102,7 @@ class Pagos extends BaseController
         $pagoModel = new PagoAlumnoModel(); 
         $folioModel = new FolioModel();
         
+        // Obtener el pago
         $pago = $pagoModel->where('id_folio', $idFolio)
                           ->where('id_usr', $session->get('id'))
                           ->first();
@@ -112,37 +111,29 @@ class Pagos extends BaseController
             return redirect()->to(base_url('alumno/pagos'));
         }
 
+        $idAlumno = $session->get('id');
+        $db = \Config\Database::connect();
+        
+        $alumno = $db->table('usr')->where('id', $idAlumno)->get()->getRowArray();
+        $grado = $db->table('grados')->where('Id_grado', $alumno['grado'])->get()->getRowArray();
+        $alumno['nombreGrado'] = $grado ? $grado['nombreGrado'] : 'No asignado';
+
+        $califModel = new CalificacionesModel();
+        $config = $califModel->getConfiguracionActiva($alumno['nivel'] ?? 5); 
+        $cicloRow = $db->table('cicloEscolar')->where('Id_cicloEscolar', $config['id_ciclo'])->get()->getRowArray();
+        $nombreCiclo = $cicloRow ? $cicloRow['nombreCicloEscolar'] : '2025-2026';
+
         return view('VistadelAlumno/recibo_pago', [
-            'pago'        => $pago, 
-            'folioVisual' => $folioModel->obtenerNumero($idFolio),
-            'nombre'      => $session->get('nombre') . ' ' . $session->get('apellidos')
+            'pagos'        => [$pago], 
+            'folio'        => $folioModel->obtenerNumero($idFolio),
+            'alumno'       => $alumno,
+            'cicloEscolar' => $nombreCiclo,
+            'realizadoPor' => $pago['qrp']  
         ]);
     }
 
     private function enviarCorreo($datos, $numFolio)
     {
-        $email = \Config\Services::email();
-        
-        $email->setFrom('pagos@sjs.edu.mx', 'Sistema Pagos SJS');
-        
-        // --- CAMBIO 1: PON AQUÍ TU CORREO PERSONAL ---
-        $email->setTo('juancarlosqqq31@gmail.com'); 
-        // ---------------------------------------------
-
-        $email->setSubject("Nuevo Pago - Folio #$numFolio");
-
-        // --- CAMBIO 2: USAR LA VISTA BONITA ---
-        // Cargamos la vista que creamos en el Paso 1 y le pasamos los datos
-        $mensaje = view('emails/nuevo_pago', [
-            'datos' => $datos, 
-            'folio' => $numFolio
-        ]);
-        
-        $email->setMessage($mensaje);
-        
-        // Enviamos y si falla, mostramos el error en el log (opcional para debug)
-        if (! $email->send()) {
-            log_message('error', $email->printDebugger(['headers']));
-        }
+        // pendiente: implementar función de correo 
     }
 }
