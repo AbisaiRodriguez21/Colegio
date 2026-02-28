@@ -43,10 +43,9 @@ $routes->group('', ['filter' => 'auth'], function ($routes) {
     // Rutas del Alumno
     $routes->get('alumno/boleta', 'AlumnoViewController::verBoleta');
 
-    // ⚠️ NOTA: Dejamos 'actualizar' aquí porque si mueves esto al grupo de Titular,
-    // los maestros de materia (que no son titulares) no podrán guardar calificaciones.
-    // A menos que SOLO los titulares califiquen en tu escuela.
     $routes->post('calificaciones/actualizar', 'Calificaciones::actualizar');
+
+    
 });
 
 // =============================================================================
@@ -116,6 +115,9 @@ $routes->group('', ['filter' => 'adminAuth'], function ($routes) {
 
     // Test BD
     $routes->get('testdb', 'TestDB::index');
+
+    $routes->get('admin/dashboard', 'Admin\DashboardAdmin::index');
+
 
     // Profesores
     $routes->get('lista-profesores', 'ProfesorLista::index');
