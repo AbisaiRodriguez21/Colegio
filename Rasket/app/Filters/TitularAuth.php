@@ -17,15 +17,12 @@ class TitularAuth implements FilterInterface
             return redirect()->to('/login');
         }
 
-        // 2. Validar si es Nivel 9 (Titular)
-        // NOTA: Asegúrate que tu login guarde 'nivelUsuario'. 
-        // Si tu login guarda 'nivel', cambia 'nivelUsuario' por 'nivel' aquí abajo.
-        if ($session->get('nivelUsuario') != 9 && $session->get('nivel') != 9) {
+        // 2. Validar si es Nivel 9  
+        if ($session->get('nivel') != 9) {
             return redirect()->back()->with('error', 'Acceso denegado: No eres titular.');
         }
 
-        // 3. Validar si tiene un grupo asignado
-        // --- CORRECCIÓN AQUÍ: Quitamos la validación de 'nombreT' ---
+        // 3. Validar si tiene un grupo asignado 
         if (!$session->get('nivelT')) {
              return redirect()->back()->with('error', 'No tienes un grupo asignado como titular.');
         }

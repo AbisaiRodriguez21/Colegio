@@ -332,7 +332,6 @@ if ($nivelUsuario == 1 || $nivelUsuario == 2) {
             <?php elseif ($nivelUsuario == 9): ?>
 
                 <?php
-                // Pequeña lógica visual: Obtener nombre del grado asignado
                 $idGradoT = session()->get('nivelT');
                 $nombreGradoT = "Mi Grupo";
 
@@ -345,6 +344,12 @@ if ($nivelUsuario == 1 || $nivelUsuario == 2) {
                 <!-- Dashboard -->
 
                 <!-- Grado Titular -->
+                 <li class="nav-item">
+                    <a class="nav-link" href="<?= base_url('titular/dashboard') ?>">
+                        <span class="nav-text">Dashboard</span>
+                    </a>
+                </li>
+
                 <li class="nav-item">
                     <a class="nav-link" href="<?= base_url('titular/mi-grupo') ?>">
                         <span class="nav-icon"><iconify-icon icon="solar:users-group-two-rounded-broken"></iconify-icon></span>
