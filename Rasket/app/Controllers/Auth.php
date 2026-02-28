@@ -42,17 +42,17 @@ class Auth extends BaseController
                 return redirect()->to(base_url('alumno/dashboard'));
             }
             
-            // CASO 2: ADMINISTRADORES (Nivel 1 y 2)
-            elseif ($nivelUsuario == 1 || $nivelUsuario == 2) {
+            // CASO 2: ADMINISTRADORES 
+            elseif ($nivelUsuario == 1) {
                 // Ellos van al dashboard general (admin)
-                return redirect()->to(base_url('dashboard'));
+                return redirect()->to(base_url('admin/dashboard'));
             }
 
-            // CASO 3: DOCENTES (Nivel 9 - Ejemplo)
+            // CASO 3: DOCENTES Titualres
             elseif ($nivelUsuario == 9) {
                 
                 // CAMBIAR LA RUTA CUANDO YA SE TENGA LA VISTA CORRESPONDIENTE
-                return redirect()->to(base_url('dashboard'));
+                return redirect()->to(base_url('titular/dashboard'));
             }
 
             // CAMBIAR LA RUTA CUANDO YA SE TENGA LA VISTA CORRESPONDIENTE

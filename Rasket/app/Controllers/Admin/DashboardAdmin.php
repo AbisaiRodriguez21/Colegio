@@ -11,6 +11,7 @@ class DashboardAdmin extends BaseController
     {
         $session = session();
         $nivel = $session->get('nivel');
+        $idUsuario = $session->get('id'); // <-- Aseguramos tener el ID
 
         if (!$session->has('id') || $nivel != 1) {
             return redirect()->to(base_url('dashboard'));
@@ -26,13 +27,17 @@ class DashboardAdmin extends BaseController
             $nombreCiclo = $ciclo ? $ciclo->nombreCicloEscolar : 'No definido';
         }
 
+        // 👉 SOLUCIÓN AL MODAL VACÍO: Consultamos la contraseña directo a la tabla usr
+        $usuario = $db->table('usr')->select('pass')->where('id', $idUsuario)->get()->getRowArray();
+        $passwordReal = $usuario ? $usuario['pass'] : '';
+
         $grados = $db->table('grados')->orderBy('nivel_grado', 'ASC')->get()->getResultArray();
         
         $data = [
             'nombre'         => $session->get('nombre'),
             'apellidos'      => $session->get('apellidos'),
             'cicloEscolar'   => $nombreCiclo,
-            'passwordActual' => $session->get('pass'),
+            'passwordActual' => $passwordReal, // <-- Le pasamos la contraseña real, no la sesión vacía
             'kinder'         => [],
             'primaria'       => [],
             'secundaria'     => [],
