@@ -10,17 +10,16 @@ class AdminAuth implements FilterInterface
 {
     public function before(RequestInterface $request, $arguments = null)
     {
-        // 1. Verifica si está logueado (Doble seguridad)
         if (!session()->get('isLoggedIn')) {
             return redirect()->to(base_url('login'));
         }
 
-        // 2. Verificar el NIVEL
+        // Verificar el NIVEL
         // Si el usuario es Nivel 7 (Alumno) o cualquier otro, se expulsa.
         $nivelUsuario = session()->get('nivel');
 
         // Niveles permitidos
-        $nivelesPermitidos = ['1', '2']; 
+        $nivelesPermitidos = ['1']; 
 
         if (!in_array($nivelUsuario, $nivelesPermitidos)) {
             // Se manda al dashboard con un error

@@ -1,99 +1,95 @@
 <!DOCTYPE html>
-<html lang="es" data-bs-theme="light">
+<html lang="es" data-bs-theme="light" data-topbar-color="light" data-menu-color="light">
 
 <head>
     <?= view("partials/title-meta", ["title" => "Seleccionar Periodo"]); ?>
     <?= $this->include("partials/head-css") ?>
+    
     <style>
-        .zen-container {
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            background-color: #f8f9fa;
-        }
-
         .card-periodo {
             transition: transform 0.2s, box-shadow 0.2s;
-            cursor: pointer;
             border: 2px solid transparent;
+            cursor: pointer;
+            /* Forzamos un diseño de tarjeta que se adapte al modo oscuro/claro */
+            background-color: var(--bs-card-bg);
+            border-radius: 8px;
         }
 
         .card-periodo:hover {
             transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-            border-color: #3b7ddd;
+            border-color: #5c6bc0;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
         }
 
-        .card-periodo input {
-            display: none;
-            /* Ocultamos el radio button real */
-        }
-
-        /* Estilo cuando está seleccionado (Click) */
+        /* Estilo cuando está seleccionado */
         .card-periodo.selected {
-            background-color: #3b7ddd;
-            color: white;
-            border-color: #3b7ddd;
+            background-color: #5c6bc0 !important;
+            border-color: #5c6bc0 !important;
         }
 
         .card-periodo.selected h4 {
-            color: white !important;
+            color: #ffffff !important;
         }
     </style>
 </head>
 
 <body>
     <div class="wrapper">
+        
         <?= $this->include("partials/menu") ?>
 
-<br>
-<br>
-<br>
-            <div class="text-center mb-5">
-                <h1 class="display-5 fw-bold text-dark">Hola, Titular de <?= esc($grado) ?></h1>
-                <p class="lead text-muted">Selecciona el <?= strtolower($titulo) ?> que deseas calificar hoy.</p>
-            </div>
+        <div class="page-content">
+            <div class="container-fluid" style="padding-top: 40px;">
 
-            <form action="<?= base_url('titular/abrir-sabana') ?>" method="post" id="formPeriodo">
+                <div class="text-center mb-5">
+                    <h1 class="display-5 fw-bold text-body">Hola, Titular de <?= esc($grado ?? 'Grupo') ?></h1>
+                    <p class="lead text-muted">Selecciona el <?= strtolower($titulo ?? 'periodo') ?> que deseas calificar hoy.</p>
+                </div>
 
-                <div class="container">
+                <form action="<?= base_url('titular/abrir-sabana') ?>" method="post" id="formPeriodo">
+
                     <div class="row justify-content-center">
-                        <?php foreach ($periodos as $p): ?>
-                            <div class="col-md-4 col-lg-3 mb-4">
-                                <label class="w-100">
-                                    <input type="radio" name="id_periodo" value="<?= $p['id'] ?>" required>
-                                    <div class="card p-4 text-center card-periodo" onclick="seleccionarTarjeta(this)">
-                                        <h4 class="mb-0 text-primary"><?= esc($p['nombre']) ?></h4>
-                                    </div>
-                                </label>
+                        <?php if (!empty($periodos)): ?>
+                            <?php foreach ($periodos as $p): ?>
+                                <div class="col-md-4 col-lg-3 mb-4">
+                                    <label class="w-100" style="cursor: pointer;">
+                                        
+                                        <input type="radio" name="id_periodo" value="<?= esc($p['id']) ?>" class="d-none" required>
+                                        
+                                        <div class="card p-4 text-center card-periodo" onclick="seleccionarTarjeta(this)">
+                                            <h4 class="mb-0 fw-bold" style="color: #5c6bc0;"><?= esc($p['nombre']) ?></h4>
+                                        </div>
+                                        
+                                    </label>
+                                </div>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <div class="col-12 text-center">
+                                <p class="text-muted">No hay periodos disponibles para calificar en este momento.</p>
                             </div>
-                        <?php endforeach; ?>
+                        <?php endif; ?>
                     </div>
-                </div>
 
-                <div class="text-center mt-5">
-                    <a href="<?= base_url('dashboard') ?>" class="btn btn-outline-secondary me-3 btn-lg">Cancelar</a>
-                    <button type="submit" class="btn btn-primary btn-lg px-5">Continuar &rarr;</button>
-                </div>
+                    <div class="text-center mt-5">
+                        <a href="<?= base_url('titular/dashboard') ?>" class="btn btn-outline-secondary me-3 btn-lg">Cancelar</a>
+                        <button type="submit" class="btn btn-primary btn-lg px-5" style="background-color: #5c6bc0; border-color: #5c6bc0;">Continuar &rarr;</button>
+                    </div>
 
-            </form>
+                </form>
 
-        </div>
-    </div>
+            </div> </div> <?= $this->include("partials/footer") ?>
 
-    <?= $this->include("partials/vendor-scripts") ?>
+    </div> <?= $this->include("partials/vendor-scripts") ?>
 
     <script>
         function seleccionarTarjeta(elemento) {
-            // Quitar clase 'selected' a todas
+            // 1. Quitar clase 'selected' a todas las tarjetas
             document.querySelectorAll('.card-periodo').forEach(el => el.classList.remove('selected'));
-            // Poner clase 'selected' a la clickeada
+            
+            // 2. Poner clase 'selected' solo a la tarjeta clickeada
             elemento.classList.add('selected');
         }
     </script>
 
 </body>
-
 </html>

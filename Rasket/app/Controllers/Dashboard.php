@@ -8,15 +8,30 @@ class Dashboard extends BaseController
 {
     public function index()
     {
-        if (!session()->get('isLoggedIn')) {
+        $session = session();
+        
+        if (!$session->get('isLoggedIn') && !$session->has('id')) {
             return redirect()->to(base_url('login'));
         }
 
-        $data = [
-            'title' => 'Dashboard',
-            'subTitle' => 'Inicio'
-        ];
+        $nivel = $session->get('nivel');
 
-        return view('layouts-dark-topnav.php', $data);
+        switch ($nivel) {
+            case 7: 
+                return redirect()->to(base_url('alumno/dashboard'));
+                break;
+                
+            case 9:
+                return redirect()->to(base_url('titular/dashboard'));
+                break;
+                
+            case 1:
+                return redirect()->to(base_url('admin/dashboard'));
+                break;
+                
+            default:
+                return redirect()->back()->with('error', 'No tienes permitido el acceso');
+
+        }
     }
 }

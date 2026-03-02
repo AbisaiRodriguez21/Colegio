@@ -43,10 +43,9 @@ $routes->group('', ['filter' => 'auth'], function ($routes) {
     // Rutas del Alumno
     $routes->get('alumno/boleta', 'AlumnoViewController::verBoleta');
 
-    // ⚠️ NOTA: Dejamos 'actualizar' aquí porque si mueves esto al grupo de Titular,
-    // los maestros de materia (que no son titulares) no podrán guardar calificaciones.
-    // A menos que SOLO los titulares califiquen en tu escuela.
     $routes->post('calificaciones/actualizar', 'Calificaciones::actualizar');
+
+    
 });
 
 // =============================================================================
@@ -54,18 +53,22 @@ $routes->group('', ['filter' => 'auth'], function ($routes) {
 // =============================================================================
 $routes->group('titular', ['filter' => 'titularAuth'], function($routes) {
     
-    // 1. EL NUEVO FLUJO (Selector Zen)
-    // URL final: /titular/calificar
+    // Dashboard del Titular
+    $routes->get('dashboard', 'Titular\DashboardTitular::index');
+
+    // Ruta para actualizar contraseña vía AJAX 
+    $routes->post('actualizar-password', 'Alumno\Dashboard::actualizarPassword');
+
+    // Rutas para gestión de grupo y calificaciones 
     $routes->get('calificar', 'Titular\SabanaController::index'); 
     
-    // URL final: /titular/abrir-sabana
+    // Ruta para cargar la sábana de calificaciones
     $routes->post('abrir-sabana', 'Titular\SabanaController::cargarSabana');
-
-    // 2. RUTAS DE GESTIÓN (Movidas desde arriba)
-    // URL final: /titular/mi-grupo
+ 
+    // Rutas para ver grupo y boletas
     $routes->get('mi-grupo', 'TitularViewController::verGrupo'); 
 
-    // URL final: /titular/ver-boleta/123
+    // Ruta para ver la boleta de un alumno específico
     $routes->get('ver-boleta/(:num)', 'TitularViewController::verBoletaAlumno/$1'); 
 
     $routes->get('hoja-evaluacion', 'TitularViewController::calificarGrupo');
@@ -74,6 +77,7 @@ $routes->group('titular', ['filter' => 'titularAuth'], function($routes) {
     $routes->get('calificaciones/exportarPlantilla/(:num)', 'Calificaciones::exportarPlantilla/$1');
     // Subir Plantilla de Calificaciones
     $routes->post('calificaciones/importar', 'Calificaciones::importar');
+
 });
 
 
@@ -111,6 +115,13 @@ $routes->group('', ['filter' => 'adminAuth'], function ($routes) {
 
     // Test BD
     $routes->get('testdb', 'TestDB::index');
+
+    $routes->get('admin/dashboard', 'Admin\DashboardAdmin::index');
+
+    // Ruta para actualizar contraseña vía AJAX
+    $routes->post('actualizar-password', 'Alumno\Dashboard::actualizarPassword'); 
+
+
 
     // Profesores
     $routes->get('lista-profesores', 'ProfesorLista::index');

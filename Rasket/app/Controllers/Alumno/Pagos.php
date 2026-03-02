@@ -119,7 +119,7 @@ class Pagos extends BaseController
         $alumno['nombreGrado'] = $grado ? $grado['nombreGrado'] : 'No asignado';
 
         $califModel = new CalificacionesModel();
-        $config = $califModel->getConfiguracionActiva($alumno['nivel'] ?? 5); 
+        $config = $califModel->getConfiguracionActiva($alumno['nivel'] ?? 7); 
         $cicloRow = $db->table('cicloEscolar')->where('Id_cicloEscolar', $config['id_ciclo'])->get()->getRowArray();
         $nombreCiclo = $cicloRow ? $cicloRow['nombreCicloEscolar'] : '2025-2026';
 

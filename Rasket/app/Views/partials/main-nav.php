@@ -293,6 +293,12 @@ if ($nivelUsuario == 1 || $nivelUsuario == 2) {
                         <span class="nav-text"> Cambio de Grado </span>
                     </a>
                 </li>
+                <li class="nav-item mt-4">
+                    <a class="nav-link text-danger" href="<?= base_url('logout') ?>">
+                        <span class="nav-icon"><iconify-icon icon="solar:logout-broken"></iconify-icon></span>
+                        <span class="nav-text"> Salir </span>
+                    </a>
+                </li>
 
             <?php elseif ($nivelUsuario == 7): ?>
                 <li class="nav-item">
@@ -332,7 +338,6 @@ if ($nivelUsuario == 1 || $nivelUsuario == 2) {
             <?php elseif ($nivelUsuario == 9): ?>
 
                 <?php
-                // Pequeña lógica visual: Obtener nombre del grado asignado
                 $idGradoT = session()->get('nivelT');
                 $nombreGradoT = "Mi Grupo";
 
@@ -345,6 +350,12 @@ if ($nivelUsuario == 1 || $nivelUsuario == 2) {
                 <!-- Dashboard -->
 
                 <!-- Grado Titular -->
+                 <li class="nav-item">
+                    <a class="nav-link" href="<?= base_url('titular/dashboard') ?>">
+                        <span class="nav-text">Dashboard</span>
+                    </a>
+                </li>
+
                 <li class="nav-item">
                     <a class="nav-link" href="<?= base_url('titular/mi-grupo') ?>">
                         <span class="nav-icon"><iconify-icon icon="solar:users-group-two-rounded-broken"></iconify-icon></span>

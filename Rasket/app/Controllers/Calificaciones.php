@@ -275,8 +275,8 @@ class Calificaciones extends BaseController
         } elseif ($nivel_grado == 1) { // Kinder
             $nombre = $id_mes . "° Evaluación";
         } else { // Primaria/Secundaria (Tabla mes)
-            $row = $db->table('mes')->select('mes')->where('id', $id_mes)->get()->getRow();
-            if ($row) $nombre = $row->mes; // O 'nombre' según tu tabla
+            $row = $db->table('mes')->select('nombre')->where('id', $id_mes)->get()->getRow();
+            if ($row) $nombre = $row->nombre; // O 'nombre' según tu tabla
         }
         return $nombre;
     }
@@ -317,8 +317,8 @@ class Calificaciones extends BaseController
         $model = new CalificacionesModel();
         
         // CONTADORES 
-        $countNuevos = 0;      // No tenía valor y ahora tiene algo (ej: 0 -> 8)
-        $countCambios = 0;     // Tenía valor y ahora cambió (ej: 8 -> 9 o 8 -> 0)
+        $countNuevos = 0;     
+        $countCambios = 0;   
 
         // Leer primera fila para validar contexto
         $firstRow = fgets($handle); 
@@ -333,7 +333,7 @@ class Calificaciones extends BaseController
             $csv_id_ciclo  = $row[$idx_id_ciclo];
 
             // -----------------------------------------------------------------
-            // 🔒 CANDADO DE SEGURIDAD 
+            // CANDADO DE SEGURIDAD 
             // -----------------------------------------------------------------
             
             // Validar Grado

@@ -190,7 +190,7 @@
                 <p class="text-uppercase"><?= esc($alumno['ap_Alumno'] ?? '') ?> <?= esc($alumno['am_Alumno'] ?? '') ?> <?= esc($alumno['Nombre'] ?? '') ?></p>
                 <p><strong>Grado:</strong> <?= esc($alumno['nombreGrado'] ?? '') ?></p>
                 <p><strong>Matricula:</strong> <?= esc($alumno['matricula'] ?? '') ?></p>
-                <p>Lo realizó: <?= esc($realizadoPor ?? 'Administración') ?></p>
+                <p>Lo realizó: <?= esc($realizadoPor ?? '') ?></p>
             </div>
         </div>
 
