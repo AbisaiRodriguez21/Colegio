@@ -41,6 +41,8 @@ class Filters extends BaseFilters
         'adminAuth'  => \App\Filters\AdminAuth::class, // Filtro de Autenticación para Admin
         'studentAuth' => \App\Filters\StudentAuth::class, // Filtro de Autenticación para Alumnos
         'titularAuth' => \App\Filters\TitularAuth::class, // Filtro de Autenticación para Titulares
+        'directorAuth'  => \App\Filters\DirectorAuth::class, // Filtro de Autenticación para Director
+        'academicoAuth' => \App\Filters\AcademicoAuth::class,// Filtro de Autenticación para Admin + Director
     ];
 
     /**

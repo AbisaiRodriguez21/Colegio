@@ -74,8 +74,7 @@ class Calificaciones extends BaseController
         // ESCENARIO A: ACTUALIZACIÓN (UPDATE)
         // ---------------------------------------------------------
         if (!empty($id_cal)) {
-            // Actualizamos la calificación existente
-            // Aquí NO cambiamos el mes, porque el registro ya existe en su mes correcto.
+            
             $resultado = $model->updateCalificacion($id_cal, $tipo, $valor, $id_usuario);
             
             if ($resultado) {
@@ -134,7 +133,7 @@ class Calificaciones extends BaseController
 
     
     // =========================================================================
-    // 3. EXPORTAR PLANTILLA CON DATOS (Para editar masivamente)
+    // 3. EXPORTAR PLANTILLA CON DATOS 
     // =========================================================================
     public function exportarPlantilla($id_grado)
     {

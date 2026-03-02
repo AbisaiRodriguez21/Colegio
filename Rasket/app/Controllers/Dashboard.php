@@ -28,6 +28,10 @@ class Dashboard extends BaseController
             case 1:
                 return redirect()->to(base_url('admin/dashboard'));
                 break;
+
+            case 2:
+            return redirect()->to(base_url('director/dashboard'));
+            break;
                 
             default:
                 return redirect()->back()->with('error', 'No tienes permitido el acceso');

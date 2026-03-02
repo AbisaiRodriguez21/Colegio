@@ -113,15 +113,9 @@ $routes->group('alumno', ['filter' => 'studentAuth'], function($routes) {
 
 $routes->group('', ['filter' => 'adminAuth'], function ($routes) {
 
-    // Test BD
+    // Dashboard y Test BD
     $routes->get('testdb', 'TestDB::index');
-
     $routes->get('admin/dashboard', 'Admin\DashboardAdmin::index');
-
-    // Ruta para actualizar contraseña vía AJAX
-    $routes->post('actualizar-password', 'Alumno\Dashboard::actualizarPassword'); 
-
-
 
     // Profesores
     $routes->get('lista-profesores', 'ProfesorLista::index');
@@ -131,42 +125,20 @@ $routes->group('', ['filter' => 'adminAuth'], function ($routes) {
     $routes->post('profesor/guardar_materia', 'ProfesorLista::guardar_materia');
     $routes->post('profesor/guardar_carga_grado', 'ProfesorLista::guardar_carga_grado');
 
-    // Gestión de Alumnos (Admin gestiona alumnos)
+    // Gestión de Alumnos
     $routes->match(['get', 'post'], 'alumno', 'Alumno::index'); 
     $routes->get('alumnos/registro', 'Alumnos::registro'); 
     $routes->post('alumnos/guardar', 'Alumnos::guardar'); 
     $routes->get('alumnos/preinscripciones', 'Alumnos::preinscripciones'); 
-    // Rutas para que el Admin edite la ficha de cualquier alumno
-    $routes->get('alumnos/editar-ficha/(:num)', 'Alumnos::editarFichaAdmin/$1');
-    $routes->post('alumnos/actualizar-ficha-admin', 'Alumnos::actualizarFichaAdmin');
-    // Nota: preinscripciones podría ser pública si es externa, pero si es interna va aquí.
     
     // Lista grupos
     $routes->get('grupos/lista', 'Grupos::index');   
     $routes->post('grupos/filtrar', 'Grupos::filtrar');
 
-    // Usuarios
+    // Usuarios y Pagos
     $routes->get('crear-usuario', 'Dashboard::crearUsuario');
-
-    // Verificar Pagos
     $routes->get('verificar-pagos', 'VerificarPagos::index');
     $routes->post('verificar-pagos/validar', 'VerificarPagos::validar');
-
-    // Boletas (Admin y Profes)
-    $routes->get('boleta/lista/(:num)', 'Boleta::lista_alumnos/$1');
-    $routes->get('boleta/ver/(:num)/(:num)', 'Boleta::ver/$1/$2');
-    $routes->get('boleta/calificar/(:num)', 'Calificaciones::editar/$1');
-    $routes->get('calificaciones/editar/(:num)', 'Calificaciones::editar/$1');
-    // Descargar Plantilla de Calificaciones
-    $routes->get('calificaciones/exportarPlantilla/(:num)', 'Calificaciones::exportarPlantilla/$1');
-    // Subir Plantilla de Calificaciones
-    $routes->post('calificaciones/importar', 'Calificaciones::importar');
-
-    // Calificaciones Bimestrales
-    $routes->get('calificaciones_bimestre/lista/(:num)', 'CalificacionesBimestre::lista/$1');
-    $routes->get('calificaciones_bimestre/alumno/(:num)/(:num)', 'CalificacionesBimestre::alumno_completo/$1/$2');
-    $routes->get('calificaciones_bimestre/alumno_completo/(:num)/(:num)', 'CalificacionesBimestre::alumno_completo/$1/$2');
-    $routes->post('calificaciones_bimestre/actualizar', 'CalificacionesBimestre::actualizar');
 
     // Asignaciones Especiales
     $routes->get('asignar-area', 'AsignarArea::index'); 
@@ -175,19 +147,18 @@ $routes->group('', ['filter' => 'adminAuth'], function ($routes) {
     $routes->post('asignar-titulares/guardar', 'AsignarTitulares::guardar'); 
 
     // Registro Profesor y Grados
-    $routes->get('registro-profesor', 'RegistroProfesor::nuevo');         
+    $routes->get('registro-profesor', 'RegistroProfesor::nuevo');        
     $routes->post('registro-profesor/guardar', 'RegistroProfesor::guardar');
     $routes->get('registro-profesor/municipios/(:segment)', 'RegistroProfesor::getMunicipios/$1'); 
     $routes->get('registro-profesor/localidades/(:segment)', 'RegistroProfesor::getLocalidades/$1');
     
-    $routes->get('registro/grados', 'RegistroProfesor::grados');              
+    $routes->get('registro/grados', 'RegistroProfesor::grados');               
     $routes->post('registro/grados/guardar', 'RegistroProfesor::guardarGrado'); 
     $routes->get('registro/grados/eliminar/(:num)', 'RegistroProfesor::eliminarGrado/$1'); 
 
     // Niveles
     $routes->get('niveles', 'Niveles::index');           
     $routes->get('niveles/fetch', 'Niveles::fetch');    
-    // Ruta para cambiar contraseña rápida
     $routes->post('niveles/actualizar-pass', 'Niveles::actualizarPassword');
 
     // Cambio de Grado
@@ -196,7 +167,47 @@ $routes->group('', ['filter' => 'adminAuth'], function ($routes) {
     $routes->get('cambio-grado/get-datos', 'CambioGradoController::getDatosModal'); 
     $routes->post('cambio-grado/activar', 'CambioGradoController::activar');
 
-    // Configuración Global (del Mes y Ciclo Activo)
+    // Configuración Global
     $routes->get('globalconfig/getDatos/(:num)', 'GlobalConfig::getDatos/$1');
-$routes->post('globalconfig/update', 'GlobalConfig::update');
+    $routes->post('globalconfig/update', 'GlobalConfig::update');
+});
+
+// =============================================================================
+// RUTAS PARA EL DIRECTOR
+// =============================================================================
+$routes->group('director', ['filter' => 'directorAuth'], function($routes) {
+    $routes->get('dashboard', 'Director\DashboardDirector::index');
+
+    $routes->get('seleccionar-periodo/(:num)', 'Director\DashboardDirector::seleccionarPeriodo/$1'); 
+    $routes->post('abrir-sabana', 'Director\DashboardDirector::abrirSabana');
+});
+
+
+// =============================================================================
+// RUTAS COMPARTIDAS  (Admin + Director)
+// =============================================================================
+$routes->group('', ['filter' => 'academicoAuth'], function($routes) {
+    
+    // Boletas
+    $routes->get('boleta/lista/(:num)', 'Boleta::lista_alumnos/$1');
+    $routes->get('boleta/ver/(:num)/(:num)', 'Boleta::ver/$1/$2');
+    
+    // Sábana de calificaciones (Acepta solo grado o grado + periodo)
+    $routes->get('boleta/calificar/(:num)', 'Calificaciones::editar/$1');
+    $routes->get('boleta/calificar/(:num)/(:num)', 'Calificaciones::editar/$1/$2'); 
+    
+    // Calificaciones Generales y Plantillas
+    $routes->get('calificaciones/editar/(:num)', 'Calificaciones::editar/$1');
+    $routes->get('calificaciones/editar/(:num)/(:num)', 'Calificaciones::editar/$1/$2');  
+    $routes->get('calificaciones/exportarPlantilla/(:num)', 'Calificaciones::exportarPlantilla/$1');
+    $routes->post('calificaciones/importar', 'Calificaciones::importar');
+
+    // Calificaciones Bimestrales
+    $routes->get('calificaciones_bimestre/lista/(:num)', 'CalificacionesBimestre::lista/$1');
+    $routes->get('calificaciones_bimestre/alumno/(:num)/(:num)', 'CalificacionesBimestre::alumno_completo/$1/$2');
+    $routes->get('calificaciones_bimestre/alumno_completo/(:num)/(:num)', 'CalificacionesBimestre::alumno_completo/$1/$2');
+    $routes->post('calificaciones_bimestre/actualizar', 'CalificacionesBimestre::actualizar');
+    
+    // Ruta centralizada de cambio de contraseña
+    $routes->post('actualizar-password', '\App\Controllers\Alumno\Dashboard::actualizarPassword');
 });

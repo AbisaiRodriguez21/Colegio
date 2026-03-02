@@ -138,7 +138,7 @@ if ($nivelUsuario == 1 || $nivelUsuario == 2) {
                 </div>
             </li>
 
-            <?php if ($nivelUsuario == 1 || $nivelUsuario == 2): ?>
+            <?php if ($nivelUsuario == 1): ?>
 
                 <li class="nav-item">
                     <a href="#" class="nav-link" onclick="abrirConfiguracion(1, 'Configurar Primaria/Secundaria'); return false;">
@@ -300,6 +300,86 @@ if ($nivelUsuario == 1 || $nivelUsuario == 2) {
                     </a>
                 </li>
 
+
+            <?php elseif ($nivelUsuario == 2): ?>
+
+                <li class="nav-item">
+                    <a class="nav-link" href="<?= base_url('director/dashboard') ?>">
+                        <span class="nav-icon"><iconify-icon icon="solar:home-2-broken"></iconify-icon></span>
+                        <span class="nav-text"> Dashboard </span>
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link" href="#submenu-boleta-dir" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="submenu-boleta-dir">
+                        <span class="nav-icon"><iconify-icon icon="solar:notebook-broken"></iconify-icon></span>
+                        <span class="nav-text"> Boleta </span>
+                        <span class="nav-arrow ms-auto"><iconify-icon icon="solar:alt-arrow-right-broken"></iconify-icon></span>
+                    </a>
+                    <div class="collapse" id="submenu-boleta-dir">
+                        <ul class="navbar-nav" style="padding-left: 20px;">
+                            <li class="nav-item">
+                                <a class="nav-link" href="#submenu-boleta-ver-dir" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="submenu-boleta-ver-dir">
+                                    <span class="nav-text"> Ver Boleta/ Imprimir </span>
+                                    <span class="nav-arrow ms-auto"><iconify-icon icon="solar:alt-arrow-right-broken"></iconify-icon></span>
+                                </a>
+                                <div class="collapse" id="submenu-boleta-ver-dir">
+                                    <ul class="navbar-nav" style="padding-left: 15px; border-left: 1px solid #eee;">
+                                        <?php foreach ($grados_menu as $grado): ?>
+                                            <li class="nav-item">
+                                                <a class="nav-link" href="<?= base_url('boleta/lista/' . $grado['id_grado']) ?>">
+                                                    <span class="nav-text"><?= esc($grado['nombreGrado']) ?></span>
+                                                </a>
+                                            </li>
+                                        <?php endforeach; ?>
+                                    </ul>
+                                </div>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="#submenu-boleta-calificar-dir" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="submenu-boleta-calificar-dir">
+                                    <span class="nav-text multiline-text"> Calificar Boleta Bimestre</span>
+                                    <span class="nav-arrow ms-auto"><iconify-icon icon="solar:alt-arrow-right-broken"></iconify-icon></span>
+                                </a>
+                                <div class="collapse" id="submenu-boleta-calificar-dir">
+                                    <ul class="navbar-nav" style="padding-left: 15px; border-left: 1px solid #eee;">
+                                        <?php foreach ($grados_menu as $grado): ?>
+                                            <li class="nav-item">
+                                                <a class="nav-link" href="<?= base_url('boleta/calificar/' . $grado['id_grado']) ?>">
+                                                    <span class="nav-text"><?= esc($grado['nombreGrado']) ?></span>
+                                                </a>
+                                            </li>
+                                        <?php endforeach; ?>
+                                    </ul>
+                                </div>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link multiline-link" href="#submenu-boleta-todo-dir" data-bs-toggle="collapse" role="button" aria-expanded="false" aria-controls="submenu-boleta-todo-dir">
+                                    <span class="nav-text multiline-text"> Calificar Boleta Todo Bimestre</span>
+                                    <span class="nav-arrow ms-auto"><iconify-icon icon="solar:alt-arrow-right-broken"></iconify-icon></span>
+                                </a>
+                                <div class="collapse" id="submenu-boleta-todo-dir">
+                                    <ul class="navbar-nav" style="padding-left: 15px; border-left: 1px solid #eee;">
+                                        <?php foreach ($grados_menu as $grado): ?>
+                                            <li class="nav-item">
+                                                <a class="nav-link" href="<?= base_url('calificaciones_bimestre/lista/' . $grado['id_grado']) ?>">
+                                                    <span class="nav-text"><?= esc($grado['nombreGrado']) ?></span>
+                                                </a>
+                                            </li>
+                                        <?php endforeach; ?>
+                                    </ul>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
+
+                <li class="nav-item mt-4">
+                    <a class="nav-link text-danger" href="<?= base_url('logout') ?>">
+                        <span class="nav-icon"><iconify-icon icon="solar:logout-broken"></iconify-icon></span>
+                        <span class="nav-text"> Salir </span>
+                    </a>
+                </li>
+
             <?php elseif ($nivelUsuario == 7): ?>
                 <li class="nav-item">
                     <a class="nav-link" href="<?= base_url('alumno/dashboard') ?>">
@@ -350,7 +430,7 @@ if ($nivelUsuario == 1 || $nivelUsuario == 2) {
                 <!-- Dashboard -->
 
                 <!-- Grado Titular -->
-                 <li class="nav-item">
+                <li class="nav-item">
                     <a class="nav-link" href="<?= base_url('titular/dashboard') ?>">
                         <span class="nav-text">Dashboard</span>
                     </a>

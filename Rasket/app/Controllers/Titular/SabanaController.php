@@ -12,10 +12,9 @@ class SabanaController extends BaseController
         $db = \Config\Database::connect();
 
         // 1. Obtener datos del grupo titular desde la sesión
-        $idGrado = $session->get('nivelT'); // ID del grado (ej: 21)
+        $idGrado = $session->get('nivelT'); 
         
         // 2. Consultar qué NIVEL EDUCATIVO es ese grado
-        // (Esto es vital para saber si mostramos Meses, Bimestres o Evaluaciones)
         $gradoInfo = $db->table('grados')
                         ->select('nivel_grado, nombreGrado')
                         ->where('id_grado', $idGrado)
@@ -25,18 +24,15 @@ class SabanaController extends BaseController
             return redirect()->back()->with('error', 'No se encontró información del grado.');
         }
 
-        $nivel = $gradoInfo->nivel_grado; // 1=Kinder, 2=Primaria, 5=Bachiller
+        $nivel = $gradoInfo->nivel_grado; 
         
-        // 3. Lógica "Inteligente" para definir los periodos
         $periodos = [];
         $tituloPeriodo = "";
 
         switch ($nivel) {
-            case 1: // KINDER (Según tu imagen: 1°, 2°, 3°)
-            case 20: // (A veces Kinder tiene otro ID de nivel, ajusta si es necesario)
+            case 2:  
                 $tituloPeriodo = "Evaluaciones";
                 
-                // Si tienes tabla 'momentos', úsala. Si no, usamos este arreglo fijo:
                 $periodos = [
                     ['id' => 1, 'nombre' => '1° Evaluación'],
                     ['id' => 2, 'nombre' => '2° Evaluación'],
@@ -51,7 +47,7 @@ class SabanaController extends BaseController
                                ->get()->getResultArray();
                 break;
 
-            default: // PRIMARIA (2) Y SECUNDARIA (3) -> (Tabla 'mes')
+            default: // PRIMARIA (3) Y SECUNDARIA (4) -> (Tabla 'mes')
                 $tituloPeriodo = "Meses";
                 $periodos = $db->table('mes') 
                                ->select('id, nombre') 

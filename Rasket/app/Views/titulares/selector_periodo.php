@@ -83,10 +83,8 @@
 
     <script>
         function seleccionarTarjeta(elemento) {
-            // 1. Quitar clase 'selected' a todas las tarjetas
             document.querySelectorAll('.card-periodo').forEach(el => el.classList.remove('selected'));
             
-            // 2. Poner clase 'selected' solo a la tarjeta clickeada
             elemento.classList.add('selected');
         }
     </script>
