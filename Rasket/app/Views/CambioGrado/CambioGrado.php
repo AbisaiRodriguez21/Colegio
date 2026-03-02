@@ -99,7 +99,7 @@
             <li><hr class="dropdown-divider"></li>
             
             <li><a class="dropdown-item disabled" href="#"><i class="bx bx-printer me-2"></i> Imprimir</a></li>
-            <li><a class="dropdown-item disabled" href="#"><i class="bx bx-dollar-circle me-2"></i> Ver Pagos</a></li>
+            <li><a class="dropdown-item" href="<?= base_url('alumnos/ver-pagos/' . $alum['id']) ?>"><i class="bx bx-dollar-circle me-2"></i> Ver Pagos</a></li>
             <li><a class="dropdown-item" href="<?= base_url('alumnos/editar-ficha/' . $alum['id']) ?>"><i class="bx bx-id-card me-2"></i> Editar Ficha</a></li>
         </ul>
     </div>

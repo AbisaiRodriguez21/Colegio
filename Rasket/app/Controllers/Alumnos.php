@@ -243,4 +243,143 @@ class Alumnos extends BaseController
 
         return redirect()->to(base_url('cambio-grado'))->with('success', 'Ficha del alumno actualizada correctamente.');
     }
+
+    // VER PAGOS DESDE ADMIN
+    public function verPagosAdmin($id_alumno)
+    {
+        // Verificamos permisos
+        if (!$this->_verificarPermisos()) {
+            return redirect()->to(base_url('dashboard'))->with('error', 'Acción no autorizada.');
+        }
+
+        $db = \Config\Database::connect();
+
+        // Obtenemos datos del alumno
+        $alumno = $db->table('usr')->where('id', $id_alumno)->get()->getRowArray();
+        if (!$alumno) {
+            return redirect()->back()->with('error', 'Alumno no encontrado');
+        }
+
+        // Obtenemos el ciclo activo 
+        $rowCiclo = $db->table('mesycicloactivo')->where('id', 1)->get()->getRow();
+        $idCicloActivo = $rowCiclo ? $rowCiclo->id_ciclo : 11;
+
+        // Obtenemos los pagos de ese alumno
+        $pagoModel = new \App\Models\PagoAlumnoModel();
+        $pagos = $pagoModel->where('id_usr', $id_alumno)
+                           ->where('cilcoescolar', $idCicloActivo)
+                           ->orderBy('Id_pago', 'DESC')
+                           ->findAll();
+
+        // Mandamos todo a la vista que ya existe
+        return view('VistadelAlumno/pagos_lista', [
+            'nombre'       => session('nombre'), 
+            'apellidos'    => session('apellidos'), 
+            'alumno'       => $alumno,
+            'pagos'        => $pagos,
+            'ciclo'        => $idCicloActivo,
+            
+            'es_admin'     => true,
+            'ruta_regreso' => base_url('cambio-grado')
+        ]);
+    }
+    
+    // GUARDAR PAGO DESDE ADMIN
+    public function guardarPagoAdmin()
+    {
+        if (!$this->_verificarPermisos()) {
+            return redirect()->to(base_url('dashboard'))->with('error', 'Acción no autorizada.');
+        }
+
+        $session = session();
+        $request = \Config\Services::request();
+        
+        $folioModel = new \App\Models\FolioModel();
+        $pagoModel  = new \App\Models\PagoAlumnoModel(); 
+
+        $idAlumno = $request->getPost('id_alumno');
+
+        // AGenerar Folio
+        $idFolio = $folioModel->generarNuevo();
+
+        // BSubir Imagen
+        $archivo = $request->getFile('archivo_comprobante');
+        $nombreArchivo = '';
+
+        if ($archivo && $archivo->isValid() && !$archivo->hasMoved()) {
+            // Se guarda con la misma nomenclatura: idAlumno_idFolio_fecha
+            $newName = $idAlumno . '_' . $idFolio . '_' . date('YmdHis') . '.' . $archivo->getExtension();
+            $archivo->move(ROOTPATH . 'public/pagos', $newName);
+            $nombreArchivo = $newName;
+        }
+
+        // Calcular el monto total
+        $cantidad = floatval($request->getPost('cantidad'));
+        $recargos = floatval($request->getPost('recargos') ?: 0);
+        $total = $cantidad + $recargos;
+
+        $dataPago = [
+            'id_usr'        => $idAlumno,
+            'cantidad'      => $cantidad,
+            'recargos'      => $recargos,
+            'total'         => $total,
+            'mes'           => $request->getPost('mes'),
+            'fechaPago'     => $request->getPost('fechaPago'),
+            'qrp'           => $session->get('nombre') . ' ' . $session->get('apellidos') . ' (Admin)',
+            'concepto'      => $request->getPost('concepto'),
+            'modoPago'      => $request->getPost('modoPago'),
+            'nota'          => $request->getPost('nota'),
+            'validar_ficha' => 49, 
+            'ficha'         => $nombreArchivo,
+            'cilcoescolar'  => $request->getPost('ciclo'),
+            'id_folio'      => $idFolio, 
+            'fechaEnvio'    => date('Y-m-d H:i:s')
+        ];
+
+        $pagoModel->insert($dataPago);
+
+        return redirect()->to(base_url("alumnos/pagos/recibo/$idFolio"));
+    }
+
+    // VER RECIBO DE PAGO DESDE ADMIN
+    public function verReciboAdmin($idFolio)
+    {
+        if (!$this->_verificarPermisos()) {
+            return redirect()->to(base_url('dashboard'))->with('error', 'Acción no autorizada.');
+        }
+
+        $pagoModel = new \App\Models\PagoAlumnoModel(); 
+        $folioModel = new \App\Models\FolioModel();
+        
+        // Obtener el pago 
+        $pago = $pagoModel->where('id_folio', $idFolio)->first();
+
+        if (!$pago) {
+            return redirect()->to(base_url('cambio-grado'))->with('error', 'Pago no encontrado.');
+        }
+
+        $idAlumno = $pago['id_usr'];
+        $db = \Config\Database::connect();
+        
+        // Traer datos del alumno y su grado
+        $alumno = $db->table('usr')->where('id', $idAlumno)->get()->getRowArray();
+        $grado = $db->table('grados')->where('Id_grado', $alumno['grado'])->get()->getRowArray();
+        $alumno['nombreGrado'] = $grado ? $grado['nombreGrado'] : 'No asignado';
+
+        // Obtener ciclo escolar activo
+        $califModel = new \App\Models\CalificacionesModel();
+        $config = $califModel->getConfiguracionActiva($alumno['nivel'] ?? 7); 
+        $cicloRow = $db->table('cicloEscolar')->where('Id_cicloEscolar', $config['id_ciclo'])->get()->getRowArray();
+        $nombreCiclo = $cicloRow ? $cicloRow['nombreCicloEscolar'] : '2025-2026';
+
+        // Reutilizamos la vista del alumno
+        return view('VistadelAlumno/recibo_pago', [
+            'pagos'        => [$pago], 
+            'folio'        => $folioModel->obtenerNumero($idFolio),
+            'alumno'       => $alumno,
+            'cicloEscolar' => $nombreCiclo,
+            'realizadoPor' => $pago['qrp'],
+            'ruta_regreso' => base_url("alumnos/ver-pagos/$idAlumno")
+        ]);
+    }
 }
