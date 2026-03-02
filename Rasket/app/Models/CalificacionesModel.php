@@ -225,8 +225,7 @@ class CalificacionesModel extends Model
     // =========================================================================
     public function crearCalificacion($datos)
     {
-        // $datos debe contener: id_usr, id_materia, id_grado, cicloEscolar, id_mes, calificacion/faltas, bandera, fechaInsertar 
         $this->insert($datos);
-        return $this->getInsertID(); // Devolvemos el ID nuevo para que el JS lo registre
+        return $this->getInsertID(); 
     }
 }
