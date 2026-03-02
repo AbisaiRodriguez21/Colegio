@@ -42,7 +42,11 @@
                                     <h5 class="card-title text-primary"><i class='bx bx-user-circle'></i> Datos Oficiales</h5>
                                 </div>
 
-                                <form action="<?= base_url('alumno/actualizar-ficha') ?>" method="POST">
+                                <form action="<?= isset($ruta_guardado) ? $ruta_guardado : base_url('alumno/actualizar-ficha') ?>" method="POST">
+    
+                                    <?php if(isset($ruta_guardado)): ?>
+                                        <input type="hidden" name="id_alumno" value="<?= esc($alumno['id']) ?>">
+                                    <?php endif; ?>
                                     
                                     <div class="row bg-light p-3 mb-4 rounded">
                                         <div class="col-md-3 mb-3">

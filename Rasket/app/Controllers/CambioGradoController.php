@@ -33,7 +33,7 @@ class CambioGradoController extends BaseController
         
         $model = new CambioGradoModel();
         if ($model->bajaAlumno($request->getPost('id'))) {
-            return $this->response->setJSON(['status' => 'success', 'msg' => 'Alumno dado de baja (Estatus 2).']);
+            return $this->response->setJSON(['status' => 'success', 'msg' => 'Alumno dado de baja.']);
         }
         return $this->response->setJSON(['status' => 'error', 'msg' => 'Error al procesar baja.']);
     }

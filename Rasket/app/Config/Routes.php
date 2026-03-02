@@ -125,6 +125,9 @@ $routes->group('', ['filter' => 'adminAuth'], function ($routes) {
     $routes->get('alumnos/registro', 'Alumnos::registro'); 
     $routes->post('alumnos/guardar', 'Alumnos::guardar'); 
     $routes->get('alumnos/preinscripciones', 'Alumnos::preinscripciones'); 
+    // Rutas para que el Admin edite la ficha de cualquier alumno
+    $routes->get('alumnos/editar-ficha/(:num)', 'Alumnos::editarFichaAdmin/$1');
+    $routes->post('alumnos/actualizar-ficha-admin', 'Alumnos::actualizarFichaAdmin');
     // Nota: preinscripciones podría ser pública si es externa, pero si es interna va aquí.
     
     // Lista grupos
