@@ -106,7 +106,7 @@ $routes->group('alumno', ['filter' => 'studentAuth'], function($routes) {
 });
 
 // =============================================================================
-// ⛔ ZONA ADMINISTRATIVA Y DOCENTE (PROTEGIDA POR 'adminAuth')
+// ZONA ADMINISTRATIVA Y DOCENTE (PROTEGIDA POR 'adminAuth')
 // =============================================================================
 // Aquí metemos TODO lo que un alumno NO DEBE VER.
 // El filtro 'adminAuth' revisa que session('nivel') sea 1 o 2.
@@ -130,7 +130,15 @@ $routes->group('', ['filter' => 'adminAuth'], function ($routes) {
     $routes->get('alumnos/registro', 'Alumnos::registro'); 
     $routes->post('alumnos/guardar', 'Alumnos::guardar'); 
     $routes->get('alumnos/preinscripciones', 'Alumnos::preinscripciones'); 
-    
+    // Rutas para que el Admin edite la ficha de cualquier alumno
+    $routes->get('alumnos/editar-ficha/(:num)', 'Alumnos::editarFichaAdmin/$1');
+    $routes->post('alumnos/actualizar-ficha-admin', 'Alumnos::actualizarFichaAdmin');
+    // Ruta para que el Admin vea los pagos de un alumno
+    $routes->get('alumnos/ver-pagos/(:num)', 'Alumnos::verPagosAdmin/$1');
+    $routes->post('alumnos/guardar-pago-admin', 'Alumnos::guardarPagoAdmin'); 
+    // Ruta para que el Admin vea el recibo generado
+    $routes->get('alumnos/pagos/recibo/(:num)', 'Alumnos::verReciboAdmin/$1');
+
     // Lista grupos
     $routes->get('grupos/lista', 'Grupos::index');   
     $routes->post('grupos/filtrar', 'Grupos::filtrar');

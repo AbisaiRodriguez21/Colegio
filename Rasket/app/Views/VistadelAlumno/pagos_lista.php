@@ -13,7 +13,7 @@
                 <div class="row mb-3">
                     <div class="col-12 d-flex justify-content-between align-items-center">
                         <h4 class="page-title">Historial de Pagos</h4>
-                        <a href="<?= base_url('alumno/dashboard') ?>" class="btn btn-secondary btn-sm"><i class='bx bx-arrow-back'></i> Regresar</a>
+                        <a href="<?= isset($es_admin) ? base_url('cambio-grado') : base_url('alumno/dashboard') ?>" class="btn btn-secondary btn-sm"><i class='bx bx-arrow-back'></i> Regresar</a>
                     </div>
                 </div>
 
@@ -83,8 +83,12 @@
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <form action="<?= base_url('alumno/pagos/guardar') ?>" method="post" enctype="multipart/form-data">
+                    <form action="<?= isset($es_admin) ? base_url('alumnos/guardar-pago-admin') : base_url('alumno/pagos/guardar') ?>" method="post" enctype="multipart/form-data">
                         <input type="hidden" name="ciclo" value="<?= $ciclo ?>">
+                        
+                        <?php if(isset($es_admin)): ?>
+                            <input type="hidden" name="id_alumno" value="<?= esc($alumno['id']) ?>">
+                        <?php endif; ?>
                         <input type="hidden" id="conceptoAnterior" value="<?= esc($alumno['permiso'] ?? '') ?>">
 
                         <div class="mb-3">
