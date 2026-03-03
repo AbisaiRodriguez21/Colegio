@@ -243,7 +243,9 @@
         </table>
 
         <div class="receipt-footer">
-            <a href="<?= base_url('alumno/pagos') ?>" class="btn-back">Volver a la lista</a>
+            <a href="<?= isset($ruta_regreso) ? $ruta_regreso : base_url('alumno/pagos') ?>" class="btn-back">Volver a la lista</a>
+            <button onclick="window.print()" class="btn-back" style="margin-left: 15px; cursor: pointer;"><i class='bx bx-printer'></i> Imprimir Comprobante</button>
+            
             <div class="disclaimer">
                 Gracias por su pago, este no es un comprobante con valor fiscal. Para uso interno de la institución
             </div>

@@ -284,7 +284,7 @@ class Alumnos extends BaseController
         ]);
     }
     
-    // GUARDAR PAGO DESDE ADMIN
+    // GUARDAR MÚLTIPLES PAGOS DESDE ADMIN
     public function guardarPagoAdmin()
     {
         if (!$this->_verificarPermisos()) {
@@ -298,46 +298,53 @@ class Alumnos extends BaseController
         $pagoModel  = new \App\Models\PagoAlumnoModel(); 
 
         $idAlumno = $request->getPost('id_alumno');
+        $idCiclo  = $request->getPost('ciclo');
 
-        // AGenerar Folio
         $idFolio = $folioModel->generarNuevo();
 
-        // BSubir Imagen
-        $archivo = $request->getFile('archivo_comprobante');
-        $nombreArchivo = '';
+        $conceptos  = $request->getPost('conceptos');
+        $meses      = $request->getPost('meses');
+        $cantidades = $request->getPost('cantidades');
+        $modos      = $request->getPost('modos');
+        $notas      = $request->getPost('notas');
+        $archivos   = $request->getFileMultiple('archivos_comprobantes');
 
-        if ($archivo && $archivo->isValid() && !$archivo->hasMoved()) {
-            // Se guarda con la misma nomenclatura: idAlumno_idFolio_fecha
-            $newName = $idAlumno . '_' . $idFolio . '_' . date('YmdHis') . '.' . $archivo->getExtension();
-            $archivo->move(ROOTPATH . 'public/pagos', $newName);
-            $nombreArchivo = $newName;
+        if ($conceptos && is_array($conceptos)) {
+            foreach ($conceptos as $index => $concepto) {
+                
+                $archivo = $archivos[$index] ?? null;
+                $nombreArchivo = '';
+
+                if ($archivo && $archivo->isValid() && !$archivo->hasMoved()) {
+                    $newName = $idAlumno . '_' . $idFolio . '_' . $index . '_' . date('YmdHis') . '.' . $archivo->getExtension();
+                    $archivo->move(ROOTPATH . 'public/pagos', $newName);
+                    $nombreArchivo = $newName;
+                }
+
+                // Aseguramos que la cantidad sea un número
+                $valorCantidad = isset($cantidades[$index]) ? $cantidades[$index] : 0;
+                $cant = floatval($valorCantidad);
+
+                $dataPago = [
+                    'id_usr'        => $idAlumno,
+                    'cantidad'      => $cant,
+                    'recargos'      => 0, 
+                    'total'         => $cant, 
+                    'mes'           => isset($meses[$index]) ? $meses[$index] : '',
+                    'fechaPago'     => date('Y-m-d'), 
+                    'qrp'           => $session->get('nombre') . ' ' . $session->get('apellidos') . ' (Admin)',
+                    'concepto'      => $concepto,
+                    'modoPago'      => isset($modos[$index]) ? $modos[$index] : '',
+                    'nota'          => isset($notas[$index]) ? $notas[$index] : '',
+                    'validar_ficha' => 49, 
+                    'ficha'         => $nombreArchivo,
+                    'cilcoescolar'  => $idCiclo,
+                    'id_folio'      => $idFolio, 
+                    'fechaEnvio'    => date('Y-m-d H:i:s')
+                ];
+                $pagoModel->insert($dataPago);
+            }
         }
-
-        // Calcular el monto total
-        $cantidad = floatval($request->getPost('cantidad'));
-        $recargos = floatval($request->getPost('recargos') ?: 0);
-        $total = $cantidad + $recargos;
-
-        $dataPago = [
-            'id_usr'        => $idAlumno,
-            'cantidad'      => $cantidad,
-            'recargos'      => $recargos,
-            'total'         => $total,
-            'mes'           => $request->getPost('mes'),
-            'fechaPago'     => $request->getPost('fechaPago'),
-            'qrp'           => $session->get('nombre') . ' ' . $session->get('apellidos') . ' (Admin)',
-            'concepto'      => $request->getPost('concepto'),
-            'modoPago'      => $request->getPost('modoPago'),
-            'nota'          => $request->getPost('nota'),
-            'validar_ficha' => 49, 
-            'ficha'         => $nombreArchivo,
-            'cilcoescolar'  => $request->getPost('ciclo'),
-            'id_folio'      => $idFolio, 
-            'fechaEnvio'    => date('Y-m-d H:i:s')
-        ];
-
-        $pagoModel->insert($dataPago);
-
         return redirect()->to(base_url("alumnos/pagos/recibo/$idFolio"));
     }
 
@@ -352,13 +359,15 @@ class Alumnos extends BaseController
         $folioModel = new \App\Models\FolioModel();
         
         // Obtener el pago 
-        $pago = $pagoModel->where('id_folio', $idFolio)->first();
+        $pagos = $pagoModel->where('id_folio', $idFolio)->findAll();
 
-        if (!$pago) {
+        if (empty($pagos)) {
             return redirect()->to(base_url('cambio-grado'))->with('error', 'Pago no encontrado.');
         }
 
-        $idAlumno = $pago['id_usr'];
+        // Tomamos el ID del alumno y quién lo realizó basándonos en el primer registro del arreglo
+        $idAlumno = $pagos[0]['id_usr'];
+        $realizadoPor = $pagos[0]['qrp'];
         $db = \Config\Database::connect();
         
         // Traer datos del alumno y su grado
@@ -374,11 +383,11 @@ class Alumnos extends BaseController
 
         // Reutilizamos la vista del alumno
         return view('VistadelAlumno/recibo_pago', [
-            'pagos'        => [$pago], 
+            'pagos'        => $pagos,
             'folio'        => $folioModel->obtenerNumero($idFolio),
             'alumno'       => $alumno,
             'cicloEscolar' => $nombreCiclo,
-            'realizadoPor' => $pago['qrp'],
+            'realizadoPor' => $realizadoPor,
             'ruta_regreso' => base_url("alumnos/ver-pagos/$idAlumno")
         ]);
     }

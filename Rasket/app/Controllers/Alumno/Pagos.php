@@ -41,6 +41,7 @@ class Pagos extends BaseController
         ]);
     }
 
+    // GUARDAR MÚLTIPLES PAGOS DESDE EL ALUMNO (CARRITO)
     public function guardar()
     {
         $session = session();
@@ -49,52 +50,68 @@ class Pagos extends BaseController
         $folioModel = new FolioModel();
         $pagoModel  = new PagoAlumnoModel(); 
 
-        // A) Generar Folio
+        // El alumno usa su propio ID de la sesión
+        $idAlumno = $session->get('id');
+        $idCiclo  = $request->getPost('ciclo');
+
+        // Generar UN SOLO Folio para todos los pagos del carrito
         $idFolio = $folioModel->generarNuevo();
 
-        // B) Subir Imagen
-        $archivo = $request->getFile('archivo_comprobante');
-        $nombreArchivo = '';
+        // Recibir los arreglos del carrito
+        $conceptos  = $request->getPost('conceptos');
+        $meses      = $request->getPost('meses');
+        $cantidades = $request->getPost('cantidades');
+        $modos      = $request->getPost('modos');
+        $notas      = $request->getPost('notas');
+        
+        $archivos = $request->getFileMultiple('archivos_comprobantes');
 
-        // Nombre del archivo: 
-        if ($archivo && $archivo->isValid() && !$archivo->hasMoved()) {
-            $newName = $session->get('id') . '_' . $idFolio . '_' . date('YmdHis') . '.' . $archivo->getExtension();
-            // Ubicación de guardado 
-            $archivo->move(ROOTPATH . 'public/pagos', $newName);
-            $nombreArchivo = $newName;
+        // Recorrer los pagos e insertarlos uno por uno
+        if ($conceptos && is_array($conceptos)) {
+            foreach ($conceptos as $index => $concepto) {
+                
+                // Procesar la imagen específica de este pago
+                $archivo = $archivos[$index] ?? null;
+                $nombreArchivo = '';
+
+                if ($archivo && $archivo->isValid() && !$archivo->hasMoved()) {
+                    $newName = $idAlumno . '_' . $idFolio . '_' . $index . '_' . date('YmdHis') . '.' . $archivo->getExtension();
+                    $archivo->move(ROOTPATH . 'public/pagos', $newName);
+                    $nombreArchivo = $newName;
+                }
+
+                // Calcular montos (Protegido contra NULOS)
+                $valorCantidad = isset($cantidades[$index]) ? $cantidades[$index] : 0;
+                $cant = floatval($valorCantidad);
+
+                // Preparar inserción
+                $dataPago = [
+                    'id_usr'        => $idAlumno,
+                    'cantidad'      => $cant,
+                    'recargos'      => 0, 
+                    'total'         => $cant,
+                    'mes'           => isset($meses[$index]) ? $meses[$index] : '',
+                    'fechaPago'     => date('Y-m-d'),
+                    'qrp'           => $session->get('nombre') . ' ' . $session->get('apellidos'),
+                    'concepto'      => $concepto,
+                    'modoPago'      => isset($modos[$index]) ? $modos[$index] : '',
+                    'nota'          => isset($notas[$index]) ? $notas[$index] : '',
+                    'validar_ficha' => 48, 
+                    'ficha'         => $nombreArchivo,
+                    'cilcoescolar'  => $idCiclo,
+                    'id_folio'      => $idFolio, 
+                    'fechaEnvio'    => date('Y-m-d H:i:s')
+                ];
+
+                $pagoModel->insert($dataPago);
+            }
         }
 
-        // Calcular el monto total
-        $cantidad = $request->getPost('cantidad');
-        $recargos = $request->getPost('recargos') ?: 0;
-        //TOTAL
-        $total = $cantidad + $recargos;
-
-        $dataPago = [
-            'id_usr'        => $session->get('id'),
-            'cantidad'      => $cantidad,
-            'recargos'      => $recargos,
-            'total'         => $total,
-            'mes'           => $request->getPost('mes'),
-            'fechaPago'     => date('Y-m-d'),
-            'qrp'           => $session->get('nombre') . ' ' . $session->get('apellidos'),
-            'concepto'      => $request->getPost('concepto'),
-            'modoPago'      => $request->getPost('modoPago'),
-            'nota'          => $request->getPost('nota'),
-            'validar_ficha' => 48, // Estatus "Por revisar"
-            'ficha'         => $nombreArchivo,
-            'cilcoescolar'  => $request->getPost('ciclo'),
-            'id_folio'      => $idFolio, 
-            'fechaEnvio'    => date('Y-m-d H:i:s')
-        ];
-
-        $pagoModel->insert($dataPago);
-
-        // Enviar Correo
-        $this->enviarCorreo($dataPago, $folioModel->obtenerNumero($idFolio));
 
         return redirect()->to(base_url("alumno/pagos/recibo/$idFolio"));
     }
+
+    // VER RECIBO DE PAGO DESDE EL ALUMNO
 
     public function verRecibo($idFolio)
     {
@@ -102,16 +119,17 @@ class Pagos extends BaseController
         $pagoModel = new PagoAlumnoModel(); 
         $folioModel = new FolioModel();
         
-        // Obtener el pago
-        $pago = $pagoModel->where('id_folio', $idFolio)
-                          ->where('id_usr', $session->get('id'))
-                          ->first();
+        // Obtener TODOS los pagos de ese folio 
+        $pagos = $pagoModel->where('id_folio', $idFolio)
+                           ->where('id_usr', $session->get('id'))
+                           ->findAll();
 
-        if (!$pago) {
+        if (empty($pagos)) {
             return redirect()->to(base_url('alumno/pagos'));
         }
 
         $idAlumno = $session->get('id');
+        $realizadoPor = $pagos[0]['qrp'];
         $db = \Config\Database::connect();
         
         $alumno = $db->table('usr')->where('id', $idAlumno)->get()->getRowArray();
@@ -124,11 +142,11 @@ class Pagos extends BaseController
         $nombreCiclo = $cicloRow ? $cicloRow['nombreCicloEscolar'] : '2025-2026';
 
         return view('VistadelAlumno/recibo_pago', [
-            'pagos'        => [$pago], 
+            'pagos'        => $pagos, 
             'folio'        => $folioModel->obtenerNumero($idFolio),
             'alumno'       => $alumno,
             'cicloEscolar' => $nombreCiclo,
-            'realizadoPor' => $pago['qrp']  
+            'realizadoPor' => $realizadoPor  
         ]);
     }
 
