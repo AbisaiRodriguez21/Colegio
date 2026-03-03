@@ -137,9 +137,7 @@
                             <div style="position: relative; z-index: 1; padding: 30px;">
                                 <h1 class="text-white mb-1" style="font-size: 26px; font-weight: 700;">Bienvenido(a) Director(a)</h1>
                                 <h2 class="text-white-50 mb-2" style="font-size: 16px;"><?= esc($nombre) ?> <?= esc($apellidos) ?></h2>
-                                <span style="background-color: #5c6bc0; color: #fff; padding: 4px 10px; border-radius: 4px; font-size: 12px; font-weight: 600;">
-                                    Ciclo Escolar <?= esc($cicloEscolar) ?>
-                                </span>
+                                 
                             </div>
                         </div>
                     </div>
@@ -220,22 +218,22 @@
                                 <div class="tab-content p-3">
                                     <div class="tab-pane fade" id="sab-kin">
                                         <ul class="grupo-lista">
-                                            <?php foreach ($kinder as $g): ?><li><a href="<?= base_url('boleta/calificar/' . $g['id_grado']) ?>"><?= esc($g['nombreGrado']) ?></a></li><?php endforeach; ?>
+                                            <?php foreach ($kinder as $g): ?><li><a href="<?= base_url('director/seleccionar-periodo/' . $g['id_grado']) ?>"><?= esc($g['nombreGrado']) ?></a></li><?php endforeach; ?>
                                         </ul>
                                     </div>
                                     <div class="tab-pane fade show active" id="sab-pri">
                                         <ul class="grupo-lista">
-                                            <?php foreach ($primaria as $g): ?><li><a href="<?= base_url('boleta/calificar/' . $g['id_grado']) ?>"><?= esc($g['nombreGrado']) ?></a></li><?php endforeach; ?>
+                                            <?php foreach ($primaria as $g): ?><li><a href="<?= base_url('director/seleccionar-periodo/' . $g['id_grado']) ?>"><?= esc($g['nombreGrado']) ?></a></li><?php endforeach; ?>
                                         </ul>
                                     </div>
                                     <div class="tab-pane fade" id="sab-sec">
                                         <ul class="grupo-lista">
-                                            <?php foreach ($secundaria as $g): ?><li><a href="<?= base_url('boleta/calificar/' . $g['id_grado']) ?>"><?= esc($g['nombreGrado']) ?></a></li><?php endforeach; ?>
+                                            <?php foreach ($secundaria as $g): ?><li><a href="<?= base_url('director/seleccionar-periodo/' . $g['id_grado']) ?>"><?= esc($g['nombreGrado']) ?></a></li><?php endforeach; ?>
                                         </ul>
                                     </div>
                                     <div class="tab-pane fade" id="sab-bac">
                                         <ul class="grupo-lista">
-                                            <?php foreach ($bachillerato as $g): ?><li><a href="<?= base_url('boleta/calificar/' . $g['id_grado']) ?>"><?= esc($g['nombreGrado']) ?></a></li><?php endforeach; ?>
+                                            <?php foreach ($bachillerato as $g): ?><li><a href="<?= base_url('director/seleccionar-periodo/' . $g['id_grado']) ?>"><?= esc($g['nombreGrado']) ?></a></li><?php endforeach; ?>
                                         </ul>
                                     </div>
                                 </div>

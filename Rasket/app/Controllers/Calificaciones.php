@@ -7,26 +7,24 @@ class Calificaciones extends BaseController
     // =========================================================================
     // 1. PANTALLA PRINCIPAL (La Sábana Editable)
     // =========================================================================
-    public function editar($id_grado)
+    public function editar($id_grado, $id_periodo = null)
     {
         $session = session();
-
-        // 1. Se verifica que el usuario correcto esté logueado 
+        
         if (!$session->has('id')) {
-            return redirect()->to('/login'); 
+            return redirect()->to(base_url('login'));  
         }
 
         // 2. Obtener el modelo
-        $model = new CalificacionesModel();
+        $model = new \App\Models\CalificacionesModel();
 
         // 3. Obtener la sábana
-        $data = $model->getSabana($id_grado);
+        $data = $model->getSabana($id_grado, $id_periodo);
 
         if (!$data) {
             return "Error: Grado no encontrado o sin configuración.";
         }
 
-        // 4. Pasar el nivel real a la vista (para permisos)
         $data['user_level'] = $session->get('nivel');
 
         return view('boletas/calificar_boleta', $data);

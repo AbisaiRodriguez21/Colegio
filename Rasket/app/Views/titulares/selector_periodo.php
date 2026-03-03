@@ -42,11 +42,23 @@
             <div class="container-fluid" style="padding-top: 40px;">
 
                 <div class="text-center mb-5">
-                    <h1 class="display-5 fw-bold text-body">Hola, Titular de <?= esc($grado ?? 'Grupo') ?></h1>
-                    <p class="lead text-muted">Selecciona el <?= strtolower($titulo ?? 'periodo') ?> que deseas calificar hoy.</p>
+                    <?php $nivelUsuario = session()->get('nivel'); ?>
+                    
+                    <?php if ($nivelUsuario == 2 || $nivelUsuario == 1): ?>
+                        <h1 class="display-5 fw-bold text-body">Periodos de <?= esc($grado ?? 'Grupo') ?></h1>
+                        <p class="lead text-muted">Selecciona el <?= strtolower($titulo ?? 'periodo') ?> que deseas revisar o calificar.</p>
+                    
+                    <?php else: ?>
+                        <h1 class="display-5 fw-bold text-body">Hola, Titular de <?= esc($grado ?? 'Grupo') ?></h1>
+                        <p class="lead text-muted">Selecciona el <?= strtolower($titulo ?? 'periodo') ?> que deseas calificar hoy.</p>
+                    <?php endif; ?>
                 </div>
 
-                <form action="<?= base_url('titular/abrir-sabana') ?>" method="post" id="formPeriodo">
+                <form action="<?= esc($action_url ?? base_url('titular/abrir-sabana')) ?>" method="post" id="formPeriodo">
+
+                    <?php if(isset($id_grado)): ?>
+                        <input type="hidden" name="id_grado" value="<?= esc($id_grado) ?>">
+                    <?php endif; ?>
 
                     <div class="row justify-content-center">
                         <?php if (!empty($periodos)): ?>
@@ -71,7 +83,7 @@
                     </div>
 
                     <div class="text-center mt-5">
-                        <a href="<?= base_url('titular/dashboard') ?>" class="btn btn-outline-secondary me-3 btn-lg">Cancelar</a>
+                        <a href="<?= esc($cancel_url ?? base_url('titular/dashboard')) ?>" class="btn btn-outline-secondary me-3 btn-lg">Cancelar</a>
                         <button type="submit" class="btn btn-primary btn-lg px-5" style="background-color: #5c6bc0; border-color: #5c6bc0;">Continuar &rarr;</button>
                     </div>
 

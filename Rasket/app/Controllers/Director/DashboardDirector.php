@@ -11,10 +11,9 @@ class DashboardDirector extends BaseController
     {
         $session = session();
         $idUsuario = $session->get('id');
-
+        
         $db = \Config\Database::connect();
         
-        // 1. Obtener ciclo escolar activo
         $califModel = new CalificacionesModel();
         $config = $califModel->getConfiguracionActiva(1); 
         $nombreCiclo = 'No definido';
@@ -23,11 +22,9 @@ class DashboardDirector extends BaseController
             $nombreCiclo = $ciclo ? $ciclo->nombreCicloEscolar : 'No definido';
         }
 
-        // 2. Obtener la contraseña real directo de la BD
         $usuario = $db->table('usr')->select('pass')->where('id', $idUsuario)->get()->getRowArray();
         $passwordReal = $usuario ? $usuario['pass'] : '';
 
-        // 3. Traer todos los grados y clasificarlos
         $grados = $db->table('grados')->orderBy('nivel_grado', 'ASC')->get()->getResultArray();
         
         $data = [
@@ -121,6 +118,7 @@ class DashboardDirector extends BaseController
             return redirect()->back()->with('error', 'Por favor selecciona un periodo.');
         }
 
+        // Redirigimos a la ruta compartida pasando AMBOS parámetros
         return redirect()->to(base_url("boleta/calificar/{$id_grado}/{$id_periodo}"));
     }
 }
