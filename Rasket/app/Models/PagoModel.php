@@ -9,7 +9,7 @@ class PagoModel extends Model
     protected $allowedFields = ['validar_ficha', 'fechaPago', 'qrp', 'id_usr'];
 
 
-    /**
+/**
      * Obtiene los pagos pendientes con búsqueda y ORDENAMIENTO dinámico.
      */
     public function getPagosPendientes($busqueda = null, $perPage = 10, $columna = 'fecha', $orden = 'DESC')
@@ -31,8 +31,8 @@ class PagoModel extends Model
         $builder = $this->select('pago.*, u.Nombre, u.ap_Alumno, u.am_Alumno, u.email, g.nombreGrado')
                         ->join('usr u', 'pago.id_usr = u.id')
                         ->join('grados g', 'u.grado = g.Id_grado', 'left')
-                        ->where('u.nivel', 7)       
-                        ->where('u.estatus', 2)     
+                        ->where('u.nivel', 7) // Nivel 7 = Alumnos
+                        ->whereIn('u.estatus', [1, 2])
                         ->where('pago.validar_ficha', 48); 
 
         // LÓGICA DE BÚSQUEDA 

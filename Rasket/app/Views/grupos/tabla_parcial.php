@@ -6,7 +6,7 @@
                 <th>Nombre del Alumno</th>
                 <th>Grado (ID)</th>
                 <th>Activo</th>
-                <th class="text-center" style="width: 120px;">Acciones</th>
+
             </tr>
         </thead>
         <tbody>
@@ -33,14 +33,7 @@
                                 <span class="badge bg-danger">Inactivo/Null (<?= esc($alumno['estado_activo'] ?? 'NULL') ?>)</span>
                             <?php endif; ?>
                         </td>
-                        <td class="text-center">
-                            <a href="<?= base_url('alumnos/materias/' . $alumno['id']) ?>" 
-                               class="btn btn-sm btn-info" 
-                               data-bs-toggle="tooltip" 
-                               title="Ver Materias">
-                               <i class="ri-list-check"></i> Ver Materias
-                            </a>
-                        </td>
+ 
                     </tr>
                 <?php endforeach; ?>
             <?php else: ?>

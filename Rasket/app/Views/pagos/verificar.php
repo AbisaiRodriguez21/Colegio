@@ -1,15 +1,12 @@
 <?php
-// =============================================================================
-// HELPER PARA GENERAR ENLACES DE ORDENAMIENTO CON ICONOS
-// =============================================================================
+
 function getSortLink($columna, $label, $ordenActual) {
     $uri = service('request')->getUri();
     
-    // 1. Determinar la nueva dirección (Si ya es ASC, cambia a DESC, sino ASC)
+    // Determinar la nueva dirección 
     $nuevoDir = ($ordenActual['columna'] == $columna && $ordenActual['dir'] == 'ASC') ? 'DESC' : 'ASC';
     
-    // 2. LÓGICA DE ICONOS (Aquí está la magia)
-    // Icono por defecto (inactivo, gris transparente)
+    // LÓGICA DE ICONOS
     $icono = '<i class="fas fa-sort text-muted opacity-25 ms-1"></i>';
     
     // Si esta es la columna activa, mostramos la flecha correcta
@@ -19,12 +16,12 @@ function getSortLink($columna, $label, $ordenActual) {
             : '<i class="fas fa-sort-down text-primary ms-1"></i>'; // Flecha abajo (DESC)
     }
 
-    // 3. Construir la nueva URL
+    // Construir la nueva URL
     $nuevaUri = clone $uri;
     $nuevaUri = $nuevaUri->addQuery('columna', $columna)
                          ->addQuery('dir', $nuevoDir);
 
-    // 4. Retornar el enlace con el texto y el icono
+    // Retornar el enlace con el texto y el icono
     return '<a href="' . $nuevaUri . '" class="text-dark text-decoration-none fw-bold d-block text-nowrap">' . $label . $icono . '</a>';
 }
 ?>
@@ -154,7 +151,7 @@ function getSortLink($columna, $label, $ordenActual) {
     </div>
 
     <div class="modal fade" id="modal-ticket" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered modal-lg"> 
+        <div class="modal-dialog modal-dialog-centered modal-xl">
             <div class="modal-content">
                 <div class="modal-header">
                      <h5 class="modal-title">Comprobante de Pago</h5>

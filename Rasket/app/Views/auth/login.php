@@ -50,7 +50,9 @@
                 <div class="col-md-6 col-lg-5">
                     <div class="card auth-card">
                         <div class="card-body px-4 py-5">
+                            
                             <div class="text-center auth-logo">
+                                <img src="https://res.cloudinary.com/do7jgbokk/image/upload/v1772642231/LogoST_otosas.png" alt="Logo de la Escuela">
                             </div>
 
                             <h2 class="fw-bold text-center fs-18">Bienvenido</h2>
@@ -81,9 +83,13 @@
                             </form>
                         </div>
                     </div>
-                    <footer>
-                        © Fénix Consultores — Sistema Escolar
-                    </footer>
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-12 text-center">
+                        <script>document.write(new Date().getFullYear())</script> &copy; Creado por <a href="http://www.ev3.com.mx/" class="fw-bold footer-text" target="_blank">Fénix [Consultores] </a>
+                    </div>
+                </div>
+            </div>
                 </div>
             </div>
         </div>

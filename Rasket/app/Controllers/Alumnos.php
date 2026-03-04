@@ -6,6 +6,8 @@ use App\Models\UserModel;
 use App\Models\GradoModel;
 use App\Models\CicloEscolarModel;
 use CodeIgniter\Controller; 
+use Dompdf\Dompdf;
+use Dompdf\Options;
 
 class Alumnos extends BaseController 
 {
@@ -120,7 +122,7 @@ class Alumnos extends BaseController
             'telefono_alum'  => $this->request->getPost('telefono_alum'),
             'mail_alumn'     => $this->request->getPost('email_tutor'), 
             
-            'grado'          => $idGradoFinal, // <--- AQUÍ USAMOS EL VALOR CALCULADO
+            'grado'          => $idGradoFinal,
             
             'generacionactiva' => $this->request->getPost('cicloEscolar'), 
             'extra'          => $this->request->getPost('extra'),
@@ -132,14 +134,12 @@ class Alumnos extends BaseController
         ];
     }
 
-    // =========================================================================
-    // 5. HELPER: QUITA ACENTOS Y CONVIERTE A MAYÚSCULAS
-    // =========================================================================
+    // HELPER: QUITA ACENTOS Y CONVIERTE A MAYÚSCULAS
     private function _sanitizarInput($texto)
     {
         if (empty($texto)) return '';
 
-        // 1. Mapa EXCLUSIVO para vocales (La Ñ no está aquí, así que se salva)
+        // Mapa EXCLUSIVO para vocales (La Ñ no está aquí, así que se salva)
         $acentos = [
             'á' => 'a', 'é' => 'e', 'í' => 'i', 'ó' => 'o', 'ú' => 'u',
             'Á' => 'A', 'É' => 'E', 'Í' => 'I', 'Ó' => 'O', 'Ú' => 'U',
@@ -149,21 +149,19 @@ class Alumnos extends BaseController
             'Ä' => 'A', 'Ë' => 'E', 'Ï' => 'I', 'Ö' => 'O', 'Ü' => 'U'
         ];
 
-        // 2. Reemplazamos solo las vocales acentuadas
+        // Reemplazamos solo las vocales acentuadas
         $textoSinAcentos = strtr($texto, $acentos);
 
-        // 3. Convertimos a Mayúsculas usando MB_STRTOUPPER
+        // Convertimos a Mayúsculas usando MB_STRTOUPPER
         return mb_strtoupper($textoSinAcentos, 'UTF-8');
     }
 
-    // =========================================================================
-    // EDITAR FICHA DESDE ADMIN (Cargar vista)
-    // =========================================================================
+    // EDITAR FICHA DESDE ADMIN 
     public function editarFichaAdmin($id_alumno)
     {
         $db = \Config\Database::connect();
         
-        // 1. Obtenemos los datos del alumno y el nombre de su grado
+        // Obtenemos los datos del alumno y el nombre de su grado
         $alumno = $db->table('usr')
                      ->select('usr.*, grados.nombreGrado')
                      ->join('grados', 'usr.grado = grados.Id_grado', 'left')
@@ -175,13 +173,13 @@ class Alumnos extends BaseController
             return redirect()->back()->with('error', 'Alumno no encontrado');
         }
 
-        // 2. Preparamos la data para la vista reutilizada
+        // Preparamos la data para la vista reutilizada
         $data = [
             'alumno' => $alumno,
             'ruta_guardado' => base_url('alumnos/actualizar-ficha-admin') 
         ];
 
-        // 3. Cargamos la vista de la ficha
+        // Cargamos la vista de la ficha
         return view('VistadelAlumno/ficha', $data);
     }
 
@@ -342,10 +340,19 @@ class Alumnos extends BaseController
                     'id_folio'      => $idFolio, 
                     'fechaEnvio'    => date('Y-m-d H:i:s')
                 ];
-                $pagoModel->insert($dataPago);
+                
+                // Guardamos el pago y atrapamos su ID
+                $idPagoInsertado = $pagoModel->insert($dataPago);
+
+                // DISPARAMOS EL CORREO AUTOMÁTICO
+                if ($idPagoInsertado) {
+                    $this->_enviarCorreoConfirmacion($idPagoInsertado);
+                }
             }
         }
-        return redirect()->to(base_url("alumnos/pagos/recibo/$idFolio"));
+        
+        // Redirigimos al recibo y mandamos mensaje de éxito
+        return redirect()->to(base_url("alumnos/pagos/recibo/$idFolio"))->with('success', 'Pago registrado y comprobante enviado al alumno.');
     }
 
     // VER RECIBO DE PAGO DESDE ADMIN
@@ -390,5 +397,124 @@ class Alumnos extends BaseController
             'realizadoPor' => $realizadoPor,
             'ruta_regreso' => base_url("alumnos/ver-pagos/$idAlumno")
         ]);
+    }
+
+    // FUNCIÓN PRIVADA PARA ENVIAR EL COMPROBANTE EN PDF
+    private function _enviarCorreoConfirmacion($idPago)
+    {
+        $db = \Config\Database::connect();
+        
+        $pago = $db->table('pago')->where('id_pago', $idPago)->get()->getRowArray();
+        if (!$pago) return false;
+
+        $alumno = $db->table('usr')->where('id', $pago['id_usr'])->get()->getRowArray();
+        if (!$alumno) return false;
+
+        $listaCorreos = [];
+        if (!empty($alumno['email']))  $listaCorreos[] = $alumno['email'];
+        if (!empty($alumno['p_mail'])) $listaCorreos[] = $alumno['p_mail'];
+        if (!empty($alumno['m_mail'])) $listaCorreos[] = $alumno['m_mail'];
+        $listaCorreos[] = env('SMTP_USER'); 
+
+        if (empty($listaCorreos)) {
+            return false;
+        }
+
+        $email = \Config\Services::email();
+        $config = [
+            'protocol'   => 'smtp',
+            'SMTPHost'   => 'smtp.gmail.com',
+            'SMTPUser'   => env('SMTP_USER'), 
+            'SMTPPass'   => env('SMTP_PASS'), 
+            'SMTPPort'   => 465,
+            'SMTPCrypto' => 'ssl',
+            'mailType'   => 'html',
+            'charset'    => 'utf-8',
+            'wordWrap'   => true,
+            'CRLF'       => "\r\n",
+            'newline'    => "\r\n"
+        ];
+        $email->initialize($config);
+
+        $email->setFrom(env('SMTP_USER'), 'St. Joseph School');
+        $email->setTo(implode(',', $listaCorreos)); 
+        $email->setSubject('Comprobante Oficial de Pago #' . $pago['id_folio'] . ' - St. Joseph School');
+
+        $montoFormateado = number_format($pago['cantidad'] + $pago['recargos'], 2);
+        $conceptoPago = !empty($pago['concepto']) ? $pago['concepto'] : 'N/A';
+        $metodoPago   = !empty($pago['modoPago']) ? $pago['modoPago'] : 'N/A';
+        $notasPago    = !empty($pago['nota']) ? $pago['nota'] : 'Ninguna';
+
+        $opcionesPdf = new \Dompdf\Options();
+        $opcionesPdf->set('isRemoteEnabled', true); 
+        $dompdf = new \Dompdf\Dompdf($opcionesPdf);
+        
+        $htmlPdf = view('pagos/recibo_pdf', [
+            'pago'            => $pago,
+            'alumno'          => $alumno,
+            'montoFormateado' => $montoFormateado
+        ]);
+
+        $dompdf->loadHtml($htmlPdf);
+        $dompdf->setPaper('Letter', 'portrait');
+        $dompdf->render();
+
+        $nombreArchivo = 'Comprobante_SJS_' . $pago['id_folio'] . '.pdf';
+        $rutaPdf = WRITEPATH . 'uploads/' . $nombreArchivo;
+        file_put_contents($rutaPdf, $dompdf->output());
+
+        $email->attach($rutaPdf);
+
+        // URL de tu logo en Cloudinary
+        $urlLogo = 'https://res.cloudinary.com/do7jgbokk/image/upload/v1772642231/LogoST_otosas.png';
+
+        $html = "
+        <div style=\"font-family: 'Segoe UI', Tahoma, sans-serif; background-color: #f4f7f6; padding: 40px 20px;\">
+            <div style=\"max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.05);\">
+                
+                <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"background-color: #ffffff; border-bottom: 3px solid #0c335e;\">
+                    <tr>
+                        <td align=\"left\" valign=\"middle\" style=\"padding: 25px 30px; width: 50%;\">
+                            <img src=\"{$urlLogo}\" alt=\"St. Joseph School\" style=\"max-width: 130px; height: auto; display: block;\">
+                        </td>
+                        <td align=\"right\" valign=\"middle\" style=\"padding: 25px 30px; width: 50%;\">
+                            <h2 style=\"margin: 0; color: #0c335e; font-size: 16px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;\">Pago Validado</h2>
+                        </td>
+                    </tr>
+                </table>
+
+                <div style=\"padding: 30px;\">
+                    <p style=\"font-size: 16px; color: #333;\">Estimado(a) <strong>{$alumno['Nombre']} {$alumno['ap_Alumno']}</strong>,</p>
+                    
+                    <p style=\"font-size: 15px; color: #555; line-height: 1.6;\">
+                        Le confirmamos que hemos recibido y registrado exitosamente su pago en nuestro sistema por la cantidad de <strong style=\"color: #0c335e;\">$ {$montoFormateado}</strong>.
+                    </p>
+
+                    <div style=\"background-color: #f8fbfd; border-left: 4px solid #0c335e; padding: 15px; margin: 25px 0; border-radius: 0 8px 8px 0;\">
+                        <p style=\"margin: 5px 0; font-size: 14px; color: #555;\"><strong>Concepto:</strong> {$conceptoPago}</p>
+                        <p style=\"margin: 5px 0; font-size: 14px; color: #555;\"><strong>Método de pago:</strong> {$metodoPago}</p>
+                        <p style=\"margin: 5px 0; font-size: 14px; color: #555;\"><strong>Notas:</strong> {$notasPago}</p>
+                    </div>
+
+                    <p style=\"font-size: 15px; color: #555; line-height: 1.6;\">
+                        Le enviamos adjunto a este correo su recibo oficial en formato <strong>PDF</strong> para sus registros personales.
+                    </p>
+                    
+                    <p style=\"margin-top: 40px; font-size: 12px; color: #999; text-align: center; border-top: 1px solid #eee; padding-top: 20px;\">
+                        St. Joseph School<br>
+                    </p>
+                </div>
+            </div>
+        </div>
+        ";
+
+        $email->setMessage($html);
+        $resultado = $email->send();
+
+        if (file_exists($rutaPdf)) {
+            unlink($rutaPdf);
+        }
+        
+        return $resultado;
     }
 }

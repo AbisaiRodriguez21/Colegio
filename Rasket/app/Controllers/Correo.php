@@ -161,20 +161,19 @@ class Correo extends BaseController
         $model = new CorreoModel();
         $emailService = \Config\Services::email();
 
-        // 1. OBTENER ID DEL USUARIO LOGUEADO
+        // OBTENER ID DEL USUARIO LOGUEADO
         $emisor_id = session()->get('id');
 
-        // Seguridad: Si no hay sesión, mandar al login
         if (!$emisor_id) {
             return redirect()->to(base_url('login'))->with('error', 'Tu sesión ha expirado.');
         }
 
-        // 2. Recoger datos
+        //Recoger datos
         $tipoDestinatario = $request->getPost('tipo_destinatario');
         $asunto           = $request->getPost('asunto');
         $mensaje          = $request->getPost('mensaje');
 
-        // 3. Archivo Adjunto
+        //Archivo Adjunto
         $rutaAdjunto = null;
         $archivo = $this->request->getFile('adjunto');
 
@@ -184,7 +183,7 @@ class Correo extends BaseController
             $rutaAdjunto = 'uploads/adjuntos/' . $nombreNuevo;
         }
 
-        // 4. Determinar Destinatarios
+        // Determinar Destinatarios
         $listaCorreos = [];
         $textoPara = ""; 
         $gradoDestinoId = null;
@@ -194,7 +193,7 @@ class Correo extends BaseController
                 $email = $request->getPost('email_individual');
                 if (!empty($email)) {
                     $listaCorreos[] = $email;
-                    $textoPara = $email; // Solo el correo, sin adornos
+                    $textoPara = $email;
                 }
                 break;
 
@@ -205,7 +204,6 @@ class Correo extends BaseController
                 $resultados = $model->getEmailsPorGrado($id_grado);
                 $listaCorreos = array_column($resultados, 'email');
                 
-                // Nombre bonito del grado
                 $grados = $model->getGrados(); 
                 $key = array_search($id_grado, array_column($grados, 'id_grado'));
                 $nombreGrado = ($key !== false) ? $grados[$key]['nombreGrado'] : "Grado ID: $id_grado";
@@ -228,25 +226,66 @@ class Correo extends BaseController
             return redirect()->back()->withInput()->with('error', 'No se encontraron alumnos con correo.');
         }
 
-        // 5. Configurar Email
-        $emailService->setFrom('notificaciones@tucolegio.com', 'Sistema Escolar');
-        $emailService->setTo('noreply@tucolegio.com'); 
-        $emailService->setBCC($listaCorreos);
+        // Configurar SMTP 
+
+        $config = [
+            'protocol'   => 'smtp',
+            'SMTPHost'   => 'smtp.gmail.com',
+            'SMTPUser'   => env('SMTP_USER'), 
+            'SMTPPass'   => env('SMTP_PASS'), 
+            'SMTPPort'   => 465,
+            'SMTPCrypto' => 'ssl',
+            'mailType'   => 'html',
+            'charset'    => 'utf-8',
+            'wordWrap'   => true,
+            'CRLF'       => "\r\n",
+            'newline'    => "\r\n"
+        ];
+        $emailService->initialize($config);
+
+        // Remitente 
+        $emailService->setFrom(env('SMTP_USER'), 'St. Joseph School');
+        $emailService->setTo(env('SMTP_USER')); // escuela
+        $emailService->setBCC($listaCorreos);    
         $emailService->setSubject($asunto);
-        $emailService->setMessage($mensaje);
+        
+        $urlLogo = 'https://res.cloudinary.com/do7jgbokk/image/upload/v1772642231/LogoST_otosas.png';
+        // diseño HTML 
+        $htmlMensaje = "
+        <div style=\"font-family: 'Segoe UI', Tahoma, sans-serif; background-color: #f4f7f6; padding: 40px 20px;\">
+            <div style=\"max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.05);\">
+                
+                <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"background-color: #ffffff; border-bottom: 3px solid #0c335e;\">
+                    <tr>
+                        <td align=\"left\" valign=\"middle\" style=\"padding: 25px 30px; width: 50%;\">
+                            <img src=\"{$urlLogo}\" alt=\"St. Joseph School\" style=\"max-width: 130px; height: auto; display: block;\">
+                        </td>
+                        <td align=\"right\" valign=\"middle\" style=\"padding: 25px 30px; width: 50%;\">
+                            <h2 style=\"margin: 0; color: #0c335e; font-size: 16px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;\">Aviso Institucional</h2>
+                        </td>
+                    </tr>
+                </table>
+
+                <div style=\"padding: 30px;\">
+                    <p style=\"font-size: 15px; color: #444; line-height: 1.6; white-space: pre-line;\">" . esc($mensaje) . "</p>
+                    
+                    <p style=\"margin-top: 40px; font-size: 12px; color: #999; text-align: center; border-top: 1px solid #eee; padding-top: 20px;\">
+                        St. Joseph School<br>
+                    </p>
+                </div>
+
+            </div>
+        </div>
+        ";
+
+        $emailService->setMessage($htmlMensaje);
 
         if ($rutaAdjunto) {
             $emailService->attach(ROOTPATH . 'public/' . $rutaAdjunto);
         }
-
-        // --- CORRECCIÓN CLAVE: Lógica para el texto "Para" ---
-        // Si hay más de 1 destinatario, agregamos el conteo (ej: "3 Primaria (25)")
-        // Si es solo 1, dejamos el texto limpio (ej: "juan@gmail.com")
         $cantidad = count($listaCorreos);
         $paraFinal = ($cantidad > 1) ? $textoPara . " (" . $cantidad . ")" : $textoPara;
-        // -----------------------------------------------------
-
-        // 6. Enviar y Guardar
+        // Enviar y Guardar
         if ($emailService->send()) {
             // ÉXITO
             $model->insert([
@@ -254,7 +293,7 @@ class Correo extends BaseController
                 'grado_destinario_id' => $gradoDestinoId,
                 'fecha_envio'         => date('Y-m-d H:i:s'),
                 'asunto'              => $asunto,
-                'para'                => $paraFinal, // Usamos la variable corregida
+                'para'                => $paraFinal, 
                 'mensaje'             => $mensaje,
                 'adjunto'             => $rutaAdjunto,
                 'estado'              => 'enviado',
@@ -269,7 +308,7 @@ class Correo extends BaseController
                 'grado_destinario_id' => $gradoDestinoId,
                 'fecha_envio'         => date('Y-m-d H:i:s'),
                 'asunto'              => $asunto,
-                'para'                => $paraFinal, // Usamos la variable corregida
+                'para'                => $paraFinal, 
                 'mensaje'             => $mensaje,
                 'adjunto'             => $rutaAdjunto,
                 'estado'              => 'error_envio',
