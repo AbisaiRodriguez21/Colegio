@@ -153,7 +153,7 @@
                                                                 <span class="badge bg-danger me-1">Falló</span>
                                                             <?php endif; ?>
                                                             <?= esc($c['asunto']) ?>
-                                                            <span class="text-muted small"> - <?= substr(esc($c['mensaje']), 0, 35) ?>...</span>
+                                                            <span class="text-muted small"> - <?= substr(esc(strip_tags($c['mensaje'])), 0, 45) ?>...</span>
                                                         </td>
                                                         <td class="text-end text-muted">
                                                             <?php if($c['adjunto']): ?><i class="bx bx-paperclip me-1"></i><?php endif; ?>
@@ -168,7 +168,7 @@
                                                             <div class="text-muted">
                                                                 <i class="bx bx-folder-open display-4"></i><br>
                                                                 <h5>Bandeja vacía</h5>
-                                                                <p>No hay correos en esta sección.</p>
+                                                                <p>Aqui apareceran los reportes de pagos por validar</p>
                                                             </div>
                                                         </td>
                                                     </tr>
