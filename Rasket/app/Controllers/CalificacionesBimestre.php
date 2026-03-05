@@ -235,7 +235,7 @@ class CalificacionesBimestre extends BaseController
     }
 
     // -------------------------------------------------------------------------
-    // 4. LÓGICA BACHILLERATO (CON TU LÓGICA EXACTA)
+    // 4. LÓGICA BACHILLERATO
     // -------------------------------------------------------------------------
     private function _editarBachillerato($id_alumno, $id_grado)
     {
@@ -248,13 +248,12 @@ class CalificacionesBimestre extends BaseController
         $alumno['nombre_completo'] = trim(($alumno['ap_Alumno']??'') . ' ' . ($alumno['am_Alumno']??'') . ' ' . ($alumno['Nombre']??''));
         $gradoInfo = $model->getInfoGrado($id_grado);
 
-        // 1. Configurar Semestre (Tu lógica)
+        // 1. Configurar Semestre 
         $semestre_actual = $this->request->getGet('semestre') ?? 1;
 
         if ($semestre_actual == 2) {
             $meses_ids = [4, 5, 6]; 
             $headers = ['FEB-MAR', 'ABR-MAY', 'JUN-JUL'];
-            // Ajustamos el link para que apunte a ESTE controlador de edición
             $link_otro = base_url("calificaciones_bimestre/alumno_completo/$id_alumno/$id_grado?semestre=1");
             $txt_btn = "Ver boleta de 1er semestre";
             $cls_btn = "btn-semestre-azul";
@@ -273,7 +272,22 @@ class CalificacionesBimestre extends BaseController
         
         $materias_map = [];
         foreach ($materias_db as $m) {
-            $m['nombre'] = html_entity_decode($m['nombre_materia']);
+            $nombre_crudo = html_entity_decode($m['nombre_materia']);
+            
+            // Explode |
+            if (strpos($nombre_crudo, '|') !== false) {
+                $partes = explode('|', $nombre_crudo);
+                // usar el nombre segun el semestre 
+                if ($semestre_actual == 2 && isset($partes[1])) {
+                    $m['nombre'] = trim($partes[1]);
+                } else {
+                    $m['nombre'] = trim($partes[0]);
+                }
+            } else {
+                // Si no hay | se pasa igual
+                $m['nombre'] = trim($nombre_crudo);
+            }
+
             $materias_map[$m['id_materia']] = $m;
         }
 
@@ -284,9 +298,7 @@ class CalificacionesBimestre extends BaseController
         $id_anterior = ($pos > 0) ? $ids[$pos - 1] : null;
         $id_siguiente = ($pos < count($ids) - 1) ? $ids[$pos + 1] : null;
 
-        // ------------------------------------------------------------
-        // TU HELPER LÓGICO INTEGRADO (ADAPTADO)
-        // ------------------------------------------------------------
+        
         $procesarSeccionesBach = function($configJson, $materias_map, $calificaciones) use ($meses_ids) {
             $secciones_out = [];
             $total_sum_semestre = 0;
@@ -313,7 +325,7 @@ class CalificacionesBimestre extends BaseController
                 foreach ($grupo['subjects'] as $itemMateria) {
                     $id_materia = is_array($itemMateria) ? ($itemMateria['id'] ?? 0) : $itemMateria;
                     
-                    // Detectar Taller por color (Tu lógica)
+                    // Detectar Taller por color 
                     $es_taller = false;
                     if (is_array($itemMateria) && !empty($itemMateria['bgcolor'])) {
                         $es_taller = true;
@@ -329,9 +341,8 @@ class CalificacionesBimestre extends BaseController
 
                         // Recorrer los 3 meses del semestre
                         foreach ($meses_ids as $id_mes) {
-                            // IMPORTANTE: Mantenemos la llave original del mes para el input
                             $val = $notas_materia[$id_mes] ?? null;
-                            $mat['notas'][$id_mes] = $val; // Usamos el ID real como key
+                            $mat['notas'][$id_mes] = $val; 
                             
                             if (is_numeric($val) && $val > 0) {
                                 $sum_horiz += $val;
@@ -339,7 +350,7 @@ class CalificacionesBimestre extends BaseController
                             }
                         }
 
-                        // Promedio Semestral (Suma / cantidad notas disponibles)
+                        // Promedio Semestral
                         $mat['promedio'] = ($count_horiz > 0) ? round($sum_horiz/$count_horiz, 1) : null;
                         
                         // Acumular para el Global
@@ -366,7 +377,6 @@ class CalificacionesBimestre extends BaseController
             return ['secciones' => $secciones_out, 'promedio_general' => $promedio_general];
         };
 
-        // Ejecutar
         $resultado = $procesarSeccionesBach($config_json, $materias_map, $calificaciones);
 
         $data = [
@@ -380,7 +390,7 @@ class CalificacionesBimestre extends BaseController
             'secciones'       => $resultado['secciones'],
             'prom_gral'       => $resultado['promedio_general'],
             'headers'         => $headers,
-            'col_ids'         => $meses_ids, // IDs reales [1,2,3] o [4,5,6] para los inputs
+            'col_ids'         => $meses_ids, 
             'semestre_actual' => $semestre_actual,
             'link_otro_semestre' => $link_otro,
             'texto_boton'     => $txt_btn,

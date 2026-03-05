@@ -119,9 +119,27 @@ class CalificacionesModel extends Model
             ->get()->getResultArray();
 
         $materiasMap = [];
+        
+        $es_bachillerato = ($grado['nivel_grado'] == 5);
+        $id_mes_actual = $activeConfig['id_mes'];
+
         foreach($materiasRaw as $m) {
-            // Normalizar nombres para evitar problemas de acentos
-            $materiasMap[$m['id_materia']] = html_entity_decode($m['nombre_materia']);
+            $nombre_crudo = html_entity_decode($m['nombre_materia']);
+
+            // Explode | 
+            if (strpos($nombre_crudo, '|') !== false) {
+                $partes = explode('|', $nombre_crudo);
+                
+                // Si es el 2do Semestre (Periodos 4, 5 o 6)
+                if ($es_bachillerato && in_array($id_mes_actual, [4, 5, 6]) && isset($partes[1])) {
+                    $materiasMap[$m['id_materia']] = trim($partes[1]);
+                } else {
+                // si no, es semestre 1
+                    $materiasMap[$m['id_materia']] = trim($partes[0]);
+                }
+            } else {
+                $materiasMap[$m['id_materia']] = trim($nombre_crudo);
+            }
         }
 
         // C. Obtener Alumnos y sus Calificaciones 
