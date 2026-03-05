@@ -180,7 +180,7 @@
                     </div>
 
                     <div class="col-md-6 col-lg-3">
-                        <a href="#" class="text-decoration-none">
+                        <a href="<?= base_url('verificar-pagos') ?>" class="text-decoration-none">
                             <div class="widget-card">
                                 <div class="widget-header">
                                     <span>Pagos</span>

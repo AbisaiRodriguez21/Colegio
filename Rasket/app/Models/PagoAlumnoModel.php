@@ -26,6 +26,6 @@ class PagoAlumnoModel extends Model
         'id_folio',      // Ticket
         'fechaEnvio',
         'validar_ficha', // Estatus
-        'qrp'            // Nombre del alumno
+        'qrp'            // Nombre  
     ];
 }

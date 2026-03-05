@@ -172,12 +172,47 @@ class Calificaciones extends BaseController
         $id_ciclo = $config['id_ciclo'];
         $id_mes   = $config['id_mes']; 
 
-        // 4. Obtener Materias (Columnas)
-        $materias = $model->db->table('materia')
+        // 4. OBTENER MATERIAS segun el JSON 
+        $configJson = json_decode($gradoInfo->sabana_calif_config ?? '{"groups":[]}', true);
+        $materias_activas_ids = [];
+        
+        if (!empty($configJson['groups'])) {
+            foreach ($configJson['groups'] as $grupo) {
+                if (!empty($grupo['subjects'])) {
+                    foreach ($grupo['subjects'] as $itemMateria) {
+                        $materias_activas_ids[] = is_array($itemMateria) ? ($itemMateria['id'] ?? 0) : $itemMateria;
+                    }
+                }
+            }
+        }
+
+        // B) Obtener todas las Materias de la BD
+        $materias_crudas = $model->db->table('materia')
             ->select('id_materia, nombre_materia')
             ->where('id_grados', $id_grado)
-            ->orderBy('orden', 'ASC')
             ->get()->getResultArray();
+            
+        // Las indexamos para buscarlas rápido
+        $mapaMateriasBD = [];
+        foreach ($materias_crudas as $mat) {
+            $mapaMateriasBD[$mat['id_materia']] = $mat['nombre_materia'];
+        }
+
+        // C) Armamos el arreglo final respetando SOLO las del JSON
+        $materias = [];
+        if (!empty($materias_activas_ids)) {
+            foreach ($materias_activas_ids as $id_json) {
+                if (isset($mapaMateriasBD[$id_json])) {
+                    $materias[] = [
+                        'id_materia' => $id_json,
+                        'nombre_materia' => $mapaMateriasBD[$id_json]
+                    ];
+                }
+            }
+        } else {
+            // Fallback por si el JSON estuviera vacío
+            $materias = $model->db->table('materia')->select('id_materia, nombre_materia')->where('id_grados', $id_grado)->orderBy('orden', 'ASC')->get()->getResultArray();
+        }
 
         // 5. Obtener Alumnos (Filas)
         $alumnos = $model->db->table('usr')
@@ -211,12 +246,29 @@ class Calificaciones extends BaseController
 
         $output = fopen('php://output', 'w');
 
-        // A. ENCABEZADOS (Orden visual preferido)
+        // A. ENCABEZADOS 
         $csv_headers = ['id_sistema', 'matricula', 'nombre_completo', 'id_grado', 'id_ciclo', 'id_mes'];
 
+        $es_bachillerato = ($gradoInfo->nivel_grado == 5);
+
         foreach ($materias as $mat) {
-            $cleanName = preg_replace('/[^A-Za-z0-9 ]/', '', $mat['nombre_materia']);
-            $csv_headers[] = strtoupper($cleanName) . '_' . $mat['id_materia'];
+            $nombre_final = html_entity_decode($mat['nombre_materia']);
+
+            if (strpos($nombre_final, '|') !== false) {
+                $partes = explode('|', $nombre_final);
+                
+                if ($es_bachillerato && in_array($config['id_mes'], [4, 5, 6]) && isset($partes[1])) {
+                    $nombre_final = trim($partes[1]);
+                } else {
+                    $nombre_final = trim($partes[0]);
+                }
+            } else {
+                $nombre_final = trim($nombre_final);
+            }
+
+            // Limpiamos el nombre resultante (sin acentos raros ni saltos de línea)
+            $cleanName = preg_replace('/[^A-Za-z0-9ÁÉÍÓÚáéíóúÑñ ]/', '', $nombre_final);
+            $csv_headers[] = mb_strtoupper($cleanName, 'UTF-8') . '_' . $mat['id_materia'];
         }
 
         fputcsv($output, $csv_headers);

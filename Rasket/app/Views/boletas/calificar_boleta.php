@@ -60,19 +60,19 @@
 
         /* EL CONTENEDOR */
         .vertical-wrapper {
-            /* Esta propiedad hace que el texto ocupe altura real */
             writing-mode: vertical-rl;
-
-            /* Rotamos 180 grados*/
             transform: rotate(180deg);
-
-            /* Ajustes de alineación */
             text-align: left;
             margin: 0 auto;
             padding: 10px 4px;
             width: 100%;
             display: block;
             box-sizing: border-box;
+            
+            max-height: 320px; 
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
         }
 
         /* CLASES DE COLOR */
@@ -296,7 +296,7 @@
                             $nombre_mat = $materias_map[$real_id] ?? 'Materia ' . $real_id;
                             $nombre_mat = mb_strtoupper($nombre_mat, 'UTF-8');
                         ?>
-                            <th class="header-subject">
+                            <th class="header-subject" title="<?= $nombre_mat ?>">
                                 <div class="vertical-wrapper">
                                     <?= $nombre_mat ?>
                                 </div>

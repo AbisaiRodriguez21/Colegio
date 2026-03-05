@@ -160,7 +160,20 @@ class AlumnoViewController extends BaseController
         
         $materias_map = [];
         foreach ($materias_db as $m) {
-            $m['nombre'] = html_entity_decode($m['nombre_materia']);
+            $nombre_crudo = html_entity_decode($m['nombre_materia']);
+            
+            if (strpos($nombre_crudo, '|') !== false) {
+                $partes = explode('|', $nombre_crudo);
+                
+                if ($semestre_actual == 2 && isset($partes[1])) {
+                    $m['nombre'] = trim($partes[1]);
+                } else {
+                    $m['nombre'] = trim($partes[0]);
+                }
+            } else {
+                $m['nombre'] = trim($nombre_crudo);
+            }
+
             $materias_map[$m['id_materia']] = $m;
         }
 
