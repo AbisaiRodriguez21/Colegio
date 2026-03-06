@@ -332,23 +332,26 @@
                                 // Buscamos si existe la nota para este alumno y materia
                                 $dataNota = $alumno['notas'][$real_id] ?? null;
 
-                                // --- LOGICA DE PERMISOS ---
+                                // --- LÓGICA DE PERMISOS JERÁRQUICA ---
                                 $editable = false;
-                                $bandera = $dataNota['bandera'] ?? 0;
+                                
+                                // Obtenemos el nivel de la persona que capturó esta calificación
+                                // (Esto viene del LEFT JOIN que agregaste en el Modelo)
+                                $nivel_editor = $dataNota['nivel_editor'] ?? null;
 
-                                // Nivel 1: Admin siempre edita
+                                // 1. Administrador (Nivel 1): Dios del sistema, edita todo siempre.
                                 if ($user_level == 1) {
                                     $editable = true;
                                 }
-                                // Nivel 2: Director edita si es profe (1) o director (2), o si está vacío (0)
+                                // 2. Director (Nivel 2): Edita si está en blanco, o si el editor NO es el Admin (Nivel 1).
                                 elseif ($user_level == 2) {
-                                    if (!$dataNota || $bandera == 1 || $bandera == 2) $editable = true;
+                                    if (!$dataNota || $nivel_editor != 1) {
+                                        $editable = true;
+                                    }
                                 }
-                                // Nivel 9: Profe edita si es suyo, está vacío, o es de otro profe.
-                                // PERO NO si es de Admin (1) o Director (2).
+                                // 3. Titular/Profesor (Nivel 9): Edita si está en blanco, o si el editor NO es Admin(1) ni Director(2).
                                 elseif ($user_level == 9) {
-                                    // Si no hay nota... O (Si la bandera NO es 1 Y TAMPOCO es 2)
-                                    if (!$dataNota || ($bandera != 1 && $bandera != 2)) {
+                                    if (!$dataNota || ($nivel_editor != 1 && $nivel_editor != 2)) {
                                         $editable = true;
                                     }
                                 }
@@ -463,9 +466,7 @@
             }
 
             cells.forEach(cell => {
-                cell.addEventListener('focus', function() {
-                    // Opcional: Seleccionar texto al hacer clic
-                    // document.execCommand('selectAll', false, null); 
+                cell.addEventListener('focus', function() { 
                 });
 
                 cell.addEventListener('blur', function() {

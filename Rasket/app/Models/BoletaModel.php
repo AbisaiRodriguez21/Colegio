@@ -57,9 +57,7 @@ class BoletaModel extends Model
 
         return $promedios;
     }
-    // ==========================================================================
-    // ==========================================================================
-
+    
     // =========================================================================
     // 1. ACCESOS GENERALES Y MENÚ
     // =========================================================================
@@ -324,24 +322,23 @@ class BoletaModel extends Model
                             // Si es calculado (Inasistencias), aplicamos la fórmula del JSON
                             if ($is_calculated && isset($item['calculateExpressionsByMonth'])) {
                                 foreach ($item['calculateExpressionsByMonth'] as $mes => $formula) {
-                                    $valor_capturado = $notas[$mes] ?? 0;
                                     
-                                    // Reemplazamos %value% por el valor real
-                                    // Ej: "100 - (5 * 100 / 74)"
-                                    $math_str = str_replace('%value%', $valor_capturado, $formula);
-                                    
-                                    // Evaluamos la operación matemática de forma segura
-                                    try {
+                                    if (isset($notas[$mes]) && $notas[$mes] !== '') {
+                                        $valor_capturado = $notas[$mes];
+                                        $math_str = str_replace('%value%', $valor_capturado, $formula);
                                         
-                                        $resultado = 0;
-                                        // Solo permitimos números y operadores básicos
-                                        if (preg_match('/^[0-9\+\-\*\/\.\(\)\s]+$/', $math_str)) {
-                                            eval("\$resultado = $math_str;");
+                                        try {
+                                            $resultado = 0;
+                                            if (preg_match('/^[0-9\+\-\*\/\.\(\)\s]+$/', $math_str)) {
+                                                eval("\$resultado = $math_str;");
+                                            }
+                                            $notas[$mes] = $resultado; 
+                                        } catch (\Exception $e) {
+                                            $notas[$mes] = 0;
                                         }
-                                        // Redondeamos a enteros para porcentajes
-                                        $notas[$mes] = round($resultado); 
-                                    } catch (\Exception $e) {
-                                        $notas[$mes] = 0;
+                                    } else {
+                                        // Si el mes está vacío, lo eliminamos para que NO arruine el promedio
+                                        unset($notas[$mes]);
                                     }
                                 }
                                 $mat['es_calculado'] = true;

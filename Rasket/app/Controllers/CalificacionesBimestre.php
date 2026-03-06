@@ -38,8 +38,12 @@ class CalificacionesBimestre extends BaseController
         if (strpos($nombreGrado, 'secundaria') !== false) {
             return $this->_editarSecundaria($id_alumno, $id_grado);
         }
-        elseif (strpos($nombreGrado, 'bachillerato') !== false) {
+        elseif (strpos($nombreGrado, 'bachillerato') !== false || strpos($nombreGrado, 'prepa') !== false) {
             return $this->_editarBachillerato($id_alumno, $id_grado);
+        }
+        // 🌟 NUEVA RUTA PARA KINDER
+        elseif (strpos($nombreGrado, 'kinder') !== false || strpos($nombreGrado, 'maternal') !== false) {
+            return $this->_editarKinder($id_alumno, $id_grado);
         }
         else {
             return $this->_editarPrimaria($id_alumno, $id_grado);
@@ -402,7 +406,92 @@ class CalificacionesBimestre extends BaseController
     }
 
     // -------------------------------------------------------------------------
-    // 6. ACTUALIZAR AJAX
+    // 6. LÓGICA KINDER (NUEVO)
+    // -------------------------------------------------------------------------
+    private function _editarKinder($id_alumno, $id_grado)
+    {
+        $session = session();
+        $modelBoleta = new BoletaModel(); 
+        $cicloInfo = $modelBoleta->getCicloActivo();
+        $id_ciclo = $cicloInfo['id_ciclo'];
+
+        $alumno = $modelBoleta->getDatosAlumno($id_alumno);
+        $alumno['nombre_completo'] = trim(($alumno['ap_Alumno']??'') . ' ' . ($alumno['am_Alumno']??'') . ' ' . ($alumno['Nombre']??''));
+        $gradoInfo = $modelBoleta->getInfoGrado($id_grado);
+
+        $config_json = json_decode($gradoInfo['boleta_config'] ?? '{}', true);
+        $materias_db = $modelBoleta->getMaterias($id_grado);
+        $calificaciones = $modelBoleta->getCalificaciones($id_alumno, $id_grado, $id_ciclo);
+        
+        $materias_map = [];
+        foreach ($materias_db as $m) {
+            $m['nombre'] = html_entity_decode($m['nombre_materia']);
+            $materias_map[$m['id_materia']] = $m;
+        }
+
+        // 2. Navegación entre alumnos
+        $listaAlumnos = $modelBoleta->getAlumnosPorGrado($id_grado);
+        $ids = array_column($listaAlumnos, 'id'); 
+        $pos = array_search($id_alumno, $ids);
+        $id_anterior = ($pos > 0) ? $ids[$pos - 1] : null;
+        $id_siguiente = ($pos < count($ids) - 1) ? $ids[$pos + 1] : null;
+
+        $procesarLado = function($ladoData) use ($materias_map, $calificaciones) {
+            $resultado = [];
+            if (!isset($ladoData['groups']) || !is_array($ladoData['groups'])) return $resultado;
+
+            foreach ($ladoData['groups'] as $grupo) {
+                if (empty($grupo['subjects'])) {
+                    $resultado[] = ['titulo' => $grupo['title'], 'materias' => []];
+                    continue;
+                }
+
+                $materias_grupo = [];
+                foreach ($grupo['subjects'] as $item) {
+                    $id_mat = is_array($item) ? ($item['id'] ?? 0) : $item;
+                    if (isset($materias_map[$id_mat])) {
+                        $mat = $materias_map[$id_mat];
+                        $mat['notas'] = $calificaciones[$id_mat] ?? [];
+                        $mat['isPercentage'] = $grupo['isPercentage'] ?? false;
+                        $mat['calculated'] = is_array($item) ? ($item['calculated'] ?? false) : false;
+                        $materias_grupo[] = $mat;
+                    }
+                }
+                
+                if (!empty($materias_grupo)) {
+                    $resultado[] = ['titulo' => $grupo['title'] ?? '', 'materias' => $materias_grupo];
+                }
+            }
+            return $resultado;
+        };
+
+        $left_groups = $procesarLado($config_json['left'] ?? []);
+        $right_groups = $procesarLado($config_json['right'] ?? []);
+
+        $left_title = $config_json['left']['title'] ?? 'CAMPOS DE FORMACIÓN';
+        $right_title = $config_json['right']['title'] ?? 'ÁREAS DE DESARROLLO';
+
+        // 4. Empaquetar y enviar a la vista
+        $data = [
+            'alumno'       => $alumno, 
+            'ciclo'        => $cicloInfo, 
+            'grado'        => $gradoInfo,
+            'id_grado'     => $id_grado, 
+            'id_anterior'  => $id_anterior, 
+            'id_siguiente' => $id_siguiente,
+            'left_title'   => $left_title,   
+            'right_title'  => $right_title,   
+            'left_groups'  => $left_groups,
+            'right_groups' => $right_groups,
+            'momentos'     => [1, 2, 3],
+            'user_level'   => $session->get('nivel')
+        ];
+
+        return view('boletas/editar_boleta_kinder', $data);
+    }
+
+    // -------------------------------------------------------------------------
+    // 7. ACTUALIZAR AJAX
     // -------------------------------------------------------------------------
     public function actualizar()
     {

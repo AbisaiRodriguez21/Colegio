@@ -22,7 +22,7 @@ class GlobalConfigModel extends Model
     {
         return $this->db->table('cicloescolar')
                         ->select('Id_cicloEscolar as id, nombreCicloEscolar as nombre')
-                        ->orderBy('Id_cicloEscolar', 'DESC') // Lo más nuevo primero
+                        ->orderBy('Id_cicloEscolar', 'DESC')  
                         ->get()->getResultArray();
     }
 
@@ -45,5 +45,13 @@ class GlobalConfigModel extends Model
             ['id' => 5, 'nombre' => 'ABR-MAY'],
             ['id' => 6, 'nombre' => 'JUN-JUL'],
         ];
+    }
+    // 5. Obtener Momentos para Kinder
+    public function getMomentosKinder()
+    {
+        return $this->db->table('momentos')
+                        ->select('id, nombre')
+                        ->orderBy('id', 'ASC')
+                        ->get()->getResultArray();
     }
 }

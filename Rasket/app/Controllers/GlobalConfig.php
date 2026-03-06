@@ -20,15 +20,17 @@ class GlobalConfig extends BaseController
             $lista_tiempo = [];
 
             if ($id_config == 2) { 
-                // CASO BACHILLERATO: Usamos los periodos 1-6
+                // CASO BACHILLERATO 
                 $lista_tiempo = $model->getPeriodosBachillerato();
+            } elseif ($id_config == 3) {
+                // CASO KINDER 
+                $lista_tiempo = $model->getMomentosKinder();
             } else {
-                // CASO PRIMARIA/SECUNDARIA: Usamos los meses normales de la BD
+                // CASO PRIMARIA/SECUNDARIA  
                 $lista_tiempo = $model->getMeses();
             }
 
             $data = [
-                // 'meses' ahora puede contener Meses O Periodos, el JS no nota la diferencia
                 'meses'  => $lista_tiempo, 
                 'ciclos' => $model->getCiclos(),
                 'actual' => $model->getConfiguracionActual($id_config)
@@ -63,7 +65,6 @@ class GlobalConfig extends BaseController
         ]);
 
         if ($update) {
-            // Guardamos un log o mensaje flash si quieres
             session()->setFlashdata('success', 'Configuración actualizada correctamente.');
             return $this->response->setJSON(['status' => 'success']);
         } else {

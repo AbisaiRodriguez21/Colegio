@@ -141,8 +141,15 @@ if ($nivelUsuario == 1 || $nivelUsuario == 2) {
             <?php if ($nivelUsuario == 1): ?>
 
                 <li class="nav-item">
+                    <a href="#" class="nav-link" onclick="abrirConfiguracion(3, 'Configurar Preescolar'); return false;">
+                        <span class="nav-text">PREESCOLAR (KINDER)</span>
+                    </a>
+                </li>
+
+                <li class="nav-item">
                     <a href="#" class="nav-link" onclick="abrirConfiguracion(1, 'Configurar Primaria/Secundaria'); return false;">
                         <span class="nav-text">PRIMARIA - SECUNDARIA</span>
+                    </a>
                 </li>
 
                 <li class="nav-item">

@@ -19,7 +19,7 @@ class CalificacionesModel extends Model
         'fechaInsertar', 
         'comentarios'
     ];
-
+    
     // =========================================================================
     // 1. CONFIGURACIÓN DEL CICLO 
     // =========================================================================
@@ -28,9 +28,8 @@ class CalificacionesModel extends Model
         // ID 1 = Primaria/Secundaria | ID 2 = Bachillerato | ID 3 = Kinder
         $id_config = 1; 
         if ($nivel_grado == 5) { $id_config = 2; } 
-        elseif ($nivel_grado <= 2) { $id_config = 3; } 
+        elseif ($nivel_grado == 2) { $id_config = 3; }  
 
-        // 1. Obtenemos qué ID de mes/periodo está activo en la tabla de control
         $builder = $this->db->table('mesycicloactivo MA');
         $builder->select('MA.id_mes, MA.id_ciclo, CE.nombreCicloEscolar');
         $builder->join('cicloescolar CE', 'MA.id_ciclo = CE.id_cicloEscolar');
@@ -40,26 +39,20 @@ class CalificacionesModel extends Model
 
         if (!$data) return null;
 
-        // 2. Buscamos el NOMBRE REAL en la tabla correcta según el nivel
-        if ($id_config == 2) { 
-            // CASO BACHILLERATO: Consultamos la tabla 'bimestres'
-            $bimestre = $this->db->table('bimestres')
-                             ->select('nombre')
-                             ->where('id', $data['id_mes'])
-                             ->get()->getRow();
-            
-            // Formato final: "1° Periodo (AGO-SEP)"
+        if ($nivel_grado == 5) { 
+            // BACHILLERATO: Consultamos 'bimestres'
+            $bimestre = $this->db->table('bimestres')->select('nombre')->where('id', $data['id_mes'])->get()->getRow();
             $nombreReal = $bimestre ? $bimestre->nombre : 'Periodo Desconocido';
             $data['nombre_mes'] = $data['id_mes'] . '° Periodo (' . $nombreReal . ')';
 
+        } elseif ($nivel_grado == 2) {
+            // KINDER: Consultamos 'momentos'
+            $momento = $this->db->table('momentos')->select('nombre')->where('id', $data['id_mes'])->get()->getRow();
+            $data['nombre_mes'] = $momento ? $momento->nombre : $data['id_mes'] . '° Evaluación';
+
         } else {
-            // CASO PRIMARIA/SECUNDARIA: Consultamos la tabla 'mes' (Calendario normal)
-            $mesInfo = $this->db->table('mes')
-                            ->select('nombre')
-                            ->where('id', $data['id_mes'])
-                            ->get()->getRow();
-            
-            // Formato final: "Septiembre", "Octubre", etc.
+            // PRIMARIA/SECUNDARIA: Consultamos 'mes'
+            $mesInfo = $this->db->table('mes')->select('nombre')->where('id', $data['id_mes'])->get()->getRow();
             $data['nombre_mes'] = $mesInfo ? $mesInfo->nombre : 'Mes Desconocido';
         }
 
@@ -91,20 +84,22 @@ class CalificacionesModel extends Model
         // Si el controlador nos mandó un mes específico 
         if ($mes_custom !== null && is_numeric($mes_custom)) {
             
-            // 1. Forzamos el ID del mes para la consulta SQL
             $activeConfig['id_mes'] = $mes_custom;
-
-            // 2. Buscamos el NOMBRE correcto para que el título de la sábana cambie 
             $nivel = $grado['nivel_grado'];
             
-            if ($nivel == 5) { // BACHILLERATO (Tabla bimestres)
+            if ($nivel == 5) { // BACHILLERATO
                 $rowB = $this->db->table('bimestres')->select('nombre')->where('id', $mes_custom)->get()->getRow();
                 if ($rowB) $activeConfig['nombre_mes'] = $rowB->nombre;  
             
-            } elseif ($nivel == 1) { // KINDER
-                $activeConfig['nombre_mes'] = $mes_custom . "° Evaluación";
+            } elseif ($nivel == 2) { // 🌟 KINDER (Corregido a 2 y usando 'momentos')
+                $rowK = $this->db->table('momentos')->select('nombre')->where('id', $mes_custom)->get()->getRow();
+                if ($rowK) {
+                    $activeConfig['nombre_mes'] = $rowK->nombre;
+                } else {
+                    $activeConfig['nombre_mes'] = $mes_custom . "° Evaluación";
+                }
             
-            } else { // PRIMARIA/SECUNDARIA (Tabla mes)
+            } else { // PRIMARIA/SECUNDARIA
                 $rowM = $this->db->table('mes')->select('nombre')->where('id', $mes_custom)->get()->getRow();
                 if ($rowM) $activeConfig['nombre_mes'] = $rowM->nombre;
             }
@@ -157,15 +152,17 @@ class CalificacionesModel extends Model
                     c.id_materia,
                     c.calificacion,
                     c.faltas,
-                    c.bandera
+                    c.bandera,
+                    editor.nivel as nivel_editor 
                 FROM usr u
                 LEFT JOIN calificacion c ON u.id = c.id_usr 
                       AND c.id_grado = ? 
                       AND c.cicloEscolar = ? 
                       AND c.id_mes = ?
+                LEFT JOIN usr editor ON c.bandera = editor.id 
                 WHERE u.grado = ? 
                   AND u.estatus = 1  
-                  AND u.nivel = 7     
+                  AND u.nivel = 7    
                 ORDER BY u.ap_Alumno, u.am_Alumno, u.Nombre";
 
         // Ejecutar consulta
@@ -173,18 +170,16 @@ class CalificacionesModel extends Model
         $resultados = $query->getResultArray();
 
         // D. Estructurar Datos para la Vista
-        // lista plana de SQL en un Array Indexado por Alumno
         $sabana = [];
         foreach ($resultados as $row) {
             $id_al = $row['id_alumno'];
             
-            // Si es la primera vez que vemos a este alumno, creamos su fila
             if (!isset($sabana[$id_al])) {
                 $sabana[$id_al] = [
                     'id' => $id_al,
                     'matricula' => $row['matricula'],
                     'nombre' => strtoupper($row['nombre_completo']),
-                    'notas' => [] // Aquí se guardan las materias
+                    'notas' => [] 
                 ];
             }
 
@@ -194,17 +189,18 @@ class CalificacionesModel extends Model
                     'id_cal'       => $row['Id_cal'],       
                     'calificacion' => $row['calificacion'],
                     'faltas'       => $row['faltas'],
-                    'bandera'      => $row['bandera']       
+                    'bandera'      => $row['bandera'],
+                    'nivel_editor' => $row['nivel_editor'] 
                 ];
             }
         }
 
         return [
             'grado_info'  => $grado,
-            'ciclo_info'  => $activeConfig, // Esto lleva el mes correcto a la vista
-            'config_json' => $configJson,  // Estructura de grupos
-            'materias_map'=> $materiasMap, // Nombres de materias
-            'alumnos'     => $sabana       // Datos listos
+            'ciclo_info'  => $activeConfig,
+            'config_json' => $configJson,  
+            'materias_map'=> $materiasMap, 
+            'alumnos'     => $sabana      
         ];
     }
 

@@ -90,10 +90,8 @@ class Calificaciones extends BaseController
 
             // Consultamos la configuración global como respaldo
             $gradoInfo = $model->db->table('grados')->select('nivel_grado')->where('id_grado', $id_grado)->get()->getRow();
-            $config    = $model->getConfiguracionActiva($gradoInfo->nivel_grado);
+            $config    = $model->getConfiguracionActiva($gradoInfo->nivel_grado); 
 
-            // LÓGICA DE PRIORIDAD
-            // Si $id_mes_post tiene datos (viene del JS), úsalo. Si no, usar la del Director ($config).
             $id_mes_final = !empty($id_mes_post) ? $id_mes_post : $config['id_mes'];
 
             $dataInsert = [
@@ -101,7 +99,7 @@ class Calificaciones extends BaseController
                 'id_materia'    => $id_materia,
                 'id_grado'      => $id_grado,
                 'cicloEscolar'  => $config['id_ciclo'], 
-                'id_mes'        => $id_mes_final,       // Guardamos el mes correcto
+                'id_mes'        => $id_mes_final,       
                 'fechaInsertar' => date('Y-m-d H:i:s'),
                 'bandera'       => $id_usuario,    
             ];

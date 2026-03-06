@@ -394,16 +394,13 @@ class Boleta extends BaseController
         $id_siguiente = ($posicion !== false && $posicion < count($ids) - 1) ? $ids[$posicion + 1] : null;
 
         // ---------------------------------------------------------------------
-        // HELPER BACHILLERATO (CAPAZ DE LEER LISTAS PLANAS Y GRUPOS)
+        // HELPER BACHILLERATO  
         // ---------------------------------------------------------------------
         $procesarSeccionesBach = function($configJson, $materias_map, $calificaciones) use ($meses_ids) {
             $secciones_out = [];
             $total_sum_semestre = 0;
-            $total_count_semestre = 0;
-
-            // Paso A: Normalizar la estructura. 
-            // Si viene "subjects" directo (Bachillerato), lo convertimos a un solo grupo sin título.
-            // Si viene "subject_groups" (Estilo nuevo), lo usamos tal cual.
+            $total_count_semestre = 0; 
+            
             $lista_grupos = [];
 
             if (isset($configJson['subject_groups'])) {

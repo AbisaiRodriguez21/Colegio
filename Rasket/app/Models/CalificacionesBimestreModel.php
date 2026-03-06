@@ -18,7 +18,7 @@ class CalificacionesBimestreModel extends Model
         'calificacion', // El valor de la nota (número)
         'cicloEscolar', // ID del ciclo escolar actual
         'fechaInsertar',// Fecha y hora de la modificación
-        'bandera'       // ID del usuario (capturista/profesor) que realizó la acción
+        'bandera'       // ID del usuario (capturista) que realizó la acción
     ];
 
     /**
