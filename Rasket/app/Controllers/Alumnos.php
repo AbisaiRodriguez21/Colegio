@@ -252,6 +252,21 @@ class Alumnos extends BaseController
 
         $db = \Config\Database::connect();
 
+        $pagosValidados = $db->table('pago')
+                             ->where('validar_ficha', 49)
+                             ->where('ficha IS NOT NULL')
+                             ->get()->getResultArray();
+
+        foreach ($pagosValidados as $pv) {
+            if (!empty($pv['ficha'])) {
+                $rutaFoto = FCPATH . 'pagos/' . $pv['ficha'];
+                if (file_exists($rutaFoto)) {
+                    unlink($rutaFoto); 
+                }
+                // Vacía el campo en la BD para evitar imágenes rotas
+                $db->table('pago')->where('id_pago', $pv['id_pago'])->update(['ficha' => null]);
+            }
+        }
         // Obtenemos datos del alumno
         $alumno = $db->table('usr')->where('id', $id_alumno)->get()->getRowArray();
         if (!$alumno) {
@@ -514,7 +529,7 @@ class Alumnos extends BaseController
         if (file_exists($rutaPdf)) {
             unlink($rutaPdf);
         }
-        
+
         return $resultado;
     }
 }

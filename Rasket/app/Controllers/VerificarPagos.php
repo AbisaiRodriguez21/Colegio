@@ -212,7 +212,20 @@ class VerificarPagos extends BaseController
         if (file_exists($rutaPdf)) {
             unlink($rutaPdf);
         }
-        
+
+        // AUTODESTRUCCIÓN DEL TICKET FÍSICO
+        if (!empty($pago['ficha'])) {
+            // Buscamos la foto original en la carpeta public/pagos/
+            $rutaFotoTicket = FCPATH . 'pagos/' . $pago['ficha'];
+            
+            // Si el archivo físico existe, lo eliminamos
+            if (file_exists($rutaFotoTicket)) {
+                unlink($rutaFotoTicket);
+            }
+            
+            // Vaciamos el campo en la BD para que el botón "Ver archivo" se oculte y no marque error
+            $db->table('pago')->where('id_pago', $pago['id_pago'])->update(['ficha' => null]);
+        }
         return $resultado;
     }
 }
