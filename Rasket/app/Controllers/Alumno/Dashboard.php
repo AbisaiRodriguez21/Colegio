@@ -49,15 +49,13 @@ class Dashboard extends BaseController
             return $this->response->setStatusCode(403)->setBody("Acceso denegado");
         }
 
-        $nuevoPass = trim($request->getPost('new_password')); // trim quita espacios al inicio/final
+        $nuevoPass = trim($request->getPost('new_password'));  
         $idUsuario = $session->get('id');
 
-        // VALIDACIÓN 1: Vacío
         if (empty($nuevoPass)) {
             return $this->response->setJSON(['status' => 'error', 'msg' => 'La contraseña no puede estar vacía.']);
         }
 
-        // VALIDACIÓN 2: Sin Espacios (Seguridad del lado del servidor)
         if (strpos($nuevoPass, ' ') !== false) {
             return $this->response->setJSON(['status' => 'error', 'msg' => 'No se permiten espacios en la contraseña.']);
         }

@@ -81,6 +81,22 @@ $routes->group('titular', ['filter' => 'titularAuth'], function($routes) {
 });
 
 
+// =========================================================================
+// RUTAS DE PROFESORES 
+// Nivel 5
+// =========================================================================
+$routes->group('profesor', ['filter' => 'profesorAuth'], function($routes) {
+
+    $routes->post('actualizar-password', 'Alumno\Dashboard::actualizarPassword');
+    
+    $routes->get('dashboard', 'Profesor\ProfesorController::dashboard');
+    
+    $routes->get('calificar/(:num)/(:num)', 'Profesor\ProfesorController::calificarMateria/$1/$2');
+    
+    $routes->post('guardar-nota', 'Profesor\ProfesorController::guardarNotaAJAX');
+});
+
+
 // =============================================================================
 // 1. RUTAS DE ALUMNOS (Protegidas por 'studentAuth')
 // =============================================================================

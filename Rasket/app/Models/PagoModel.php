@@ -64,4 +64,6 @@ class PagoModel extends Model
             'qrp'           => $nombreQuienValida 
         ]);
     }
+
+    
 }

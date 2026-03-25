@@ -24,24 +24,24 @@ class Auth extends BaseController
         if ($user) {
             session()->set([
                 'isLoggedIn' => true,
-                'id'         => $user['id'],                        
-                'usuario'    => $user['email'],                    
-                'nombre'     => $user['Nombre'] ?? '',          
-                'ap'         => $user['ap_Alumno'] ?? '',         
-                'am'         => $user['am_Alumno'] ?? '',        
-                'nivel'      => $user['nivel'] ?? '',             
-                'foto'       => $user['foto'] ?? '',    
+                'id'         => $user['id'],
+                'usuario'    => $user['email'],
+                'nombre'     => $user['Nombre'] ?? '',
+                'ap'         => $user['ap_Alumno'] ?? '',
+                'am'         => $user['am_Alumno'] ?? '',
+                'nivel'      => $user['nivel'] ?? '',
+                'foto'       => $user['foto'] ?? '',
                 'nivelT'     => $user['nivelT'] ?? 0,
             ]);
-// === ENRUTADOR INTELIGENTE DE NIVELES ===
-            
+            // === ENRUTADOR INTELIGENTE DE NIVELES ===
+
             $nivelUsuario = $user['nivel'];
 
             // CASO 1: ALUMNOS (Nivel 7)
             if ($nivelUsuario == 7) {
                 return redirect()->to(base_url('alumno/dashboard'));
             }
-            
+
             // CASO 2: ADMINISTRADORES 
             elseif ($nivelUsuario == 1) {
                 // Ellos van al dashboard general (admin)
@@ -50,12 +50,16 @@ class Auth extends BaseController
 
             // CASO 3: DOCENTES Titualres
             elseif ($nivelUsuario == 9) {
-                
-                // CAMBIAR LA RUTA CUANDO YA SE TENGA LA VISTA CORRESPONDIENTE
-                return redirect()->to(base_url('titular/dashboard'));
-            }
 
-            // CAMBIAR LA RUTA CUANDO YA SE TENGA LA VISTA CORRESPONDIENTE
+                return redirect()->to(base_url('titular/dashboard'));
+            } 
+            
+            // CASO 4: DOCENTES Profesores
+            elseif ($nivelUsuario == 5) {
+
+                return redirect()->to(base_url('profesor/dashboard'));
+            } 
+            
             else {
                 return redirect()->to(base_url('dashboard'));
             }

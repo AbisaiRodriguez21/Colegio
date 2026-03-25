@@ -68,7 +68,6 @@ class BoletaModel extends Model
     public function getGradosMenu()
     {
         return $this->db->table('grados')
-            // ->where('grado_activo', 1) 
             ->orderBy('id_grado', 'ASC')
             ->get()
             ->getResultArray();

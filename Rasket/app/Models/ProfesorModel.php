@@ -205,4 +205,45 @@ class ProfesorModel extends Model
             log_message('error', 'ProfesorModel: Error en transacción DB. ' . json_encode($db->error()));
         }
     }
+
+
+
+
+
+    public function getMateriasDashboardProfesor($id_profesor)
+    {
+        $db = \Config\Database::connect();
+
+        $cicloActivo = $db->table('mesycicloactivo')
+                          ->select('id_ciclo')
+                          ->where('id', 1)
+                          ->get()
+                          ->getRow();
+
+        if (!$cicloActivo) {
+            return []; 
+        }
+
+        $id_ciclo = $cicloActivo->id_ciclo;
+
+        $builder = $db->table('materia_asignadaoriginal mao');
+        $builder->select('
+            mao.id_materia, 
+            m.nombre_materia, 
+            g.id_grado, 
+            g.nombreGrado, 
+            g.nivel_grado
+        ');
+        
+        $builder->join('materia m', 'm.Id_materia = mao.id_materia');
+        $builder->join('grados g', 'g.id_grado = m.id_grados');
+        
+        $builder->where('mao.id_usr', $id_profesor);
+        $builder->where('mao.activo', 1);
+        $builder->where('mao.id_cicloEscolar', $id_ciclo);
+        
+        $builder->orderBy('g.id_grado', 'ASC');
+
+        return $builder->get()->getResultArray();
+    }
 }
