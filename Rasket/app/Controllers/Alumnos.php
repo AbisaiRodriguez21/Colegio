@@ -4,7 +4,7 @@ namespace App\Controllers;
 
 use App\Models\UserModel;
 use App\Models\GradoModel;
-use App\Models\CicloEscolarModel;
+use App\Models\Model;
 use CodeIgniter\Controller; 
 use Dompdf\Dompdf;
 use Dompdf\Options;

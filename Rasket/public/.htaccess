@@ -1,38 +1,23 @@
-# Disable directory browsing
 Options -Indexes
 
-# Ensure mod_rewrite is enabled
 <IfModule mod_rewrite.c>
-  RewriteEngine On
+    RewriteEngine On
+    RewriteBase /
 
-  # Set the base URL to the current folder
-  RewriteBase /Colegio/Rasket/public/
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_URI} (.+)/$
+    RewriteRule ^ %1 [L,R=301]
 
-  #Permite servir archivos estáticos correctamente
-  RewriteCond %{REQUEST_FILENAME} -f
-  RewriteRule ^ - [L]
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^(.*)$ index.php/$1 [L,QSA]
 
-  # Si la ruta comienza con source/, deja pasar (CSS, JS, imágenes)
-  RewriteCond %{REQUEST_URI} ^/Colegio/Rasket/public/source/
-  RewriteRule ^ - [L]
-
-  # Redirect Trailing Slashes...
-  RewriteCond %{REQUEST_FILENAME} !-d
-  RewriteCond %{REQUEST_URI} (.+)/$
-  RewriteRule ^ %1 [L,R=301]
-
-  # Send other requests to index.php
-  RewriteCond %{REQUEST_FILENAME} !-f
-  RewriteCond %{REQUEST_FILENAME} !-d
-  RewriteRule ^ index.php [L]
-
-  # Ensure Authorization header is passed
-  RewriteCond %{HTTP:Authorization} .
-  RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+    RewriteCond %{HTTP:Authorization} .
+    RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
 </IfModule>
 
 <IfModule !mod_rewrite.c>
-  ErrorDocument 404 index.php
+    ErrorDocument 404 /index.php
 </IfModule>
 
 ServerSignature Off

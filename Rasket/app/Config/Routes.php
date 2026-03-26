@@ -9,7 +9,7 @@ if (file_exists(SYSTEMPATH . 'Config/Routes.php')) {
 }
 
 $routes->setDefaultNamespace('App\Controllers');
-$routes->setDefaultController('Home');
+$routes->setDefaultController('Auth');
 $routes->setDefaultMethod('index');
 $routes->setTranslateURIDashes(false);
 $routes->set404Override();
@@ -21,7 +21,7 @@ $routes->setAutoRoute(false);
 $routes->get('login', 'Auth::index');
 $routes->post('auth/attemptLogin', 'Auth::attemptLogin');
 $routes->get('logout', 'Auth::logout');
-$routes->get('/', 'Home::index');
+$routes->get('/', 'Auth::index');
 
 // =============================================================================
 // RUTAS GENERALES (Cualquier usuario logueado: Admin, Profe, Alumno)

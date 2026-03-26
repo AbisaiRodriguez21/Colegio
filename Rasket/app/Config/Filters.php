@@ -44,6 +44,7 @@ class Filters extends BaseFilters
         'directorAuth'  => \App\Filters\DirectorAuth::class, // Filtro de Autenticación para Director
         'academicoAuth' => \App\Filters\AcademicoAuth::class,// Filtro de Autenticación para Admin + Director
         'profesorAuth'  => \App\Filters\ProfesorAuth::class, // Filtro de Autenticación para Profesores
+        'acentos'       => \App\Filters\AcentosFilter::class,
     ];
 
     /**
@@ -84,6 +85,7 @@ class Filters extends BaseFilters
             // 'invalidchars',
         ],
         'after' => [
+            'acentos',
             // 'honeypot',
             // 'secureheaders',
         ],
