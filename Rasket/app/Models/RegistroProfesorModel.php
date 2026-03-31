@@ -23,7 +23,7 @@ class RegistroProfesorModel extends Model
     public function getCiclos()
     {
         // Usamos la conexión interna del modelo ($this->db)
-        return $this->db->table('cicloEscolar')
+        return $this->db->table('cicloescolar')
                         ->orderBy('nombreCicloEscolar', 'ASC')
                         ->get()->getResultArray();
     }

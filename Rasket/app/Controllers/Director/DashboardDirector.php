@@ -18,7 +18,7 @@ class DashboardDirector extends BaseController
         $config = $califModel->getConfiguracionActiva(1); 
         $nombreCiclo = 'No definido';
         if (!empty($config['id_ciclo'])) {
-            $ciclo = $db->table('cicloEscolar')->where('Id_cicloEscolar', $config['id_ciclo'])->get()->getRow();
+            $ciclo = $db->table('cicloescolar')->where('Id_cicloEscolar', $config['id_ciclo'])->get()->getRow();
             $nombreCiclo = $ciclo ? $ciclo->nombreCicloEscolar : 'No definido';
         }
 

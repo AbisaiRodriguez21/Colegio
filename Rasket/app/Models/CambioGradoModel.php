@@ -89,7 +89,7 @@ class CambioGradoModel extends Model
                 'concepto'      => $datosPago['concepto'],
                 'modoPago'      => $datosPago['modoPago'],
                 'nota'          => $datosPago['nota'],
-                'validar_ficha' => 49, 
+                'validar_ficha' => 1, 
                 'ficha'         => null, 
                 'cilcoescolar'  => $idCiclo,  
                 'id_folio'      => $siguienteNumFolio, 

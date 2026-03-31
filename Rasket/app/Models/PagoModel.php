@@ -33,7 +33,7 @@ class PagoModel extends Model
                         ->join('grados g', 'u.grado = g.Id_grado', 'left')
                         ->where('u.nivel', 7) // Nivel 7 = Alumnos
                         ->whereIn('u.estatus', [1, 2])
-                        ->where('pago.validar_ficha', 48); 
+                        ->where('pago.validar_ficha', 0); 
 
         // LÓGICA DE BÚSQUEDA 
         if (!empty($busqueda)) {
@@ -59,7 +59,7 @@ class PagoModel extends Model
     public function validarPago($idPago, $nombreQuienValida)
     {
         return $this->update($idPago, [
-            'validar_ficha' => 49, 
+            'validar_ficha' => 1, 
             'fechaPago'     => date('Y-m-d'),
             'qrp'           => $nombreQuienValida 
         ]);

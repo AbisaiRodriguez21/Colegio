@@ -71,7 +71,7 @@
                                             
                                             <form action="<?= base_url('profesor/guardar_carga_grado') ?>" method="POST" class="form-carga-grado">
                                                 
-                                                <input type="hidden" name="id_profesor" value="<?= $profesor['id'] ?>">
+                                                <input type="hidden" name="id_profesor" value="<?= $profesor['id'] ?? $profesor['Id'] ?? service('uri')->getSegment(3) ?>">
                                                 <input type="hidden" name="id_grado" value="<?= $grado['id_grado'] ?>">
 
                                                 <div class="d-flex justify-content-end mb-3">
@@ -105,9 +105,9 @@
                                                                     <td class="text-center">
                                                                         <div class="form-check form-switch d-flex justify-content-center">
                                                                             <input class="form-check-input" type="checkbox" 
-                                                                                   name="materias[]" 
-                                                                                   value="<?= $mat['Id_materia'] ?>" // O 'Id_materia' según tu BD
-                                                                                   <?= ($mat['estado_asignacion'] == 'propia') ? 'checked' : '' ?>>
+                                                                                name="materias[]" 
+                                                                                value="<?= $mat['id_materia'] ?? $mat['Id_materia'] ?>" 
+                                                                                <?= ($mat['estado_asignacion'] == 'propia') ? 'checked' : '' ?>>
                                                                         </div>
                                                                     </td>
                                                                 </tr>

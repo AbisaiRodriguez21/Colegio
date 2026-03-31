@@ -17,13 +17,13 @@
                     </div>
                 </div>
 
-                <div class="row mb-4">
+                < !--<div class="row mb-4">
                     <div class="col-12">
                         <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#modalPago">
                             <i class="mdi mdi-cash-plus me-1"></i> Reportar Nuevo Pago
                         </button>
                     </div>
-                </div>
+                </div>-- >
 
                 <div class="card">
                     <div class="card-body">

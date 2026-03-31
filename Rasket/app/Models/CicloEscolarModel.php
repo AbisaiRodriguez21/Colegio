@@ -5,7 +5,7 @@ use CodeIgniter\Model;
 
 class CicloEscolarModel extends Model
 {
-    protected $table = 'cicloEscolar'; 
+    protected $table = 'cicloescolar'; 
     protected $primaryKey = 'id_cicloEscolar'; 
  
     protected $allowedFields = ['id_cicloEscolar', 'nombreCicloEscolar'];

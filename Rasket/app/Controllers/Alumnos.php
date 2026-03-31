@@ -9,6 +9,7 @@ use CodeIgniter\Controller;
 use Dompdf\Dompdf;
 use Dompdf\Options;
 
+
 class Alumnos extends BaseController 
 {
     
@@ -44,7 +45,7 @@ class Alumnos extends BaseController
     private function _cargarFormulario($titulo, $estatus)
     {
         $gradoModel = new GradoModel();
-        $cicloModel = new CicloEscolarModel();
+        $cicloModel = new \App\Models\CicloEscolarModel();
 
         $data = [
             'title'         => $titulo,
@@ -253,7 +254,7 @@ class Alumnos extends BaseController
         $db = \Config\Database::connect();
 
         $pagosValidados = $db->table('pago')
-                             ->where('validar_ficha', 49)
+                             ->where('validar_ficha', 1)
                              ->where('ficha IS NOT NULL')
                              ->get()->getResultArray();
 
@@ -349,7 +350,7 @@ class Alumnos extends BaseController
                     'concepto'      => $concepto,
                     'modoPago'      => isset($modos[$index]) ? $modos[$index] : '',
                     'nota'          => isset($notas[$index]) ? $notas[$index] : '',
-                    'validar_ficha' => 49, 
+                    'validar_ficha' => 1,
                     'ficha'         => $nombreArchivo,
                     'cilcoescolar'  => $idCiclo,
                     'id_folio'      => $idFolio, 
@@ -400,7 +401,7 @@ class Alumnos extends BaseController
         // Obtener ciclo escolar activo
         $califModel = new \App\Models\CalificacionesModel();
         $config = $califModel->getConfiguracionActiva($alumno['nivel'] ?? 7); 
-        $cicloRow = $db->table('cicloEscolar')->where('Id_cicloEscolar', $config['id_ciclo'])->get()->getRowArray();
+        $cicloRow = $db->table('cicloescolar')->where('Id_cicloEscolar', $config['id_ciclo'])->get()->getRowArray();
         $nombreCiclo = $cicloRow ? $cicloRow['nombreCicloEscolar'] : '2025-2026';
 
         // Reutilizamos la vista del alumno

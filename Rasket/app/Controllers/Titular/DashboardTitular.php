@@ -39,7 +39,7 @@ class DashboardTitular extends BaseController
         $nombreCiclo = 'No definido';
 
         if (!empty($config['id_ciclo'])) {
-            $cicloRow = $db->table('cicloEscolar')
+            $cicloRow = $db->table('cicloescolar')
                            ->where('Id_cicloEscolar', $config['id_ciclo'])
                            ->get()
                            ->getRowArray();

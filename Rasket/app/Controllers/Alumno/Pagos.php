@@ -96,7 +96,7 @@ class Pagos extends BaseController
                     'concepto'      => $concepto,
                     'modoPago'      => isset($modos[$index]) ? $modos[$index] : '',
                     'nota'          => isset($notas[$index]) ? $notas[$index] : '',
-                    'validar_ficha' => 48, 
+                    'validar_ficha' => 0, 
                     'ficha'         => $nombreArchivo,
                     'cilcoescolar'  => $idCiclo,
                     'id_folio'      => $idFolio, 
@@ -138,7 +138,7 @@ class Pagos extends BaseController
 
         $califModel = new CalificacionesModel();
         $config = $califModel->getConfiguracionActiva($alumno['nivel'] ?? 7); 
-        $cicloRow = $db->table('cicloEscolar')->where('Id_cicloEscolar', $config['id_ciclo'])->get()->getRowArray();
+        $cicloRow = $db->table('cicloescolar')->where('Id_cicloEscolar', $config['id_ciclo'])->get()->getRowArray();
         $nombreCiclo = $cicloRow ? $cicloRow['nombreCicloEscolar'] : '2025-2026';
 
         return view('VistadelAlumno/recibo_pago', [

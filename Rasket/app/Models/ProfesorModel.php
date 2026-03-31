@@ -59,7 +59,7 @@ class ProfesorModel extends Model
      */
     public function tieneMaterias($idProfesor)
     {
-        return $this->db->table('materia_asignadaoriginal')
+        return $this->db->table('materia_asignada')
             ->where('id_usr', $idProfesor)
             ->where('activo', 1)
             ->countAllResults() > 0;
@@ -70,7 +70,7 @@ class ProfesorModel extends Model
      */
     public function getMateriasAsignadas($id)
     {
-        return $this->db->table('materia_asignadaoriginal MA')
+        return $this->db->table('materia_asignada MA')
             ->select('M.nombre_materia, G.nombreGrado, MA.activo')
            
             ->join('materia M', 'MA.id_materia = M.Id_materia', 'inner') 
@@ -111,7 +111,7 @@ class ProfesorModel extends Model
     public function verificarEstadoMateria($id_materia, $id_profesor_actual)
     {
         // Solo verificamos si el profesor ACTUAL la tiene asignada
-        $esPropia = $this->db->table('materia_asignadaoriginal')
+        $esPropia = $this->db->table('materia_asignada')
             ->where('id_materia', $id_materia)
             ->where('id_usr', $id_profesor_actual)
             ->where('activo', 1)
@@ -160,7 +160,7 @@ class ProfesorModel extends Model
         $db->transStart(); 
 
         // 3. RESETEO (Soft Delete)
-        $builder = $db->table('materia_asignadaoriginal');
+        $builder = $db->table('materia_asignada');
         $builder->where('id_usr', $id_profesor);
         $builder->whereIn('id_materia', $idsMateriasGrado); 
         $builder->update(['activo' => 0]);
@@ -170,14 +170,14 @@ class ProfesorModel extends Model
             foreach ($materias_seleccionadas as $id_mat) {
                 
                 // Verificar si ya existe el registro 
-                $existe = $db->table('materia_asignadaoriginal')
+                $existe = $db->table('materia_asignada')
                              ->where('id_usr', $id_profesor)
                              ->where('id_materia', $id_mat)
                              ->countAllResults();
 
                 if ($existe > 0) {
                     // Update
-                    $db->table('materia_asignadaoriginal')
+                    $db->table('materia_asignada')
                        ->where('id_usr', $id_profesor)
                        ->where('id_materia', $id_mat)
                        ->update([
@@ -193,7 +193,7 @@ class ProfesorModel extends Model
                         'id_cicloEscolar' => $idCicloActivo
                     ];
                     
-                    $db->table('materia_asignadaoriginal')->insert($dataInsert);
+                    $db->table('materia_asignada')->insert($dataInsert);
                 }
             }
         }
@@ -226,7 +226,7 @@ class ProfesorModel extends Model
 
         $id_ciclo = $cicloActivo->id_ciclo;
 
-        $builder = $db->table('materia_asignadaoriginal mao');
+        $builder = $db->table('materia_asignada mao');
         $builder->select('
             mao.id_materia, 
             m.nombre_materia, 
